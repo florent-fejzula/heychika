@@ -75,6 +75,28 @@ test('an order can be placed on a demo design, and removing the demo takes it aw
   }
 });
 
+test('removing the demo also clears test orders that were sent, delivered and returned', async () => {
+  const db = await freshDb();
+  await db.exec(ADD);
+  const v = (await one(db, `
+    select v.id from variants v join stock s on s.variant_id = v.id join products p on p.id = v.product_id
+     where p.slug = 'demo-basic-tee' and s.qty_available >= 2 limit 1`)).id;
+  const placed = await as(db, 'anon', (tx) =>
+    one(tx, 'select place_order($1, $2, $3) r', ['XK', JSON.stringify(arta), JSON.stringify([{ variant_id: v, qty: 2 }])]));
+  const orderId = (await one(db, 'select id from orders where order_number = $1', [placed.r.order_number])).id;
+  const lineId = (await one(db, 'select id from order_lines where order_id = $1', [orderId])).id;
+  await as(db, 'staff', async (tx) => {
+    await tx.query('select dispatch_order($1)', [orderId]);
+    await tx.query('select mark_delivered($1, $2, $3)', [orderId, '[]', 26]);
+    await tx.query(`select record_return($1, $2, 'too big', 12)`, [orderId, JSON.stringify([{ order_line_id: lineId, qty: 1, condition: 'saleable' }])]);
+  });
+
+  await db.exec(REMOVE);
+  for (const t of ['orders', 'returns', 'return_lines', 'customers', 'stock_movements', 'products']) {
+    assert.equal(await count(db, t), 0, t);
+  }
+});
+
 test('removing the demo leaves real products, trips, orders and customers alone', async () => {
   const db = await freshDb();
   const p = await product(db, { name: 'Real dress' });
