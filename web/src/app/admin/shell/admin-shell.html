@@ -12,6 +12,7 @@
       <a
         [routerLink]="item.path"
         routerLinkActive="active"
+        [class.also-active]="alsoActive(item)"
         [routerLinkActiveOptions]="{ exact: !!item.exact }"
         ariaCurrentWhenActive="page"
       >

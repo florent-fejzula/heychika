@@ -1,0 +1,91 @@
+<div class="stack">
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted">Loading…</p>
+    }
+    @case ('error') {
+      <p class="notice notice-error">{{ loadError() }}</p>
+    }
+    @case ('missing') {
+      <p class="notice">There’s no such order.</p>
+    }
+    @case ('ready') {
+      @let o = order()!;
+      <a class="back" [routerLink]="['/admin/orders', o.id]">← {{ o.order_number }}</a>
+      <h1>Pack & send</h1>
+
+      @if (!canPack()) {
+        <p class="notice">This order has already left, or it was cancelled. Nothing to pack.</p>
+      } @else {
+        <p class="muted">For {{ o.delivery_name }}, {{ o.delivery_city }}. Scan each item as it goes in the parcel.</p>
+
+        <section class="card">
+          <app-scanner label="Scan each item, or type its SKU" (scanned)="onScan($event)" />
+        </section>
+
+        @if (feedback(); as f) {
+          <p class="feedback" [class]="'feedback ' + f.kind" role="status" aria-live="assertive">
+            {{ f.kind === 'ok' ? '✓ ' : f.kind === 'wrong' ? '✗ ' : '' }}{{ f.text }}
+          </p>
+        }
+
+        <section class="card stack">
+          <h2>{{ done() }} of {{ total() }} packed</h2>
+          <ul class="lines">
+            @for (l of o.lines; track l.id) {
+              @let n = packedOf(l);
+              <li [class.complete]="n >= l.qty">
+                <span class="tick" aria-hidden="true">{{ n >= l.qty ? '✓' : '' }}</span>
+                <span class="what">
+                  <strong>{{ l.product_name_snapshot }}</strong>
+                  <span>{{ l.color_snapshot }} · <strong>{{ l.size_snapshot }}</strong></span>
+                  <code>{{ l.sku_snapshot }}</code>
+                </span>
+                <span class="count">
+                  <span class="nums">{{ n }} / {{ l.qty }}</span>
+                  <span class="toolbar">
+                    @if (n > 0) {
+                      <button class="btn btn-small" type="button" (click)="untick(l)" [attr.aria-label]="'Take one out: ' + l.product_name_snapshot">−</button>
+                    }
+                    @if (n < l.qty) {
+                      <button class="btn btn-small" type="button" (click)="tick(l)" [attr.aria-label]="'Tick by hand: ' + l.product_name_snapshot">Tick</button>
+                    }
+                  </span>
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section class="card stack">
+          <div class="grid-2">
+            <label class="field">
+              <span>Courier <span class="muted">(optional)</span></span>
+              <input [value]="courier()" (input)="courier.set($any($event.target).value)" placeholder="e.g. Post Express" />
+            </label>
+            <label class="field">
+              <span>Tracking <span class="muted">(optional)</span></span>
+              <input [value]="tracking()" (input)="tracking.set($any($event.target).value)" autocapitalize="characters" />
+            </label>
+          </div>
+
+          @if (!allPacked()) {
+            <label class="check">
+              <input type="checkbox" [checked]="skipCheck()" (change)="skipCheck.set($any($event.target).checked)" />
+              Send without scanning everything
+            </label>
+          }
+
+          @if (error(); as message) {
+            <p class="notice notice-error" role="alert">{{ message }}</p>
+          }
+
+          <button class="btn btn-primary btn-block" type="button" (click)="send()" [disabled]="busy() || (!allPacked() && !skipCheck())">
+            {{ busy() ? 'Sending…' : 'Mark as sent' }}
+          </button>
+          <p class="muted small">The items come off the shelf and count as on the road until delivered.</p>
+        </section>
+      }
+    }
+  }
+</div>

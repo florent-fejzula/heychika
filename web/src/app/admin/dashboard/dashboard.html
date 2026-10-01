@@ -5,9 +5,15 @@
     <p class="notice notice-error">Couldn’t load the numbers. Check your connection and refresh.</p>
   } @else if (summary(); as s) {
     @if (s.toConfirm > 0) {
-      <a class="card waiting" routerLink="/admin/orders">
+      <a class="card waiting" routerLink="/admin/orders" [queryParams]="{ stage: 'confirm' }">
         <strong>{{ s.toConfirm }} new {{ s.toConfirm === 1 ? 'order' : 'orders' }}</strong>
         <span>to confirm →</span>
+      </a>
+    }
+    @if (s.toSend > 0) {
+      <a class="card waiting" routerLink="/admin/orders" [queryParams]="{ stage: 'send' }">
+        <strong>{{ s.toSend }} {{ s.toSend === 1 ? 'order' : 'orders' }}</strong>
+        <span>to pack and send →</span>
       </a>
     }
 
@@ -26,11 +32,11 @@
         <strong>{{ s.stockValue }}</strong>
         <span class="muted">at cost</span>
       </div>
-      <div class="card tile">
+      <a class="card tile link" routerLink="/admin/orders" [queryParams]="{ stage: 'cash' }">
         <span class="label">Waiting for cash</span>
         <strong>{{ s.awaitingCashValue }}</strong>
-        <span class="muted">{{ s.awaitingCash }} {{ s.awaitingCash === 1 ? 'order' : 'orders' }} out for delivery</span>
-      </div>
+        <span class="muted">{{ s.awaitingCash }} {{ s.awaitingCash === 1 ? 'order' : 'orders' }} sent or delivered, not paid</span>
+      </a>
     </section>
 
     @if (s.unitsOnTheRoad > 0) {

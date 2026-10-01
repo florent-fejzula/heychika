@@ -13,7 +13,7 @@ web/        the Angular app: public shop at /, admin at /admin
 
 ## Status
 
-**Phases 1–6 are done** (foundation, catalogue, barcodes, buying trips, stock, the shop).
+**Phases 1–8 are done** (foundation, catalogue, barcodes, buying trips, stock, the shop, orders, returns).
 
 - **The shop**, at `/`: browse by category, size and colour; a product page with colour and size
   pickers, photos for the chosen colour, a share button and a link preview for DMs; the bag; and
@@ -21,11 +21,22 @@ web/        the Angular app: public shop at /, admin at /admin
   Prices show in EUR, MKD or ALL depending on the country chosen. Placing an order holds the stock
   for that customer straight away; the last item can't be sold twice. Customers can track an order
   with its number and their phone.
-- **Orders** in the admin: every order from the shop with the customer's details ready to call,
-  WhatsApp or Viber, and the address ready to copy for the courier. (Confirming, sending and
-  recording the cash come in the next phase.)
+- **Orders** in the admin, grouped by what needs doing: to confirm, to send, on the road, cash due.
+  Each order shows its next step: confirm after calling; **pack & send**, scanning each item into the
+  parcel so a wrong size is caught before it leaves; delivered (noting anything handed back at the
+  door) and the cash collected; not delivered and tried again. Change the items or the address before
+  it's sent, or cancel it and the stock goes back on sale. Call, WhatsApp or Viber the customer from
+  the order, and copy the address for the courier.
+- **New order** for sales agreed in a DM: type the phone and a repeat customer fills in; add items by
+  search or by scanning; use a price agreed in the chat, in the customer's currency; free delivery if
+  you like. It starts confirmed and holds the stock.
+- **Returns:** a refused or undeliverable parcel, an item handed back at the door, or something sent
+  back later. Each item goes back on the shelf or is set aside as damaged; money goes back only if it
+  was paid.
+- **Customers:** everyone who ordered, with what they paid for, parcels that came back, their orders,
+  and a note about them
 - Full database schema for every phase, with the stock engine, purchasing, costing and checkout
-  working and tested (111 database tests)
+  working and tested (132 database tests)
 - Admin login (owners only), phone-first layout, a live "Today" dashboard, Settings (exchange
   rates, delivery fees, shop details)
 - **Products:** add a design, tick its colours and sizes to create every SKU and barcode at once,
@@ -39,8 +50,7 @@ web/        the Angular app: public shop at /, admin at /admin
   low or sold out; recount, mark damage and write off with a reason; the full history of every size
 - **Categories, colours & sizes:** add new ones without touching code
 
-Still to come: moving orders through confirmed → sent → delivered → paid with scan-to-dispatch
-(phase 7), returns (8), reports (9), and launch (10).
+Still to come: reports and Excel export (phase 9), and launch (10).
 
 ### Trying the shop with demo products
 
@@ -143,6 +153,9 @@ enforces regardless of connection count.
 - **Never edit a migration that has been applied.** Add a new one.
 - **Stock only changes through `private.apply_stock_movement`.** Nothing writes `stock` or
   `stock_movements` directly — that's what keeps the ledger and the balances in agreement.
+- **Orders only move through their functions** (`confirm_order`, `dispatch_order`, `mark_delivered`,
+  `record_return` and the rest, in `20261005000001_order_flow.sql`). Each moves the order and its
+  stock together; the admin has no direct write access to orders.
 - **The shop places orders only through `public.place_order`**, which takes variant ids and
   quantities and works out every price itself. The shop's own total (`bagTotals` in
   `web/src/app/core/money.ts`) must match it exactly, or every order is refused as "price

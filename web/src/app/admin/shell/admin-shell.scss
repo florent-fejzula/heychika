@@ -73,7 +73,8 @@
     text-decoration: none;
   }
 
-  a.active {
+  a.active,
+  a.also-active {
     color: var(--accent);
   }
 
@@ -116,7 +117,8 @@
       color: var(--ink-soft);
     }
 
-    a.active {
+    a.active,
+    a.also-active {
       background: var(--accent-soft);
       color: var(--accent);
     }

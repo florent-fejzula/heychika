@@ -343,8 +343,9 @@ COD customer who will refuse it.
 A phone camera works via `@zxing/browser`. A €25 Bluetooth scanner acts as a keyboard and needs no
 code at all — just a focused input.
 
-**Built so far:** lookup (point 3). Stock-in and dispatch scanning arrive with their screens in the
-stock and order rounds, reusing the same scanner. Labels need to be at least ~45 mm wide to scan
+**Built so far:** lookup (point 3) and dispatch (point 2: Pack & send on each order; an item that
+isn't in the order is refused loudly), plus adding items to a hand-typed order by scanning. Stock-in
+is by the buying-trip grid, which is faster than scanning items that have no stickers yet. Labels need to be at least ~45 mm wide to scan
 reliably (measured; see `web/scripts/check-barcodes.mjs`), so the label sizes offered stop there.
 
 ---
@@ -362,8 +363,8 @@ screen, because self-service checkout is the actual goal.
 | 4 ✅ | Purchases — trip entry, landed cost, receive into stock |
 | 5 ✅ | Stock engine — ledger, constraints, adjustments, write-offs |
 | 6 ✅ | Shop — browse, product page, cart, checkout, order creation |
-| 7 | Order management — status flow, scan-to-dispatch, COD collection |
-| 8 | Returns — refunds, failed delivery, saleable vs damaged |
+| 7 ✅ | Order management — status flow, scan-to-dispatch, COD collection |
+| 8 ✅ | Returns — refunds, failed delivery, saleable vs damaged |
 | 9 | Reports — stock, sales, profit, Excel export |
 | 10 | Launch — backup, hardening, static pages, social links |
 
@@ -423,7 +424,16 @@ every report a lie. Dispatched-but-unpaid and delivered-but-unpaid belong in the
   so it matches the prices the customer saw item by item
 - The shop's country is remembered in a cookie; on a first visit a Macedonian-language browser
   defaults to North Macedonia, anything else to Kosovo
-- Reserved stock is held until the order is confirmed or cancelled; there's no automatic expiry
+- Reserved stock is held until the order is sent or cancelled; there's no automatic expiry
+- An order can be sent straight from "new" (sending it confirms it); it can be cancelled only before
+  it's sent. After that, anything that comes back is a return
+- An item handed back to the courier at the door stays "on the road" (`order_lines.refused_qty`)
+  until its return is recorded in Prishtina and someone has looked at it
+- An order delivered and paid is complete and frozen; a return still records what came back
+- Refunds are entered in the order's currency, and can't exceed what was collected
+- Orders typed in from a DM start confirmed, can include designs not shown online (not retired
+  ones), and can use a price agreed in the chat. Staff are trusted with customer details, so a DM
+  order updates the customer's saved address; a shop order never does
 - Guest checkout only; no customer logins
 - Single stock pool, Prishtina
 - COD only, collected in the customer's local currency

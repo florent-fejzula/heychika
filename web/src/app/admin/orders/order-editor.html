@@ -1,0 +1,164 @@
+<div class="stack">
+  @if (isNew()) {
+    <a class="back" routerLink="/admin/orders">← Orders</a>
+    <h1>New order</h1>
+  } @else {
+    <a class="back" [routerLink]="['/admin/orders', id()]">← {{ existing()?.order_number ?? 'Order' }}</a>
+    <h1>Change items</h1>
+  }
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted">Loading…</p>
+    }
+    @case ('error') {
+      <p class="notice notice-error">{{ loadError() }}</p>
+    }
+    @case ('locked') {
+      <p class="notice">This order has already been sent or closed, so its items can’t change. If something came back, record a return on the order.</p>
+    }
+    @case ('ready') {
+      <!-- -------------------------------------------------------- customer -->
+      @if (isNew()) {
+        <section class="card stack">
+          <h2>Customer</h2>
+          <label class="field">
+            <span>Phone</span>
+            <input type="tel" inputmode="tel" [value]="customer().phone" (input)="setCustomer('phone', $any($event.target).value)"
+                   placeholder="Start typing: a repeat customer pops up" />
+          </label>
+          @if (matches().length && !customerId()) {
+            <ul class="matches" aria-label="Customers with this number">
+              @for (c of matches(); track c.id) {
+                <li>
+                  <button type="button" class="match" (click)="pick(c)">
+                    <strong>{{ c.first_name }} {{ c.last_name }}</strong>
+                    <span class="muted">{{ c.phone }} · {{ c.city }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+          @if (customerId()) {
+            <p class="notice notice-ok small">Repeat customer. Her details are filled in; change anything that’s new.</p>
+          }
+
+          <div class="chips" role="radiogroup" aria-label="Country">
+            @for (c of countries; track c.code) {
+              <label class="chip"><input type="radio" name="country" [checked]="country() === c.code" (change)="country.set(c.code)" /> {{ c.name }} · {{ c.currency }}</label>
+            }
+          </div>
+          <div class="grid-2">
+            <label class="field"><span>First name</span><input [value]="customer().first_name" (input)="setCustomer('first_name', $any($event.target).value)" /></label>
+            <label class="field"><span>Last name</span><input [value]="customer().last_name" (input)="setCustomer('last_name', $any($event.target).value)" /></label>
+          </div>
+          <label class="field"><span>Town or city</span><input [value]="customer().city" (input)="setCustomer('city', $any($event.target).value)" /></label>
+          <label class="field"><span>Street and number</span><input [value]="customer().address" (input)="setCustomer('address', $any($event.target).value)" /></label>
+          <label class="field postal"><span>Postcode <span class="muted">(optional)</span></span><input [value]="customer().postal_code" (input)="setCustomer('postal_code', $any($event.target).value)" /></label>
+        </section>
+      }
+
+      <!-- -------------------------------------------------------- items -->
+      <section class="card stack">
+        <h2>Items</h2>
+
+        @if (lines().length) {
+          <ul class="lines">
+            @for (l of lines(); track l.item.id) {
+              <li>
+                <div class="row">
+                  <span class="what">
+                    <strong>{{ l.item.product.name }}</strong>
+                    <span>{{ l.item.color.name }} · {{ l.item.size.label }} <span class="muted">· {{ left(l.item) }} more left</span></span>
+                  </span>
+                  <span class="stepper" role="group" [attr.aria-label]="'How many: ' + l.item.product.name">
+                    <button type="button" (click)="setQty(l, l.qty - 1)" [attr.aria-label]="l.qty === 1 ? 'Remove' : 'One fewer'">−</button>
+                    <span>{{ l.qty }}</span>
+                    <button type="button" (click)="setQty(l, l.qty + 1)" [disabled]="left(l.item) <= 0" aria-label="One more">+</button>
+                  </span>
+                </div>
+                <label class="field price">
+                  <span>Price each ({{ currency() }})</span>
+                  <input inputmode="decimal" [value]="l.priceText" (input)="setPrice(l, $any($event.target).value)"
+                         [placeholder]="(l.kept ?? usual(l.item)) + ''" />
+                </label>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="muted">Search for a design, or scan its sticker.</p>
+        }
+
+        <label class="field">
+          <span class="sr-only">Find a design</span>
+          <input type="search" placeholder="Find a design by name or SKU" [value]="search()" (input)="search.set($any($event.target).value); openDesign.set(null)" />
+        </label>
+        @if (search().trim() && !designs().length) {
+          <p class="muted small">Nothing matches.</p>
+        }
+        <ul class="designs">
+          @for (d of designs(); track d.id) {
+            <li>
+              <button type="button" class="design" [attr.aria-expanded]="openDesign() === d.id" (click)="openDesign.set(openDesign() === d.id ? null : d.id)">
+                {{ d.name }} <span class="muted">{{ d.items.length }} {{ d.items.length === 1 ? 'size' : 'sizes' }}</span>
+              </button>
+              @if (openDesign() === d.id || designs().length === 1) {
+                <div class="sizes">
+                  @for (i of d.items; track i.id) {
+                    <button type="button" class="size" (click)="add(i)" [disabled]="left(i) <= 0">
+                      <span class="swatch" [style.background]="i.color.hex ?? '#ccc'"></span>
+                      {{ i.color.name }} · <strong>{{ i.size.label }}</strong>
+                      <span class="muted">{{ left(i) > 0 ? left(i) + ' left' : 'none left' }}</span>
+                    </button>
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+
+        @if (showScanner()) {
+          <app-scanner label="Scan an item, or type its SKU" (scanned)="onScan($event)" />
+          @if (scanNote(); as note) {
+            <p class="muted small" role="status">{{ note }}</p>
+          }
+        } @else {
+          <div><button class="btn btn-small" type="button" (click)="showScanner.set(true)">Add by scanning</button></div>
+        }
+      </section>
+
+      <!-- -------------------------------------------------------- delivery and total -->
+      <section class="card stack">
+        <div class="grid-2">
+          <label class="field">
+            <span>Delivery ({{ currency() }})</span>
+            <input inputmode="decimal" [value]="feeText()" (input)="feeText.set($any($event.target).value)" [placeholder]="usualFee() + ''" />
+            <small>Usually {{ money(usualFee()) }}. 0 for free.</small>
+          </label>
+          @if (isNew()) {
+            <label class="field">
+              <span>Note <span class="muted">(optional)</span></span>
+              <input [value]="notes()" (input)="notes.set($any($event.target).value)" placeholder="e.g. wants it by Friday" />
+            </label>
+          }
+        </div>
+
+        <dl class="totals">
+          <div><dt>{{ count() }} {{ count() === 1 ? 'item' : 'items' }}</dt><dd>{{ money(itemsTotal()) }}</dd></div>
+          <div><dt>Delivery</dt><dd>{{ fee() === null ? '?' : fee() === 0 ? 'Free' : money(fee()!) }}</dd></div>
+          <div class="total"><dt>Courier collects</dt><dd>{{ money(total()) }}</dd></div>
+        </dl>
+
+        @if (error(); as message) {
+          <p class="notice notice-error" role="alert">{{ message }}</p>
+        }
+        <button class="btn btn-primary btn-block" type="button" (click)="save()" [disabled]="busy()">
+          {{ busy() ? 'Saving…' : isNew() ? 'Create order' : 'Save changes' }}
+        </button>
+        @if (isNew()) {
+          <p class="muted small">It starts as confirmed and the items are held for her straight away.</p>
+        }
+      </section>
+    }
+  }
+</div>

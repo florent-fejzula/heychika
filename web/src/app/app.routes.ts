@@ -74,9 +74,39 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/orders/order-list').then((m) => m.OrderList),
       },
       {
+        path: 'orders/new',
+        title: 'New order · Hey Chika',
+        loadComponent: () => import('./admin/orders/order-editor').then((m) => m.OrderEditor),
+      },
+      {
         path: 'orders/:id',
         title: 'Order · Hey Chika',
         loadComponent: () => import('./admin/orders/order-detail').then((m) => m.OrderDetail),
+      },
+      {
+        path: 'orders/:id/pack',
+        title: 'Pack & send · Hey Chika',
+        loadComponent: () => import('./admin/orders/order-pack').then((m) => m.OrderPack),
+      },
+      {
+        path: 'orders/:id/items',
+        title: 'Change items · Hey Chika',
+        loadComponent: () => import('./admin/orders/order-editor').then((m) => m.OrderEditor),
+      },
+      {
+        path: 'orders/:id/return',
+        title: 'Return · Hey Chika',
+        loadComponent: () => import('./admin/orders/order-return').then((m) => m.OrderReturn),
+      },
+      {
+        path: 'customers',
+        title: 'Customers · Hey Chika',
+        loadComponent: () => import('./admin/customers/customer-list').then((m) => m.CustomerList),
+      },
+      {
+        path: 'customers/:id',
+        title: 'Customer · Hey Chika',
+        loadComponent: () => import('./admin/customers/customer-detail').then((m) => m.CustomerDetail),
       },
       {
         path: 'settings',
