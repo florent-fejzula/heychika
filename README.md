@@ -7,7 +7,7 @@ See [PLAN.md](PLAN.md) for the design and build order.
 
 ```
 docs/       the original specification documents
-supabase/   database: migrations, seed data, tests
+supabase/   database: migrations, seed data, demo data, tests
 web/        the Angular app: public shop at /, admin at /admin
 ```
 
@@ -25,7 +25,7 @@ web/        the Angular app: public shop at /, admin at /admin
   WhatsApp or Viber, and the address ready to copy for the courier. (Confirming, sending and
   recording the cash come in the next phase.)
 - Full database schema for every phase, with the stock engine, purchasing, costing and checkout
-  working and tested (104 database tests)
+  working and tested (111 database tests)
 - Admin login (owners only), phone-first layout, a live "Today" dashboard, Settings (exchange
   rates, delivery fees, shop details)
 - **Products:** add a design, tick its colours and sizes to create every SKU and barcode at once,
@@ -41,6 +41,14 @@ web/        the Angular app: public shop at /, admin at /admin
 
 Still to come: moving orders through confirmed → sent → delivered → paid with scan-to-dispatch
 (phase 7), returns (8), reports (9), and launch (10).
+
+### Trying the shop with demo products
+
+To see the whole flow before real stock exists, run `supabase/demo/demo-data.sql` in the SQL Editor. It adds
+12 generic designs (plus one hidden draft) with colours, sizes, prices, a sale, a sold-out design and a
+spread of stock, received through a real buying trip. There are no photos; the shop shows a letter instead.
+Run `supabase/demo/remove-demo-data.sql` before launch to take it all out again, including any test orders
+you placed. Both are tested, and the removal only touches designs whose link starts with `demo-`.
 
 ### Getting a design into the shop
 
