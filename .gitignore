@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.angular/
+coverage/
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
