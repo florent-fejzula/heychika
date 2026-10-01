@@ -1,0 +1,62 @@
+<div class="stack">
+  <div class="page-head">
+    <h1>Stock</h1>
+    <a class="btn btn-primary" routerLink="/admin/stock/purchases/new">New buying trip</a>
+  </div>
+  <app-stock-tabs />
+
+  @if (error(); as message) {
+    <p class="notice notice-error">{{ message }}</p>
+  } @else if (rows() === null) {
+    <p class="muted">Loading…</p>
+  } @else if (!rows()!.length) {
+    <section class="card stack empty">
+      <h2>No buying trips yet</h2>
+      <p class="muted">
+        A buying trip is one purchase of goods, like “Istanbul, October”. Enter what you bought and what the trip cost,
+        and the stock and the real cost of every item are worked out for you.
+      </p>
+      <div><a class="btn btn-primary" routerLink="/admin/stock/purchases/new">Start the first one</a></div>
+    </section>
+  } @else {
+    @if (drafts().length) {
+      <h2>Not received yet</h2>
+      <ul class="list">
+        @for (p of drafts(); track p.id) {
+          <li>
+            <a class="card item" [routerLink]="['/admin/stock/purchases', p.id]">
+              <span class="body">
+                <strong>{{ p.reference }}</strong>
+                <span class="muted">{{ date(p) }}@if (p.supplier_name) { · {{ p.supplier_name }} }</span>
+              </span>
+              <span class="nums">
+                <span>{{ items(p) }} {{ items(p) === 1 ? 'item' : 'items' }}</span>
+                <span class="badge">Draft</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (received().length) {
+      <h2>Received</h2>
+      <ul class="list">
+        @for (p of received(); track p.id) {
+          <li>
+            <a class="card item" [routerLink]="['/admin/stock/purchases', p.id]">
+              <span class="body">
+                <strong>{{ p.reference }}</strong>
+                <span class="muted">{{ date(p) }}@if (p.supplier_name) { · {{ p.supplier_name }} }</span>
+              </span>
+              <span class="nums">
+                <span>{{ items(p) }} {{ items(p) === 1 ? 'item' : 'items' }} · {{ goods(p) }}</span>
+                <span class="muted">+ {{ trip(p) }} trip costs</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

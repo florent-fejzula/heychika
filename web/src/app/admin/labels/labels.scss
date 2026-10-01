@@ -1,0 +1,135 @@
+.notice {
+  margin: 0;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+  align-self: end;
+}
+
+.grow {
+  flex: 1 1 200px;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+
+  &.off {
+    opacity: 0.55;
+  }
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  small {
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  input {
+    width: 56px;
+    text-align: center;
+    padding: 6px 4px;
+  }
+
+  .btn {
+    width: 36px;
+    padding: 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The sheets. Sized in real millimetres.
+
+.sheets {
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.page {
+  flex: none;
+  display: grid;
+  box-sizing: border-box;
+  align-content: start;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+  break-after: page;
+}
+
+.label {
+  // Text sizes scale with the label's own height, so one stylesheet fits every layout.
+  container-type: size;
+  box-sizing: border-box;
+  padding: 6cqh 5cqw 4cqh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  color: #000;
+  font-family: var(--font-ui);
+  line-height: 1.15;
+}
+
+.name {
+  font-size: 10cqh;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.opts {
+  font-size: 8.5cqh;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+img,
+.pending {
+  width: 100%;
+  height: 38cqh;
+  object-fit: contain;
+}
+
+.sku {
+  font-size: 8cqh;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+@media print {
+  .sheets {
+    overflow: visible;
+    gap: 0;
+    padding: 0;
+  }
+
+  .page {
+    box-shadow: none;
+  }
+
+  .page:last-child {
+    break-after: auto;
+  }
+}

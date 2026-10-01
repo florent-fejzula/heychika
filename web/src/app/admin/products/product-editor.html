@@ -1,0 +1,116 @@
+<div class="stack">
+  <a class="back" routerLink="/admin/products">← Products</a>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted">Loading…</p>
+    }
+    @case ('error') {
+      <p class="notice notice-error">{{ loadError() }}</p>
+    }
+    @case ('missing') {
+      <section class="card stack">
+        <h1>Design not found</h1>
+        <p class="muted">It may have been deleted.</p>
+        <a class="btn" routerLink="/admin/products">Back to products</a>
+      </section>
+    }
+    @case ('ready') {
+      <div class="page-head">
+        <h1>{{ product()?.name ?? 'New design' }}</h1>
+        @if (product(); as p) {
+          <span class="muted code">{{ p.category.code }}-{{ p.model_code }}</span>
+        }
+      </div>
+
+      <form class="card stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
+        @if (isNew()) {
+          <label class="field">
+            <span>Category</span>
+            <select formControlName="category_id">
+              <option [ngValue]="0" disabled>Choose…</option>
+              @for (c of categories(); track c.id) {
+                @if (c.active) {
+                  <option [ngValue]="c.id">{{ c.name }}</option>
+                }
+              }
+            </select>
+            <small>The category can’t be changed later. Its code becomes part of every SKU.</small>
+          </label>
+        } @else {
+          <p class="muted fixed">{{ product()?.category?.name }}</p>
+        }
+
+        <label class="field">
+          <span>Name</span>
+          <input type="text" formControlName="name" placeholder="Black satin wrap dress" autocomplete="off" />
+        </label>
+
+        <label class="field">
+          <span>Description</span>
+          <textarea rows="3" formControlName="description" placeholder="Fit, feel, how to wear it"></textarea>
+        </label>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>Material</span>
+            <input type="text" formControlName="material" placeholder="Satin" />
+          </label>
+          <label class="field">
+            <span>Brand</span>
+            <input type="text" formControlName="brand" />
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <label class="field">
+            <span>Status</span>
+            <select formControlName="status">
+              <option value="draft">Draft (not for sale yet)</option>
+              <option value="active">Active</option>
+              <option value="archived">Archived (retired)</option>
+            </select>
+          </label>
+          <div class="field">
+            <span>Shop</span>
+            <label class="check"><input type="checkbox" formControlName="show_online" /> Show in online shop</label>
+            <label class="check"><input type="checkbox" formControlName="featured" /> Feature on the homepage</label>
+          </div>
+        </div>
+        <small class="muted">Customers see a design only when it is Active <em>and</em> shown in the shop.</small>
+
+        @if (message(); as m) {
+          <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
+        }
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" [disabled]="saving() || (!isNew() && form.pristine)">
+            {{ saving() ? 'Saving…' : isNew() ? 'Create design' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+
+      @if (product(); as p) {
+        <app-variant-manager
+          [productId]="p.id"
+          [sizeType]="p.category.size_type"
+          [colours]="colours()"
+          [sizes]="sizes()"
+          (variantsChange)="variants.set($event)"
+        />
+
+        <app-image-manager [productId]="p.id" [colours]="usedColours()" />
+
+        @if (variants() !== null && variants()!.length === 0) {
+          <section class="card stack">
+            <h2>Delete this design</h2>
+            <p class="muted">Only possible while it has no sizes. Its photos are deleted with it.</p>
+            <div><button class="btn btn-danger" type="button" (click)="remove()">Delete design</button></div>
+          </section>
+        }
+      } @else {
+        <p class="muted">After you create the design, you can add its colours, sizes and photos.</p>
+      }
+    }
+  }
+</div>

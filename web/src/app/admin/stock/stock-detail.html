@@ -1,0 +1,126 @@
+<div class="detail stack">
+  @if (row().stock; as s) {
+    <dl class="levels">
+      <div><dt>On the shelf</dt><dd>{{ s.qty_physical }}</dd></div>
+      <div><dt>Reserved</dt><dd>{{ s.qty_reserved }}</dd></div>
+      <div class="key"><dt>Available</dt><dd>{{ s.qty_available }}</dd></div>
+      <div><dt>On the road</dt><dd>{{ s.qty_in_transit }}</dd></div>
+      <div><dt>Damaged</dt><dd>{{ s.qty_damaged }}</dd></div>
+    </dl>
+    <p class="muted explain">
+      Available = on the shelf − reserved. Reserved stock is promised to an order but hasn’t left yet.
+      Cost per item: <strong>{{ money(row().cost_eur) }}</strong>.
+    </p>
+  }
+
+  @if (message(); as m) {
+    <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
+  }
+
+  <!-- Recount -->
+  <section class="action">
+    <h3>Recount</h3>
+    <p class="muted">Counted the shelf and it’s different? Enter what you actually have.</p>
+    <div class="fields">
+      <label class="field small">
+        <span>On the shelf now</span>
+        <input type="text" inputmode="numeric" autocomplete="off" [value]="count()" (input)="count.set($any($event.target).value)" />
+      </label>
+      <label class="field grow">
+        <span>Reason</span>
+        <input type="text" list="reasons" autocomplete="off" placeholder="Stock check" [value]="countReason()" (input)="countReason.set($any($event.target).value)" />
+      </label>
+      <button class="btn" type="button" [disabled]="busy()" (click)="recount()">
+        Save @if (recountDelta !== null && recountDelta !== 0) { ({{ recountDelta > 0 ? '+' : '−' }}{{ recountDelta < 0 ? -recountDelta : recountDelta }}) }
+      </button>
+    </div>
+  </section>
+
+  <!-- Damaged -->
+  @if (shelf > 0) {
+    <section class="action">
+      <h3>Found damaged</h3>
+      <p class="muted">Takes them off sale straight away. They stay in the count as damaged until you write them off.</p>
+      <div class="fields">
+        <label class="field small">
+          <span>How many</span>
+          <input type="text" inputmode="numeric" autocomplete="off" [value]="damagedQty()" (input)="damagedQty.set($any($event.target).value)" />
+        </label>
+        <label class="field grow">
+          <span>What happened</span>
+          <input type="text" list="reasons" autocomplete="off" placeholder="Stain on the sleeve" [value]="damagedReason()" (input)="damagedReason.set($any($event.target).value)" />
+        </label>
+        <button class="btn" type="button" [disabled]="busy()" (click)="markDamaged()">Mark damaged</button>
+      </div>
+    </section>
+  }
+
+  @if (damaged > 0) {
+    <section class="action">
+      <h3>Write off damaged</h3>
+      <p class="muted">For ones that are thrown away, or not worth fixing.</p>
+      <div class="fields">
+        <label class="field small">
+          <span>How many</span>
+          <input type="text" inputmode="numeric" autocomplete="off" [value]="writeOffQty()" (input)="writeOffQty.set($any($event.target).value)" />
+        </label>
+        <label class="field grow">
+          <span>Reason</span>
+          <input type="text" list="reasons" autocomplete="off" placeholder="Beyond repair" [value]="writeOffReason()" (input)="writeOffReason.set($any($event.target).value)" />
+        </label>
+        <button class="btn btn-danger" type="button" [disabled]="busy()" (click)="writeOff()">Write off</button>
+      </div>
+    </section>
+  }
+
+  <!-- Low stock -->
+  <section class="action">
+    <h3>Low-stock warning</h3>
+    <div class="fields">
+      <label class="field small">
+        <span>Warn at or below</span>
+        <input type="text" inputmode="numeric" autocomplete="off" [value]="minStock()" (input)="minStock.set($any($event.target).value)" />
+      </label>
+      <button class="btn" type="button" [disabled]="busy()" (click)="saveMin()">Save</button>
+    </div>
+  </section>
+
+  <datalist id="reasons">
+    <option value="Stock check"></option>
+    <option value="Lost"></option>
+    <option value="Found"></option>
+    <option value="Damaged in storage"></option>
+    <option value="Counted wrong when received"></option>
+  </datalist>
+
+  <!-- History -->
+  <section class="action">
+    <h3>History</h3>
+    @if (history() === null) {
+      <p class="muted">Loading…</p>
+    } @else if (!history()!.length) {
+      <p class="muted">Nothing has happened to this size yet.</p>
+    } @else {
+      <ul class="history">
+        @for (m of history(); track m.id) {
+          <li>
+            <div class="top">
+              <strong>{{ label(m) }}</strong>
+              <span class="muted when">{{ when(m.created_at) }}@if (who(m)) { · {{ who(m) }} }</span>
+            </div>
+            <div class="muted fx">{{ m.qty < 0 ? -m.qty : m.qty }} · {{ effects(m) }}</div>
+            @if (m.note) {
+              <div class="note">“{{ m.note }}”</div>
+            }
+            @if (m.ref_type === 'purchase' && m.ref_id) {
+              <a class="ref" [routerLink]="['/admin/stock/purchases', m.ref_id]">Buying trip #{{ m.ref_id }}</a>
+              @if (m.unit_cost_eur !== null) {
+                <span class="muted"> · cost {{ money(m.unit_cost_eur) }} each</span>
+              }
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

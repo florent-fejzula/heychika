@@ -1,0 +1,75 @@
+.intro,
+.notice {
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+
+  &.off {
+    opacity: 0.55;
+  }
+
+  code {
+    font-size: 0.8125rem;
+  }
+}
+
+.type {
+  font-size: 0.75rem;
+  display: none;
+
+  @media (min-width: 700px) {
+    display: inline;
+  }
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+}
+
+.name {
+  min-height: 36px;
+  padding: 4px 8px;
+}
+
+.hex {
+  width: 44px;
+  min-height: 36px;
+  padding: 2px;
+}
+
+.add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+
+  input,
+  select {
+    flex: 1 1 140px;
+    min-height: 40px;
+  }
+
+  .short {
+    flex: 0 0 72px;
+    text-transform: uppercase;
+  }
+
+  .hex {
+    flex: 0 0 52px;
+  }
+
+  .btn {
+    min-height: 40px;
+  }
+}

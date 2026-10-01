@@ -1,0 +1,42 @@
+.landing {
+  min-height: 100dvh;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.wordmark {
+  font-size: clamp(3rem, 14vw, 5rem);
+  line-height: 1;
+}
+
+.tagline {
+  margin: 20px 0 0;
+  font-size: 1.125rem;
+  color: var(--ink-soft);
+}
+
+.muted {
+  margin: 4px 0 0;
+}
+
+.soon {
+  margin: 40px 0 16px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.social {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}

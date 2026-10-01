@@ -1,0 +1,49 @@
+<section class="card stack">
+  <h2>Photos</h2>
+
+  <label class="btn drop">
+    <input type="file" accept="image/*" multiple (change)="upload($any($event.target))" [disabled]="progress() !== null" />
+    {{ progress() ?? (images().length ? 'Add more photos' : 'Add photos') }}
+  </label>
+  <p class="muted hint">
+    Take them on the phone or pick from the gallery. They’re shrunk automatically. The first photo
+    is the cover; change it with “Make cover”.
+  </p>
+
+  @if (message(); as m) {
+    <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
+  }
+
+  @if (loaded() && images().length) {
+    <ul class="grid">
+      @for (image of images(); track image.id; let i = $index; let first = $first; let last = $last) {
+        <li class="tile">
+          <div class="frame">
+            <img [src]="url(image)" alt="Photo {{ i + 1 }}" loading="lazy" />
+            @if (image.is_primary) {
+              <span class="badge cover">Cover</span>
+            }
+          </div>
+
+          @if (colours().length) {
+            <select aria-label="Colour shown in photo {{ i + 1 }}" [value]="image.color_id ?? ''" (change)="tag(image, $any($event.target).value)">
+              <option value="">Any colour</option>
+              @for (c of colours(); track c.id) {
+                <option [value]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          }
+
+          <div class="tools">
+            <button class="btn btn-small" type="button" aria-label="Move earlier" [disabled]="first" (click)="move(image, -1)">←</button>
+            <button class="btn btn-small" type="button" aria-label="Move later" [disabled]="last" (click)="move(image, 1)">→</button>
+            @if (!image.is_primary) {
+              <button class="btn btn-small" type="button" (click)="makeCover(image)">Make cover</button>
+            }
+            <button class="btn btn-small btn-danger" type="button" aria-label="Delete photo {{ i + 1 }}" (click)="remove(image)">✕</button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

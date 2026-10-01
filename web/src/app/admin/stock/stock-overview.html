@@ -1,0 +1,78 @@
+<div class="stack">
+  <h1>Stock</h1>
+  <app-stock-tabs />
+
+  @if (error(); as message) {
+    <p class="notice notice-error">{{ message }}</p>
+  } @else if (rows() === null) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <section class="tiles" aria-label="Totals">
+      <div class="card tile"><span class="label">On the shelf</span><strong>{{ totals().shelf }}</strong><span class="muted">items</span></div>
+      <div class="card tile"><span class="label">Worth</span><strong>{{ money(totals().value) }}</strong><span class="muted">at cost</span></div>
+      <div class="card tile"><span class="label">On the road</span><strong>{{ totals().road }}</strong><span class="muted">out for delivery</span></div>
+      <div class="card tile"><span class="label">Damaged</span><strong>{{ totals().damaged }}</strong><span class="muted">not for sale</span></div>
+    </section>
+
+    @if (!rows()!.length) {
+      <section class="card stack empty">
+        <h2>No stock yet</h2>
+        <p class="muted">Add your designs under Products, then record a buying trip to put items on the shelf.</p>
+        <div class="toolbar">
+          <a class="btn" routerLink="/admin/products">Products</a>
+          <a class="btn btn-primary" routerLink="/admin/stock/purchases/new">New buying trip</a>
+        </div>
+      </section>
+    } @else {
+      <input type="search" placeholder="Find a design, colour or SKU" aria-label="Find in stock"
+             [value]="search()" (input)="search.set($any($event.target).value)" />
+
+      <div class="chips" role="group" aria-label="Show">
+        @for (f of filters; track f.id) {
+          <label class="chip">
+            <input type="radio" name="stock-filter" [checked]="filter() === f.id" (change)="filter.set(f.id)" />
+            {{ f.label }}
+            @if (f.id !== 'all' && counts()[f.id]) {
+              <span class="n">{{ counts()[f.id] }}</span>
+            }
+          </label>
+        }
+      </div>
+
+      @for (g of groups(); track g.id) {
+        <section class="card group">
+          <header>
+            <a [routerLink]="['/admin/products', g.id]">{{ g.name }}</a>
+            <span class="muted">{{ g.shelf }} on the shelf</span>
+          </header>
+
+          @for (r of g.rows; track r.id) {
+            <button class="row" type="button" [class.off]="!r.active" [attr.aria-expanded]="open() === r.id" (click)="toggle(r.id)">
+              <span class="what">
+                <span class="swatch" [style.background]="r.color.hex ?? '#ccc'"></span>
+                {{ r.color.name }} · <strong>{{ r.size.label }}</strong>
+                @if (isOut(r)) {
+                  <span class="badge badge-muted">Sold out</span>
+                } @else if (isLow(r)) {
+                  <span class="badge">Running low</span>
+                }
+              </span>
+              <span class="nums">
+                <strong>{{ s(r).qty_available }}</strong>
+                <span class="muted">available</span>
+                @if (s(r).qty_reserved) { <span class="muted">· {{ s(r).qty_reserved }} reserved</span> }
+                @if (s(r).qty_in_transit) { <span class="muted">· {{ s(r).qty_in_transit }} on the road</span> }
+                @if (s(r).qty_damaged) { <span class="muted">· {{ s(r).qty_damaged }} damaged</span> }
+              </span>
+            </button>
+            @if (open() === r.id && current(r.id); as row) {
+              <app-stock-detail [row]="row" (changed)="reload()" />
+            }
+          }
+        </section>
+      } @empty {
+        <p class="muted">Nothing matches.</p>
+      }
+    }
+  }
+</div>

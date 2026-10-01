@@ -1,0 +1,154 @@
+<div class="stack">
+  <h1>Settings</h1>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted">Loading…</p>
+    }
+    @case ('error') {
+      <p class="notice notice-error">Couldn’t load settings. Check your connection and refresh.</p>
+    }
+    @case ('ready') {
+      <form class="stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <!-- Exchange rates -->
+        <section class="card stack">
+          <div>
+            <h2>Exchange rates</h2>
+            <p class="muted hint">Prices are set in euros. Customers in North Macedonia and Albania see them converted and rounded up.</p>
+          </div>
+
+          @if (fxAgeDays() >= staleFxDays) {
+            <p class="notice">Rates were last changed {{ fxAgeDays() }} days ago. The lek moves — worth checking it’s still right.</p>
+          }
+
+          <div class="grid-2">
+            <label class="field">
+              <span>MKD per €1</span>
+              <input type="number" inputmode="decimal" step="any" formControlName="mkd_per_eur" />
+            </label>
+            <label class="field">
+              <span>Round MKD up to</span>
+              <input type="number" inputmode="decimal" step="any" formControlName="mkd_rounding" />
+            </label>
+            <label class="field">
+              <span>ALL per €1</span>
+              <input type="number" inputmode="decimal" step="any" formControlName="all_per_eur" />
+            </label>
+            <label class="field">
+              <span>Round ALL up to</span>
+              <input type="number" inputmode="decimal" step="any" formControlName="all_rounding" />
+            </label>
+          </div>
+
+          <div class="preview">
+            <label class="field sample">
+              <span>A dress at</span>
+              <input type="number" inputmode="decimal" step="any" min="0"
+                     [value]="samplePrice()" (input)="setSample($any($event.target).value)" />
+            </label>
+            <div class="shows" aria-live="polite">
+              @if (preview(); as p) {
+                <span>Kosovo <strong>{{ p[0] }}</strong></span>
+                <span>N. Macedonia <strong>{{ p[1] }}</strong></span>
+                <span>Albania <strong>{{ p[2] }}</strong></span>
+              } @else {
+                <span class="muted">Fill in the rates to see a preview.</span>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Delivery -->
+        <section class="card stack" formArrayName="zones">
+          <div>
+            <h2>Delivery</h2>
+            <p class="muted hint">Everything ships from Prishtina. Fees are in euros and convert like prices do.</p>
+          </div>
+
+          @for (zone of zones.controls; track zone.controls.country.value; let i = $index) {
+            <fieldset class="zone" [formGroupName]="i">
+              <legend>
+                <label class="toggle">
+                  <input type="checkbox" formControlName="active" />
+                  {{ countryName[zone.controls.country.value] }}
+                </label>
+              </legend>
+              <div class="grid-3">
+                <label class="field">
+                  <span>Fee (€)</span>
+                  <input type="number" inputmode="decimal" step="any" min="0" formControlName="fee_eur" />
+                </label>
+                <label class="field">
+                  <span>Free over (€)</span>
+                  <input type="number" inputmode="decimal" step="any" min="0" formControlName="free_over_eur" placeholder="—" />
+                </label>
+                <label class="field">
+                  <span>Takes</span>
+                  <input type="text" formControlName="est_days" placeholder="2–4 days" />
+                </label>
+              </div>
+            </fieldset>
+          }
+        </section>
+
+        <!-- Pricing -->
+        <section class="card stack">
+          <h2>Pricing</h2>
+          <label class="field narrow">
+            <span>Suggested markup (%)</span>
+            <input type="number" inputmode="decimal" step="any" min="0" formControlName="default_markup_pct" />
+            <small>Used to suggest a selling price from what an item cost. You can always change the price.</small>
+          </label>
+        </section>
+
+        <!-- Contact -->
+        <section class="card stack">
+          <h2>Shop details</h2>
+          <label class="field">
+            <span>Shop name</span>
+            <input type="text" formControlName="store_name" />
+          </label>
+          <div class="grid-2">
+            <label class="field">
+              <span>Phone</span>
+              <input type="tel" formControlName="contact_phone" autocomplete="tel" />
+            </label>
+            <label class="field">
+              <span>Email</span>
+              <input type="email" formControlName="contact_email" />
+            </label>
+          </div>
+          <label class="field">
+            <span>Instagram</span>
+            <input type="url" formControlName="instagram_url" placeholder="https://instagram.com/…" />
+          </label>
+          <label class="field">
+            <span>TikTok</span>
+            <input type="url" formControlName="tiktok_url" placeholder="https://tiktok.com/@…" />
+          </label>
+          <label class="field">
+            <span>Facebook</span>
+            <input type="url" formControlName="facebook_url" placeholder="https://facebook.com/…" />
+          </label>
+        </section>
+
+        <section class="card stack">
+          <h2>Categories, colours &amp; sizes</h2>
+          <p class="muted hint">The choices offered when adding a design. Add a new colour or category here.</p>
+          <div><a class="btn" routerLink="/admin/lists">Manage lists</a></div>
+        </section>
+
+        <div class="actions">
+          @if (message(); as m) {
+            <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">
+              {{ m.text }}
+            </p>
+          }
+          <button class="btn btn-primary" type="submit" [disabled]="saving() || form.pristine">
+            {{ saving() ? 'Saving…' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+    }
+  }
+</div>

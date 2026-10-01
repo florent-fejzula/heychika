@@ -1,0 +1,91 @@
+p {
+  margin: 0;
+}
+
+.notice {
+  margin: 0;
+}
+
+.pick {
+  display: grid;
+  gap: 8px;
+
+  @media (min-width: 700px) {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+.grid-wrap {
+  overflow-x: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.grid {
+  border-collapse: collapse;
+  min-width: 100%;
+
+  th,
+  td {
+    padding: 4px;
+    text-align: center;
+    font-size: 0.875rem;
+  }
+
+  thead th {
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
+  tbody th {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 92px;
+    padding-left: 0;
+    text-align: left;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  td input {
+    width: 52px;
+    min-height: 40px;
+    padding: 4px;
+    text-align: center;
+  }
+}
+
+.none {
+  color: var(--muted);
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .field {
+    flex: 1 1 160px;
+  }
+}
+
+.inline {
+  display: flex;
+  gap: 8px;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}

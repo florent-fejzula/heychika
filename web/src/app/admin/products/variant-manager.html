@@ -1,0 +1,111 @@
+<section class="card stack">
+  <div class="page-head">
+    <h2>Colours &amp; sizes</h2>
+    @if (variants().length) {
+      <a class="btn btn-small" routerLink="/admin/labels" [queryParams]="{ product: productId() }">Print labels</a>
+    }
+  </div>
+
+  <!-- Add -->
+  <div class="stack add">
+    <div class="group">
+      <span class="label">Colours</span>
+      <div class="chips">
+        @for (c of offeredColours(); track c.id) {
+          <label class="chip">
+            <input type="checkbox" [checked]="pickedColours().has(c.id)" (change)="toggleColour(c.id)" />
+            <span class="swatch" [style.background]="c.hex ?? 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'"></span>
+            {{ c.name }}
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="label">Sizes</span>
+      <div class="chips">
+        @for (s of offeredSizes(); track s.id) {
+          <label class="chip">
+            <input type="checkbox" [checked]="pickedSizes().has(s.id)" [disabled]="isTaken(s.id)" (change)="toggleSize(s.id)" />
+            {{ s.label }}
+          </label>
+        }
+      </div>
+      <label class="check">
+        <input type="checkbox" [checked]="showAllSizes()" (change)="showAllSizes.set(!showAllSizes())" />
+        Show all kinds of sizes
+      </label>
+    </div>
+
+    <div class="add-row">
+      <label class="field">
+        <span>Price (€)</span>
+        <input type="text" inputmode="decimal" placeholder="29.90" autocomplete="off"
+               [value]="newPrice()" (input)="newPrice.set($any($event.target).value)" />
+      </label>
+      <button class="btn btn-primary" type="button" [disabled]="busy() || !toAdd().length" (click)="add()">
+        @if (toAdd().length) {
+          Add {{ toAdd().length }} {{ toAdd().length === 1 ? 'size' : 'sizes' }}
+        } @else {
+          Tick colours and sizes
+        }
+      </button>
+    </div>
+  </div>
+
+  @if (message(); as m) {
+    <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
+  }
+
+  <!-- Existing -->
+  @if (!loaded()) {
+    <p class="muted">Loading…</p>
+  } @else if (!variants().length) {
+    <p class="muted">No sizes yet. Tick a colour and the sizes it comes in, then add them.</p>
+  } @else {
+    <div class="all">
+      <label class="field">
+        <span>Same price for every size</span>
+        <input type="text" inputmode="decimal" placeholder="€" autocomplete="off"
+               [value]="allPrice()" (input)="allPrice.set($any($event.target).value)" />
+      </label>
+      <button class="btn" type="button" [disabled]="busy()" (click)="setAll()">Apply</button>
+    </div>
+
+    @for (g of groups(); track g.colour.code) {
+      <div class="colour">
+        <h3><span class="swatch" [style.background]="g.colour.hex ?? '#ccc'"></span> {{ g.colour.name }}</h3>
+        @for (v of g.rows; track v.id) {
+          <div class="row" [class.off]="!v.active">
+            <div class="id">
+              <strong>{{ v.size.label }}</strong>
+              <code>{{ v.sku }}</code>
+            </div>
+            <div class="price">
+              <input type="text" inputmode="decimal" aria-label="Price in euros for {{ v.sku }}" autocomplete="off"
+                     [value]="v.price_eur" (change)="savePrice(v, $any($event.target).value)" />
+              @if (margin(v); as pct) {
+                <small class="muted">cost {{ money(v.cost_eur) }} · {{ pct }}% margin</small>
+              }
+            </div>
+            <div class="stock">
+              <strong>{{ units(v) }}</strong>
+              <small class="muted">in stock</small>
+            </div>
+            <div class="actions">
+              <label class="check">
+                <input type="checkbox" [checked]="v.active" (change)="setActive(v, $any($event.target).checked)" />
+                Active
+              </label>
+              @if (v.locked) {
+                <span class="badge badge-muted" title="Has stock or sales history, so it can’t be removed">In use</span>
+              } @else {
+                <button class="btn btn-small btn-danger" type="button" [disabled]="busy()" (click)="remove(v)">Remove</button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,78 @@
+<div class="stack">
+  <div class="page-head">
+    <h1>Products</h1>
+    <a class="btn btn-primary" routerLink="/admin/products/new">New design</a>
+  </div>
+
+  @if (error(); as message) {
+    <p class="notice notice-error">{{ message }}</p>
+  } @else if (products() === null) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <div class="filters">
+      <input type="search" placeholder="Search name or code" aria-label="Search products"
+             [value]="search()" (input)="search.set($any($event.target).value)" />
+      <select aria-label="Category" [value]="category()" (change)="category.set($any($event.target).value)">
+        <option value="">All categories</option>
+        @for (c of categories(); track c.code) {
+          <option [value]="c.code">{{ c.name }}</option>
+        }
+      </select>
+      <select aria-label="Status" [value]="status()" (change)="setStatus($any($event.target).value)">
+        <option value="">Draft &amp; active</option>
+        <option value="active">Active only</option>
+        <option value="draft">Drafts only</option>
+        <option value="archived">Archived</option>
+      </select>
+    </div>
+
+    @if (products()!.length === 0) {
+      <section class="card stack empty">
+        <h2>No designs yet</h2>
+        <p class="muted">A design is one style, like “black satin wrap dress”. You add its colours and sizes on the next screen.</p>
+        <a class="btn btn-primary" routerLink="/admin/products/new">Add the first design</a>
+      </section>
+    } @else if (shown().length === 0) {
+      <p class="muted">Nothing matches. Try clearing the search or filters.</p>
+    } @else {
+      <ul class="list">
+        @for (p of shown(); track p.id) {
+          <li>
+            <a class="card item" [routerLink]="['/admin/products', p.id]">
+              <span class="thumb">
+                @if (cover(p); as src) {
+                  <img [src]="src" alt="" loading="lazy" />
+                }
+              </span>
+              <span class="body">
+                <strong>{{ p.name }}</strong>
+                <span class="muted meta">{{ p.category.name }} · {{ code(p) }}</span>
+                <span class="tags">
+                  @if (p.status !== 'active') {
+                    <span class="badge badge-muted">{{ statusLabel(p.status) }}</span>
+                  }
+                  @if (p.status === 'active' && p.show_online) {
+                    <span class="badge badge-ok">Online</span>
+                  }
+                  @if (p.featured) {
+                    <span class="badge">Featured</span>
+                  }
+                  @if (!p.variants.length) {
+                    <span class="badge badge-muted">No sizes yet</span>
+                  }
+                </span>
+              </span>
+              <span class="numbers">
+                <span>{{ price(p) }}</span>
+                <span class="muted">{{ units(p) }} in stock</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+      <p class="muted count">{{ shown().length }} {{ shown().length === 1 ? 'design' : 'designs' }}</p>
+    }
+
+    <p class="muted"><a routerLink="/admin/lists">Categories, colours &amp; sizes</a></p>
+  }
+</div>

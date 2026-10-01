@@ -1,0 +1,87 @@
+<div class="stack">
+  <a class="back" routerLink="/admin/products">← Products</a>
+  <h1>Categories, colours &amp; sizes</h1>
+  <p class="muted intro">
+    These are the choices offered when adding a design. A code is part of every SKU, so once something
+    uses it the code is locked; the name can always change. To stop offering one, switch it off instead of deleting it.
+  </p>
+
+  @if (message(); as m) {
+    <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
+  }
+
+  @if (!loaded()) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <!-- Categories -->
+    <section class="card stack">
+      <h2>Categories</h2>
+      @for (c of categories(); track c.id) {
+        <div class="row" [class.off]="!c.active">
+          <code>{{ c.code }}</code>
+          <input class="name" type="text" [value]="c.name" [attr.aria-label]="'Name of ' + c.code" (change)="rename('categories', c.id, $any($event.target).value)" />
+          <span class="muted type">{{ typeLabel(c.size_type) }}</span>
+          <label class="check"><input type="checkbox" [checked]="c.active" (change)="setActive('categories', c.id, $any($event.target).checked)" /> On</label>
+          <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'Delete ' + c.name" (click)="remove('categories', c.id, c.name)">✕</button>
+        </div>
+      }
+      <form class="add" (submit)="addCategory($event)">
+        <input name="code" class="short" type="text" placeholder="DR" maxlength="3" aria-label="New category code" autocomplete="off" />
+        <input name="name" type="text" placeholder="Dresses" aria-label="New category name" autocomplete="off" />
+        <select name="type" aria-label="Size kind">
+          @for (t of sizeTypes; track t[0]) {
+            <option [value]="t[0]">{{ t[1] }}</option>
+          }
+        </select>
+        <button class="btn btn-small" type="submit">Add</button>
+      </form>
+      <small class="muted">Code: {{ rule.categories.hint }}.</small>
+    </section>
+
+    <!-- Colours -->
+    <section class="card stack">
+      <h2>Colours</h2>
+      @for (c of colours(); track c.id) {
+        <div class="row" [class.off]="!c.active">
+          <code>{{ c.code }}</code>
+          <input class="name" type="text" [value]="c.name" [attr.aria-label]="'Name of ' + c.code" (change)="rename('colors', c.id, $any($event.target).value)" />
+          <input class="hex" type="color" [value]="c.hex ?? '#cccccc'" [attr.aria-label]="'Swatch for ' + c.name" (change)="setHex(c.id, $any($event.target).value)" />
+          <label class="check"><input type="checkbox" [checked]="c.active" (change)="setActive('colors', c.id, $any($event.target).checked)" /> On</label>
+          <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'Delete ' + c.name" (click)="remove('colors', c.id, c.name)">✕</button>
+        </div>
+      }
+      <form class="add" (submit)="addColour($event)">
+        <input name="code" class="short" type="text" placeholder="LIL" maxlength="3" aria-label="New colour code" autocomplete="off" />
+        <input name="name" type="text" placeholder="Lilac" aria-label="New colour name" autocomplete="off" />
+        <input name="hex" class="hex" type="color" value="#c8a2c8" aria-label="New colour swatch" />
+        <button class="btn btn-small" type="submit">Add</button>
+      </form>
+      <small class="muted">Code: {{ rule.colors.hint }}.</small>
+    </section>
+
+    <!-- Sizes -->
+    <section class="card stack">
+      <h2>Sizes</h2>
+      @for (s of sizes(); track s.id) {
+        <div class="row" [class.off]="!s.active">
+          <code>{{ s.code }}</code>
+          <input class="name" type="text" [value]="s.label" [attr.aria-label]="'Label of ' + s.code" (change)="rename('sizes', s.id, $any($event.target).value)" />
+          <span class="muted type">{{ typeLabel(s.size_type) }}</span>
+          <label class="check"><input type="checkbox" [checked]="s.active" (change)="setActive('sizes', s.id, $any($event.target).checked)" /> On</label>
+          <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'Delete ' + s.label" (click)="remove('sizes', s.id, s.label)">✕</button>
+        </div>
+      }
+      <form class="add" (submit)="addSize($event)">
+        <input name="code" class="short" type="text" placeholder="46" maxlength="5" aria-label="New size code" autocomplete="off" />
+        <input name="name" type="text" placeholder="46" aria-label="New size label" autocomplete="off" />
+        <select name="type" aria-label="Size kind">
+          @for (t of sizeTypes; track t[0]) {
+            <option [value]="t[0]">{{ t[1] }}</option>
+          }
+        </select>
+        <button class="btn btn-small" type="submit">Add</button>
+      </form>
+      <small class="muted">Code: {{ rule.sizes.hint }}.</small>
+    </section>
+  }
+</div>

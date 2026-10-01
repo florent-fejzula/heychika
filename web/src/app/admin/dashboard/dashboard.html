@@ -1,0 +1,60 @@
+<div class="stack">
+  <h1>Today</h1>
+
+  @if (error()) {
+    <p class="notice notice-error">Couldn’t load the numbers. Check your connection and refresh.</p>
+  } @else if (summary(); as s) {
+    <section class="tiles" aria-label="Summary">
+      <div class="card tile">
+        <span class="label">Designs</span>
+        <strong>{{ s.designs }}</strong>
+      </div>
+      <div class="card tile">
+        <span class="label">On the shelf</span>
+        <strong>{{ s.unitsOnShelf }}</strong>
+        <span class="muted">units</span>
+      </div>
+      <div class="card tile">
+        <span class="label">Stock value</span>
+        <strong>{{ s.stockValue }}</strong>
+        <span class="muted">at cost</span>
+      </div>
+      <div class="card tile">
+        <span class="label">Waiting for cash</span>
+        <strong>{{ s.awaitingCashValue }}</strong>
+        <span class="muted">{{ s.awaitingCash }} {{ s.awaitingCash === 1 ? 'order' : 'orders' }} out for delivery</span>
+      </div>
+    </section>
+
+    @if (s.unitsOnTheRoad > 0) {
+      <p class="muted">{{ s.unitsOnTheRoad }} {{ s.unitsOnTheRoad === 1 ? 'item is' : 'items are' }} on the road to customers.</p>
+    }
+
+    @if (s.lowStock.length) {
+      <section class="card stack">
+        <h2>Running low</h2>
+        <ul class="low">
+          @for (item of s.lowStock; track item.sku) {
+            <li>
+              <code>{{ item.sku }}</code>
+              <span [class.out]="item.available === 0">{{ item.available === 0 ? 'Sold out' : item.available + ' left' }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (s.designs === 0) {
+      <section class="card stack empty">
+        <h2>Nothing in the shop yet</h2>
+        <p class="muted">
+          Products, stock and orders are being built next. Meanwhile, check the exchange rates and
+          delivery fees are right.
+        </p>
+        <a class="btn" routerLink="/admin/settings">Open settings</a>
+      </section>
+    }
+  } @else {
+    <p class="muted">Loading…</p>
+  }
+</div>

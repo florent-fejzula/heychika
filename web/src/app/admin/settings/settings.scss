@@ -1,0 +1,82 @@
+.hint {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+}
+
+.notice {
+  margin: 0;
+}
+
+input.ng-invalid.ng-touched {
+  border-color: var(--danger);
+}
+
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.sample {
+  width: 120px;
+}
+
+.shows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+
+  strong {
+    margin-left: 4px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.zone {
+  margin: 0;
+  padding: 12px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+
+  legend {
+    padding: 0;
+    font-weight: 500;
+  }
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.narrow {
+  max-width: 260px;
+}
+
+// Save stays reachable without scrolling back up, above the phone tab bar.
+.actions {
+  position: sticky;
+  bottom: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+
+  @media (min-width: 900px) {
+    bottom: 16px;
+  }
+}

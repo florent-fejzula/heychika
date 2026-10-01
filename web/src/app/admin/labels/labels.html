@@ -1,0 +1,116 @@
+<div class="stack">
+  <div class="no-print stack">
+    <div class="page-head">
+      <h1>Labels</h1>
+      <button class="btn btn-primary" type="button" [disabled]="!total()" (click)="print()">
+        Print {{ total() }} {{ total() === 1 ? 'label' : 'labels' }}
+      </button>
+    </div>
+
+    @if (error(); as message) {
+      <p class="notice notice-error">{{ message }}</p>
+    } @else if (variants() === null) {
+      <p class="muted">Loading…</p>
+    } @else {
+      <section class="card stack">
+        <label class="field">
+          <span>Label paper</span>
+          <select [value]="layoutId()" (change)="layoutId.set($any($event.target).value)">
+            @for (l of layouts; track l.id) {
+              <option [value]="l.id">{{ l.name }}</option>
+            }
+          </select>
+          <small>Pick the one that matches the stickers you bought. When printing, set scale to 100% (not “fit to page”).</small>
+        </label>
+        <div class="grid-2">
+          @if (perPage() > 1) {
+            <label class="field">
+              <span>Labels already used on the sheet</span>
+              <input type="number" inputmode="numeric" min="0" [max]="perPage() - 1" [value]="skip()"
+                     (input)="setSkip($any($event.target).value)" />
+            </label>
+          }
+          <label class="check">
+            <input type="checkbox" [checked]="showPrice()" (change)="showPrice.set(!showPrice())" />
+            Print the price on labels
+          </label>
+        </div>
+      </section>
+
+      <div class="toolbar">
+        <input class="grow" type="search" placeholder="Find a design or SKU" aria-label="Find a design or SKU"
+               [value]="search()" (input)="search.set($any($event.target).value)" />
+        @if (total()) {
+          <button class="btn" type="button" (click)="clear()">Clear all</button>
+        }
+      </div>
+
+      @for (b of blocks(); track b.id) {
+        <section class="card stack">
+          <div class="page-head">
+            <h2>{{ b.name }}</h2>
+            <span class="toolbar">
+              <button class="btn btn-small" type="button" (click)="oneEach(b)">1 each</button>
+              <button class="btn btn-small" type="button" (click)="matchStock(b)">As in stock</button>
+              <button class="btn btn-small" type="button" (click)="clear(b)">None</button>
+            </span>
+          </div>
+          @for (v of b.variants; track v.id) {
+            <div class="line" [class.off]="!v.active">
+              <span class="what">
+                {{ v.color.name }} · <strong>{{ v.size.label }}</strong>
+                <small class="muted">{{ v.sku }} · {{ v.stock?.qty_physical ?? 0 }} in stock</small>
+              </span>
+              <span class="stepper">
+                <button class="btn btn-small" type="button" aria-label="One fewer" (click)="step(v.id, -1)">−</button>
+                <input type="number" inputmode="numeric" min="0" max="99" aria-label="Copies of {{ v.sku }}"
+                       [value]="copies()[v.id] ?? 0" (change)="setCopies(v.id, $any($event.target).value)" />
+                <button class="btn btn-small" type="button" aria-label="One more" (click)="step(v.id, 1)">+</button>
+              </span>
+            </div>
+          }
+        </section>
+      } @empty {
+        <p class="muted">
+          @if (variants()!.length === 0) {
+            Nothing to print yet. Add a design with colours and sizes first.
+          } @else {
+            Nothing matches that search.
+          }
+        </p>
+      }
+    }
+  </div>
+
+  <!-- What gets printed. On screen it is a preview at real size; when printing it is all that remains. -->
+  @if (total()) {
+    <p class="muted no-print">Preview, {{ pages().length }} {{ pages().length === 1 ? 'page' : 'pages' }}. Scroll sideways if it is wider than your screen.</p>
+    <div class="sheets">
+      @for (page of pages(); track $index) {
+        <div class="page"
+             [style.width.mm]="layout().pageWidth" [style.height.mm]="layout().pageHeight"
+             [style.padding-top.mm]="layout().marginTop" [style.padding-left.mm]="layout().marginLeft"
+             [style.grid-template-columns]="'repeat(' + layout().columns + ', ' + layout().width + 'mm)'"
+             [style.grid-auto-rows.mm]="layout().height"
+             [style.column-gap.mm]="layout().gapX" [style.row-gap.mm]="layout().gapY">
+          @for (item of page; track $index) {
+            @if (item) {
+              <div class="label">
+                <div class="name">{{ item.product.name }}</div>
+                <div class="opts">{{ item.color.name }} · {{ item.size.label }}@if (showPrice()) { · {{ price(item) }}}</div>
+                @if (barcode(item); as src) {
+                  <img [src]="src" alt="Barcode {{ item.barcode }}" />
+                } @else {
+                  <div class="pending"></div>
+                }
+                <div class="sku">{{ item.sku }}</div>
+              </div>
+            } @else {
+              <div class="gap"></div>
+            }
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

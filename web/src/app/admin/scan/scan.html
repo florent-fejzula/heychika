@@ -1,0 +1,71 @@
+<div class="stack">
+  <h1>Scan</h1>
+
+  <section class="card stack">
+    <form class="entry" (submit)="$event.preventDefault(); lookup(code())">
+      <label class="field grow">
+        <span>Scan a sticker, or type a SKU</span>
+        <!-- A hardware scanner types the code and presses Enter; this form catches that. -->
+        <input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" #entry
+               placeholder="DR-001-BLK-M" [value]="code()" (input)="code.set($any($event.target).value)" />
+      </label>
+      <button class="btn btn-primary" type="submit" [disabled]="busy() || !code().trim()">Look up</button>
+    </form>
+
+    <!-- Always in the page (just hidden): the scanner needs a stable element to attach to. -->
+    <div class="camera" [hidden]="!cameraOn()">
+      <video #video playsinline muted></video>
+      <div class="aim" aria-hidden="true"></div>
+    </div>
+    @if (cameraOn()) {
+      <button class="btn" type="button" (click)="stopCamera()">Stop camera</button>
+    } @else {
+      <button class="btn" type="button" (click)="startCamera()">Scan with the camera</button>
+    }
+
+    @if (cameraError(); as message) {
+      <p class="notice notice-error">{{ message }}</p>
+    }
+  </section>
+
+  @if (error(); as message) {
+    <p class="notice notice-error" role="alert">{{ message }}</p>
+  }
+
+  @if (notFound(); as missing) {
+    <p class="notice" role="status">Nothing found for <code>{{ missing }}</code>. Check the sticker, or search by name in Products.</p>
+  }
+
+  @if (result(); as r) {
+    <section class="card stack" aria-live="polite">
+      <div class="head">
+        <div>
+          <h2>{{ r.product.name }}</h2>
+          <p class="muted what">
+            <span class="swatch" [style.background]="r.color.hex ?? '#ccc'"></span>
+            {{ r.color.name }} · <strong>{{ r.size.label }}</strong>
+          </p>
+        </div>
+        <strong class="price">{{ money(r.price_eur) }}</strong>
+      </div>
+
+      @if (!r.active) {
+        <p class="notice">This size is marked inactive, so it is not for sale.</p>
+      }
+
+      <dl class="levels">
+        <div><dt>On the shelf</dt><dd>{{ r.stock?.qty_physical ?? 0 }}</dd></div>
+        <div><dt>Reserved</dt><dd>{{ r.stock?.qty_reserved ?? 0 }}</dd></div>
+        <div class="key"><dt>Available</dt><dd>{{ r.stock?.qty_available ?? 0 }}</dd></div>
+        <div><dt>On the road</dt><dd>{{ r.stock?.qty_in_transit ?? 0 }}</dd></div>
+        <div><dt>Damaged</dt><dd>{{ r.stock?.qty_damaged ?? 0 }}</dd></div>
+      </dl>
+
+      <p class="muted sku"><code>{{ r.sku }}</code></p>
+      <div class="toolbar">
+        <a class="btn" routerLink="/admin/stock" [queryParams]="{ find: r.sku }">Stock details</a>
+        <a class="btn" [routerLink]="['/admin/products', r.product.id]">Open design</a>
+      </div>
+    </section>
+  }
+</div>

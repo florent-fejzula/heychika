@@ -1,0 +1,31 @@
+<main class="login">
+  <h1 class="brand wordmark">Hey Chika</h1>
+  <p class="muted">Shop admin</p>
+
+  @if (!configured) {
+    <p class="notice notice-error">
+      The app isn’t connected to a database yet. Add the Supabase URL and key to
+      <code>src/environments</code> — see the README.
+    </p>
+  }
+
+  <form class="card stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <label class="field">
+      <span>Email</span>
+      <input type="email" formControlName="email" autocomplete="username" inputmode="email" />
+    </label>
+
+    <label class="field">
+      <span>Password</span>
+      <input type="password" formControlName="password" autocomplete="current-password" />
+    </label>
+
+    @if (error(); as message) {
+      <p class="notice notice-error" role="alert">{{ message }}</p>
+    }
+
+    <button class="btn btn-primary btn-block" type="submit" [disabled]="busy()">
+      {{ busy() ? 'Signing in…' : 'Sign in' }}
+    </button>
+  </form>
+</main>

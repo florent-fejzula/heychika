@@ -1,0 +1,326 @@
+// Shared look for shop and admin. Components keep only their own layout;
+// anything reused (buttons, fields, cards) lives here.
+
+:root {
+  --ink: #1f1a1c;
+  --ink-soft: #5e5458;
+  --muted: #8b8185;
+  --paper: #fbf8f6;
+  --surface: #ffffff;
+  --line: #ebe4e0;
+  --accent: #b5566f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f6e7eb;
+  --ok: #2e7d4f;
+  --danger: #b3261e;
+  --danger-soft: #fbeaea;
+
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-brand: 'Cormorant Garamond', Georgia, serif;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --gutter: 16px;
+  --tap: 44px; // minimum touch target
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.5 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.125rem;
+}
+
+a {
+  color: inherit;
+}
+
+.brand {
+  font-family: var(--font-brand);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--gutter);
+}
+
+// ---------------------------------------------------------------------------
+// Forms. 16px inputs stop iOS Safari zooming in on focus.
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  > span {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+
+  small {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  min-height: var(--tap);
+  padding: 10px 12px;
+  width: 100%;
+
+  &:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+    border-color: transparent;
+  }
+}
+
+input[type='checkbox'] {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+// ---------------------------------------------------------------------------
+// Buttons
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap);
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 0.9375rem var(--font-ui);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.btn-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+// ---------------------------------------------------------------------------
+// Messages
+
+.notice {
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.notice-error {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.notice-ok {
+  background: #e8f3ec;
+  color: var(--ok);
+}
+
+// ---------------------------------------------------------------------------
+// Shared admin pieces
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.back {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-small {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.8125rem;
+}
+
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--danger-soft);
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.badge-muted {
+  background: #efeae7;
+  color: var(--ink-soft);
+}
+
+.badge-ok {
+  background: #e8f3ec;
+  color: var(--ok);
+}
+
+.swatch {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+// A toggle button that is really a checkbox: works with a keyboard and a screen reader.
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.9375rem;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    pointer-events: none;
+  }
+
+  &:has(input:checked) {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+
+  &:has(input:disabled) {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Printing: only the page content, none of the admin chrome.
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .shell {
+    display: block !important;
+  }
+
+  .shell .content {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}

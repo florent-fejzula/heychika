@@ -1,0 +1,198 @@
+<div class="stack">
+  <a class="back" routerLink="/admin/stock/purchases">← Buying trips</a>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted">Loading…</p>
+    }
+    @case ('error') {
+      <p class="notice notice-error">{{ loadError() }}</p>
+    }
+    @case ('missing') {
+      <section class="card stack">
+        <h1>Buying trip not found</h1>
+        <p class="muted">It may have been deleted.</p>
+        <div><a class="btn" routerLink="/admin/stock/purchases">Back to buying trips</a></div>
+      </section>
+    }
+    @case ('ready') {
+      <div class="page-head">
+        <h1>{{ purchase()?.reference ?? 'New buying trip' }}</h1>
+        @if (purchase(); as p) {
+          <span class="badge" [class.badge-ok]="p.status === 'received'">{{ p.status === 'received' ? 'Received' : 'Draft' }}</span>
+        }
+      </div>
+
+      @if (justReceived()) {
+        <section class="card stack done" role="status">
+          <h2>Received. The items are on the shelf.</h2>
+          <p class="muted">Each item now has its real cost. Next, stick a barcode on each one.</p>
+          <div class="toolbar">
+            <a class="btn btn-primary" routerLink="/admin/labels" [queryParams]="{ purchase: purchase()!.id }">Print labels for these items</a>
+            <a class="btn" routerLink="/admin/stock">See the stock</a>
+          </div>
+        </section>
+      }
+
+      @if (isNew() || isDraft()) {
+        <form class="card stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <label class="field">
+            <span>Name</span>
+            <input type="text" formControlName="reference" placeholder="Istanbul, October" autocomplete="off" />
+          </label>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>Date</span>
+              <input type="date" formControlName="purchase_date" />
+            </label>
+            <label class="field">
+              <span>Bought from <em>(optional)</em></span>
+              <input type="text" formControlName="supplier_name" autocomplete="off" />
+            </label>
+          </div>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>Prices on the invoice are in</span>
+              <select formControlName="currency">
+                <option value="EUR">Euros (€)</option>
+                <option value="USD">US dollars</option>
+                <option value="TRY">Turkish lira</option>
+              </select>
+            </label>
+            @if (formCurrency() !== 'EUR') {
+              <label class="field">
+                <span>{{ formCurrency() }} per €1</span>
+                <input type="text" inputmode="decimal" formControlName="rate" autocomplete="off" [placeholder]="formCurrency() === 'TRY' ? '38.5' : '1.08'" />
+                <small>The rate you actually got, not today’s.</small>
+              </label>
+            }
+          </div>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>Trip costs (€)</span>
+              <input type="text" inputmode="decimal" formControlName="extra" autocomplete="off" />
+              <small>Travel, transport, customs: everything it cost to get these here.</small>
+            </label>
+            <label class="field">
+              <span>Share the trip costs</span>
+              <select formControlName="method">
+                <option value="by_quantity">Equally per item</option>
+                <option value="by_value">By price (dearer items carry more)</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Notes <em>(optional)</em></span>
+            <textarea rows="2" formControlName="notes"></textarea>
+          </label>
+
+          @if (message(); as m) {
+            <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
+          }
+
+          <div class="actions">
+            <button class="btn btn-primary" type="submit" [disabled]="saving() || (!isNew() && !dirty())">
+              {{ saving() ? 'Saving…' : isNew() ? 'Create buying trip' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      } @else if (purchase(); as p) {
+        <section class="card stack">
+          <dl class="facts">
+            <div><dt>Date</dt><dd>{{ date(p.purchase_date) }}</dd></div>
+            @if (p.supplier_name) { <div><dt>Bought from</dt><dd>{{ p.supplier_name }}</dd></div> }
+            <div><dt>Invoice in</dt><dd>{{ p.currency }}@if (p.currency !== 'EUR') { <span class="muted"> at {{ p.currency_per_eur }} per €1</span> }</dd></div>
+            <div><dt>Trip costs</dt><dd>{{ money(p.extra_costs_eur) }}, shared {{ methodLabel(p.allocation_method).toLowerCase() }}</dd></div>
+            @if (p.notes) { <div><dt>Notes</dt><dd>{{ p.notes }}</dd></div> }
+          </dl>
+          <p class="muted">This trip has been received, so it is a permanent record and can’t be edited. To fix a miscount on the shelf, use Recount under Stock.</p>
+        </section>
+      }
+
+      @if (purchase(); as p) {
+        @if (isDraft()) {
+          <app-purchase-lines [purchaseId]="p.id" [currency]="p.currency" [designs]="designs()" [lines]="lines()" (saved)="linesSaved()" />
+        }
+
+        <!-- What is on the trip -->
+        <section class="card stack">
+          <h2>Items on this trip</h2>
+          @if (!groups().length) {
+            <p class="muted">Nothing yet. @if (isDraft()) { Choose a design above and enter how many you bought. }</p>
+          }
+          @for (g of groups(); track g.id) {
+            <div class="design">
+              <h3><span>{{ g.name }}</span> <span class="muted">{{ g.qty }} {{ g.qty === 1 ? 'item' : 'items' }}</span></h3>
+              @for (r of g.rows; track r.line.id) {
+                <div class="line">
+                  <div class="what">
+                    <span class="swatch" [style.background]="r.line.variant.color.hex ?? '#ccc'"></span>
+                    {{ r.line.variant.color.name }} · <strong>{{ r.line.variant.size.label }}</strong>
+                    <span class="muted">{{ r.line.qty }} × {{ money(r.line.unit_price, p.currency) }}</span>
+                  </div>
+                  <div class="landed">
+                    <strong>{{ money(r.landed) }}</strong> <span class="muted">each, all in</span>
+                    @if (isDraft()) {
+                      <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'Remove ' + r.line.variant.sku" (click)="removeLine(r.line)">✕</button>
+                    }
+                  </div>
+                  @if (r.averageNote) {
+                    <div class="muted note">{{ r.averageNote }}</div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        @if (summary(); as s) {
+          <section class="card stack">
+            <h2>{{ isDraft() ? 'What this trip will cost' : 'What this trip cost' }}</h2>
+            <dl class="sum">
+              <div><dt>Items</dt><dd>{{ s.items }}</dd></div>
+              <div><dt>Goods</dt><dd>{{ s.goods }}@if (s.foreign) { <span class="muted"> ≈ {{ s.goodsEur }}</span> }</dd></div>
+              <div><dt>Trip costs</dt><dd>{{ s.trip }}</dd></div>
+              <div class="total"><dt>Everything</dt><dd>{{ s.total }}</dd></div>
+              <div><dt>Per item, on average</dt><dd>{{ s.average }}</dd></div>
+            </dl>
+            @if (s.problem) {
+              <p class="notice notice-error">{{ s.problem }}</p>
+            }
+          </section>
+        }
+
+        @if (isDraft()) {
+          <section class="card stack">
+            <h2>Received it?</h2>
+            <p class="muted">
+              This puts the items on the shelf and fixes what each one cost. It can’t be undone, so check the numbers above first.
+            </p>
+            @if (dirty()) {
+              <p class="notice">Save the changes at the top first. The costs above are for the saved version.</p>
+            }
+            @if (receiveError(); as problem) {
+              <p class="notice notice-error" role="alert">{{ problem }}</p>
+            }
+            <div class="toolbar">
+              <button class="btn btn-primary" type="button" [disabled]="receiving() || dirty() || !summary() || !!summary()?.problem" (click)="receive()">
+                {{ receiving() ? 'Receiving…' : summary() ? 'Receive ' + summary()!.items + ' items' : 'Receive' }}
+              </button>
+              <button class="btn btn-danger" type="button" (click)="remove()">Delete this draft</button>
+            </div>
+          </section>
+        } @else {
+          <div class="toolbar">
+            <a class="btn" routerLink="/admin/labels" [queryParams]="{ purchase: p.id }">Print labels</a>
+            <a class="btn" routerLink="/admin/stock">See the stock</a>
+          </div>
+        }
+      } @else {
+        <p class="muted">After you create the trip, you can add the items you bought.</p>
+      }
+    }
+  }
+</div>

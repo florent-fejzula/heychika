@@ -1,0 +1,82 @@
+<section class="card stack">
+  <h2>Add items</h2>
+
+  <div class="pick">
+    <input type="search" placeholder="Find a design" aria-label="Find a design" [value]="query()" (input)="query.set($any($event.target).value)" />
+    <select aria-label="Design" [value]="designId() ?? ''" (change)="choose($any($event.target).value)">
+      <option value="">Choose a design…</option>
+      @for (d of options(); track d.id) {
+        <option [value]="d.id">{{ d.name }} · {{ d.category.code }}-{{ d.model_code }}</option>
+      }
+    </select>
+  </div>
+
+  @if (!designs().length) {
+    <p class="muted">There are no designs yet. <a routerLink="/admin/products/new">Add one</a> first.</p>
+  }
+
+  @if (design(); as d) {
+    @if (!variants().length) {
+      <p class="muted">
+        “{{ d.name }}” has no colours or sizes yet.
+        <a [routerLink]="['/admin/products', d.id]">Add them</a>, then come back.
+      </p>
+    } @else {
+      <div class="grid-wrap">
+        <table class="grid">
+          <thead>
+            <tr>
+              <th scope="col"><span class="sr">Colour</span></th>
+              @for (s of sizes(); track s[0]) {
+                <th scope="col">{{ s[1].label }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of colours(); track c[0]) {
+              <tr>
+                <th scope="row"><span class="swatch" [style.background]="c[1].hex ?? '#ccc'"></span> {{ c[1].name }}</th>
+                @for (s of sizes(); track s[0]) {
+                  <td>
+                    @if (variantAt(c[0], s[0]); as v) {
+                      <input type="text" inputmode="numeric" autocomplete="off" placeholder="0"
+                             [attr.aria-label]="c[1].name + ' ' + s[1].label + ', how many'"
+                             [value]="qty()[v.id] ?? ''" (input)="setQty(v.id, $any($event.target).value)" />
+                    } @else {
+                      <span class="none" title="This colour doesn’t come in this size">–</span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="controls">
+        <label class="field">
+          <span>Paid per item ({{ currency() }})</span>
+          <input type="text" inputmode="decimal" autocomplete="off" placeholder="12.50" [value]="price()" (input)="price.set($any($event.target).value)" />
+        </label>
+        <label class="field">
+          <span>Same number in every box</span>
+          <span class="inline">
+            <input type="text" inputmode="numeric" autocomplete="off" placeholder="2" [value]="fillAll()" (input)="fillAll.set($any($event.target).value)" />
+            <button class="btn btn-small" type="button" (click)="applyFill()">Fill</button>
+          </span>
+        </label>
+      </div>
+
+      <div class="foot">
+        <span class="muted">{{ total() }} {{ total() === 1 ? 'item' : 'items' }} of this design</span>
+        <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="save()">
+          {{ busy() ? 'Saving…' : 'Save to this trip' }}
+        </button>
+      </div>
+    }
+  }
+
+  @if (message(); as m) {
+    <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
+  }
+</section>
