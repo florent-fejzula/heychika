@@ -1,4 +1,4 @@
-import { formatMoney, formatPlain, localPrice, parseAmount, parseCount, parseRate } from './money';
+import { COUNTRY_CURRENCY, DeliveryZone, bagTotals, formatMoney, formatPlain, localPrice, parseAmount, parseCount, parseRate } from './money';
 
 const fx = { mkd_per_eur: 61.5, all_per_eur: 98, mkd_rounding: 50, all_rounding: 100 };
 
@@ -78,5 +78,38 @@ describe('parseCount', () => {
 
   it('rejects decimals, negatives, text and empty', () => {
     for (const bad of ['', '1.5', '-1', 'ten', '1e3', '1234567']) expect(parseCount(bad)).toBeNull();
+  });
+});
+
+describe('bagTotals', () => {
+  const fx = { mkd_per_eur: 61.5, all_per_eur: 98, mkd_rounding: 50, all_rounding: 100 };
+  const zone = (country: 'XK' | 'MK' | 'AL', fee: number, freeOver: number | null = null): DeliveryZone => ({
+    country, currency: COUNTRY_CURRENCY[country], fee_eur: fee, free_over_eur: freeOver, est_days: null,
+  });
+
+  it('adds the items and the delivery fee in euros for Kosovo', () => {
+    expect(bagTotals([{ priceEur: 25, qty: 2 }, { priceEur: 39, qty: 1 }], zone('XK', 2), fx)).toEqual({
+      subtotalEur: 89, items: 89, delivery: 2, total: 91, toFreeDeliveryEur: null,
+    });
+  });
+
+  it('rounds each price the way the shop shows it, then adds them up', () => {
+    // €24.50 is 1506.75 MKD, shown as 1550. Two of them must cost 2 x 1550 = 3100,
+    // not the pair's 3013.50 rounded to 3050.
+    const t = bagTotals([{ priceEur: 24.5, qty: 2 }], zone('MK', 4), fx);
+    expect(t.items).toBe(3100);
+    expect(t.delivery).toBe(250);
+    expect(t.total).toBe(3350);
+  });
+
+  it('makes delivery free over the threshold, and says how far off it is below it', () => {
+    expect(bagTotals([{ priceEur: 30, qty: 1 }], zone('AL', 4, 50), fx)).toMatchObject({ delivery: 400, toFreeDeliveryEur: 20 });
+    expect(bagTotals([{ priceEur: 50, qty: 1 }], zone('AL', 4, 50), fx)).toMatchObject({ delivery: 0, toFreeDeliveryEur: null });
+  });
+
+  it('shows free delivery as 0, never -0', () => {
+    expect(Object.is(localPrice(0, 'MKD', fx), 0)).toBe(true);
+    expect(Object.is(bagTotals([{ priceEur: 10, qty: 1 }], zone('MK', 0), fx).delivery, 0)).toBe(true);
+    expect(formatMoney(localPrice(0, 'ALL', fx), 'ALL')).toBe('0 ALL');
   });
 });

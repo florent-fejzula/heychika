@@ -1,0 +1,90 @@
+<div class="narrow">
+  @if (justPlaced(); as placed) {
+    <header class="thanks">
+      <p class="eyebrow">Order placed</p>
+      <h1>Thank you, {{ placed.name }}!</h1>
+      <p>
+        Your order number is <strong class="number">{{ placed.number }}</strong>.
+        We’ll call you on <strong>{{ placed.phone }}</strong> to confirm it@if (order(); as o) {, then send it to {{ o.city }}}.
+      </p>
+      @if (order(); as o) {
+        <p class="pay">You pay <strong>{{ money(o.total) }}</strong> in cash when it arrives.</p>
+      }
+    </header>
+
+    @if (order(); as o) {
+      <ng-container [ngTemplateOutlet]="summary" [ngTemplateOutletContext]="{ $implicit: o }" />
+    } @else if (state() === 'loading') {
+      <p class="muted">Loading your order…</p>
+    }
+
+    <p class="muted small">
+      Keep the order number. You can check on it any time under “Track an order” at the bottom of the shop.
+    </p>
+    <a class="btn" routerLink="/">Keep shopping</a>
+  } @else if (state() === 'shown' && order(); as o) {
+    <header>
+      <h1>Order {{ o.order_number }}</h1>
+      <p class="muted">Placed {{ date(o.created_at) }} · to {{ o.city }}, {{ countryName() }}</p>
+    </header>
+
+    @if (steps(); as list) {
+      <ol class="steps">
+        @for (s of list; track s.label) {
+          <li [class.done]="s.done">{{ s.label }}</li>
+        }
+      </ol>
+    }
+    @if (sentence(); as text) {
+      <p class="status">{{ text }}</p>
+    }
+
+    <ng-container [ngTemplateOutlet]="summary" [ngTemplateOutletContext]="{ $implicit: o }" />
+    <a class="btn" routerLink="/">Back to the shop</a>
+  } @else {
+    <h1>Track an order</h1>
+    <p class="muted">Enter the order number and the phone number you ordered with.</p>
+
+    <form class="card form" (ngSubmit)="look()">
+      <label class="field">
+        <span>Order number</span>
+        <input name="number" [(ngModel)]="numberText" placeholder="HC-2026-0001" autocapitalize="characters" required />
+      </label>
+      <label class="field">
+        <span>Phone</span>
+        <input name="phone" [(ngModel)]="phoneText" type="tel" inputmode="tel" autocomplete="tel" required />
+      </label>
+      @switch (state()) {
+        @case ('not_found') {
+          <p class="notice notice-error" role="alert">No order matches that number and phone. Check both and try again.</p>
+        }
+        @case ('error') {
+          <p class="notice notice-error" role="alert">Couldn’t reach the shop. Check your connection and try again.</p>
+        }
+      }
+      <button class="btn btn-primary" type="submit" [disabled]="state() === 'loading'">
+        {{ state() === 'loading' ? 'Looking…' : 'Find my order' }}
+      </button>
+    </form>
+  }
+</div>
+
+<ng-template #summary let-o>
+  <section class="card summary">
+    <ul class="items">
+      @for (line of o.lines; track $index) {
+        <li>
+          <span>
+            {{ line.name }}
+            <span class="muted">{{ line.color }} · {{ line.size }}@if (line.qty > 1) { · × {{ line.qty }}}</span>
+          </span>
+          <span class="amount">{{ money(line.price * line.qty) }}</span>
+        </li>
+      }
+    </ul>
+    <dl>
+      <div><dt>Delivery</dt><dd>{{ o.delivery_fee === 0 ? 'Free' : money(o.delivery_fee) }}</dd></div>
+      <div class="total"><dt>To pay on delivery</dt><dd>{{ money(o.total) }}</dd></div>
+    </dl>
+  </section>
+</ng-template>

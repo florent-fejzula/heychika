@@ -1,0 +1,266 @@
+.checkout {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+h1 {
+  font-family: var(--font-brand);
+  font-size: 2rem;
+}
+
+.empty {
+  padding: 32px 0;
+  text-align: center;
+
+  p {
+    margin: 0 0 16px;
+  }
+}
+
+.layout {
+  display: grid;
+  gap: 24px;
+
+  @media (min-width: 820px) {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.block {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  legend {
+    padding: 0;
+    margin-bottom: 12px;
+    font-weight: 600;
+    font-size: 1.0625rem;
+  }
+}
+
+.countries {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.country {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.25;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    pointer-events: none;
+  }
+
+  small {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  &:has(input:checked) {
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.field .muted {
+  font-weight: 400;
+}
+
+.postal {
+  max-width: 200px;
+}
+
+.invalid input,
+.invalid textarea {
+  border-color: var(--danger);
+}
+
+.error {
+  color: var(--danger) !important;
+}
+
+textarea {
+  resize: vertical;
+}
+
+// The bot trap: off-screen, out of the tab order, ignored by screen readers.
+.trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: var(--gutter);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+
+  @media (min-width: 820px) {
+    position: sticky;
+    top: 76px;
+  }
+
+  h2 {
+    font-size: 1.0625rem;
+  }
+
+  dl {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  dt {
+    color: var(--ink-soft);
+  }
+
+  dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .total {
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    font-size: 1.125rem;
+    font-weight: 600;
+
+    dt {
+      color: var(--ink);
+    }
+  }
+
+  .notice {
+    margin: 0;
+  }
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  li {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.875rem;
+  }
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 4px;
+  background: #f1ebe7;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 4px;
+  }
+}
+
+.times {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.6875rem;
+  line-height: 18px;
+  text-align: center;
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .muted {
+    font-size: 0.8125rem;
+  }
+}
+
+.amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.edit {
+  align-self: flex-start;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.place {
+  min-height: 52px;
+  font-size: 1rem;
+}
+
+.fine {
+  margin: 0;
+  font-size: 0.8125rem;
+  text-align: center;
+}

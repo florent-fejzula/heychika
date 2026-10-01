@@ -13,10 +13,19 @@ web/        the Angular app: public shop at /, admin at /admin
 
 ## Status
 
-**Phases 1–5 are done** (foundation, catalogue, barcodes, buying trips, stock).
+**Phases 1–6 are done** (foundation, catalogue, barcodes, buying trips, stock, the shop).
 
-- Full database schema for every phase, with the stock engine, purchasing and costing working and
-  tested (82 database tests)
+- **The shop**, at `/`: browse by category, size and colour; a product page with colour and size
+  pickers, photos for the chosen colour, a share button and a link preview for DMs; the bag; and
+  checkout, where the customer types their own name, phone and address and pays cash on delivery.
+  Prices show in EUR, MKD or ALL depending on the country chosen. Placing an order holds the stock
+  for that customer straight away; the last item can't be sold twice. Customers can track an order
+  with its number and their phone.
+- **Orders** in the admin: every order from the shop with the customer's details ready to call,
+  WhatsApp or Viber, and the address ready to copy for the courier. (Confirming, sending and
+  recording the cash come in the next phase.)
+- Full database schema for every phase, with the stock engine, purchasing, costing and checkout
+  working and tested (104 database tests)
 - Admin login (owners only), phone-first layout, a live "Today" dashboard, Settings (exchange
   rates, delivery fees, shop details)
 - **Products:** add a design, tick its colours and sizes to create every SKU and barcode at once,
@@ -29,9 +38,16 @@ web/        the Angular app: public shop at /, admin at /admin
 - **Stock:** what is on the shelf, reserved, on the road and damaged, with filters for what is running
   low or sold out; recount, mark damage and write off with a reason; the full history of every size
 - **Categories, colours & sizes:** add new ones without touching code
-- A server-rendered placeholder shop page
 
-Orders and the public shop are still to come.
+Still to come: moving orders through confirmed → sent → delivered → paid with scan-to-dispatch
+(phase 7), returns (8), reports (9), and launch (10).
+
+### Getting a design into the shop
+
+A design shows in the shop when it is **Active**, **Show in online shop** is ticked, and it has at
+least one active size. A size can be ordered only while it has stock, so receive a buying trip (or
+recount) first. On the design's page in the admin, **Copy link to send in a DM** gives the link to
+paste to a customer.
 
 ## First-time setup
 
@@ -119,6 +135,10 @@ enforces regardless of connection count.
 - **Never edit a migration that has been applied.** Add a new one.
 - **Stock only changes through `private.apply_stock_movement`.** Nothing writes `stock` or
   `stock_movements` directly — that's what keeps the ledger and the balances in agreement.
+- **The shop places orders only through `public.place_order`**, which takes variant ids and
+  quantities and works out every price itself. The shop's own total (`bagTotals` in
+  `web/src/app/core/money.ts`) must match it exactly, or every order is refused as "price
+  changed"; `checkout-parity.test.js` checks the two agree.
 - **Each new migration grants its own access.** Migration 6 revokes Supabase's default
   grant-everything, so a new table is invisible to the app until you grant and add policies.
   Fail-closed is deliberate.

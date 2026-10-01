@@ -1,0 +1,94 @@
+<div class="stack">
+  <a class="back" routerLink="/admin/orders">← Orders</a>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted">Loading…</p>
+    }
+    @case ('error') {
+      <p class="notice notice-error">{{ error() }}</p>
+    }
+    @case ('missing') {
+      <p class="notice">There’s no such order.</p>
+    }
+    @case ('ready') {
+      @let o = order()!;
+      <div class="page-head">
+        <div>
+          <h1>{{ o.order_number }}</h1>
+          <p class="muted sub">{{ when(o.created_at) }} · {{ o.channel === 'online' ? 'from the shop' : 'entered by hand' }}</p>
+        </div>
+        <span class="badge" [class.badge-muted]="o.status !== 'new'">{{ label[o.status] }}</span>
+      </div>
+
+      <section class="card stack">
+        <div class="who">
+          <h2>{{ o.delivery_name }}</h2>
+          @if (previousOrders() > 0) {
+            <span class="badge badge-ok">{{ previousOrders() }} earlier {{ previousOrders() === 1 ? 'order' : 'orders' }}</span>
+          }
+        </div>
+
+        @if (o.delivery_phone) {
+          <div class="phone">
+            <a class="number" [href]="'tel:+' + digits()">{{ o.delivery_phone }}</a>
+            <div class="toolbar">
+              <a class="btn btn-small" [href]="'tel:+' + digits()">Call</a>
+              <a class="btn btn-small" [href]="'https://wa.me/' + digits()" target="_blank" rel="noopener">WhatsApp</a>
+              <a class="btn btn-small" [href]="'viber://chat?number=%2B' + digits()">Viber</a>
+            </div>
+          </div>
+        }
+
+        <address>
+          {{ o.delivery_address }}<br />
+          {{ o.delivery_postal_code ? o.delivery_postal_code + ' ' : '' }}{{ o.delivery_city }}<br />
+          {{ countryName[o.country] }}
+        </address>
+        <div>
+          <button class="btn btn-small" type="button" (click)="copyAddress()">{{ copied() ? 'Copied' : 'Copy name, phone and address' }}</button>
+        </div>
+
+        @if (o.customer_notes) {
+          <p class="note"><span class="muted">Their note:</span> {{ o.customer_notes }}</p>
+        }
+      </section>
+
+      <section class="card stack">
+        <h2>{{ items() }} {{ items() === 1 ? 'item' : 'items' }}</h2>
+        <ul class="lines">
+          @for (l of o.lines; track l.id) {
+            <li>
+              <span class="what">
+                <strong>{{ l.product_name_snapshot }}</strong>
+                <span>{{ l.color_snapshot }} · {{ l.size_snapshot }}@if (l.qty > 1) { · <strong>× {{ l.qty }}</strong>}</span>
+                <code>{{ l.sku_snapshot }}</code>
+              </span>
+              <span class="amount">{{ l.unit_price_in_currency !== null ? money(l.unit_price_in_currency * l.qty) : eur(l.line_total_eur) }}</span>
+            </li>
+          }
+        </ul>
+        <dl class="totals">
+          <div><dt>Delivery</dt><dd>{{ o.delivery_fee_in_currency === 0 ? 'Free' : money(o.delivery_fee_in_currency) }}</dd></div>
+          <div class="total">
+            <dt>Courier collects</dt>
+            <dd>{{ money(o.total_in_currency) }}</dd>
+          </div>
+          @if (o.currency !== 'EUR') {
+            <div class="muted"><dt>In euros</dt><dd>{{ eur(o.total_eur) }} at {{ o.currency_per_eur }} {{ o.currency }}</dd></div>
+          }
+        </dl>
+      </section>
+
+      <section class="card stack">
+        <h2>History</h2>
+        <ol class="history">
+          @for (h of o.history; track $index) {
+            <li><span>{{ label[h.to_status] }}</span><span class="muted">{{ when(h.created_at) }}</span></li>
+          }
+        </ol>
+        <p class="muted small">Confirming, sending and marking the cash as collected arrive in the next update.</p>
+      </section>
+    }
+  }
+</div>

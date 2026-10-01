@@ -204,12 +204,16 @@ orders          id, order_number (HC-2026-0001), customer_id,
                 total_in_currency,                -- what the courier collects
                 amount_collected NULL,
                 delivery_method, courier_name, tracking_ref, delivery_notes,
+                delivery_name, delivery_phone, delivery_city, delivery_address,
+                delivery_postal_code,            -- where this parcel goes, as typed at checkout
+                delivery_fee_in_currency,
                 dispatched_at, delivered_at, paid_at, completed_at,
                 cancelled_reason, locked, created_at, updated_at
 
 order_lines     id, order_id, variant_id,
                 sku_snapshot, product_name_snapshot, color_snapshot, size_snapshot,
                 qty, unit_price_eur, default_price_eur, discount_eur, line_total_eur,
+                unit_price_in_currency,           -- the price the customer saw
                 unit_cost_eur NULL,               -- frozen at dispatch
                 returned_qty
 
@@ -319,6 +323,10 @@ They work from their phones with a DM open in the other app. Desktop is the seco
 6. Confirmation + tracking by order number and phone
 7. Static pages — about, delivery & returns, contact
 
+**Built:** 1–6. Home and category listing are one page, filtered by category, size and colour
+(not price: with ~50 designs it adds little). A size or colour filter shows only what is in stock
+in it. Static pages come with launch (phase 10).
+
 **The share button matters more than it looks.** Customers live in Instagram DMs and won't all move
 to a website. The realistic flow for a long time is: customer DMs, sister pastes a product link,
 customer checks out themselves. That link is the bridge off manual entry.
@@ -353,7 +361,7 @@ screen, because self-service checkout is the actual goal.
 | 3 ✅ | Barcodes — generation, printable label sheets, scan lookup |
 | 4 ✅ | Purchases — trip entry, landed cost, receive into stock |
 | 5 ✅ | Stock engine — ledger, constraints, adjustments, write-offs |
-| 6 | Shop — browse, product page, cart, checkout, order creation |
+| 6 ✅ | Shop — browse, product page, cart, checkout, order creation |
 | 7 | Order management — status flow, scan-to-dispatch, COD collection |
 | 8 | Returns — refunds, failed delivery, saleable vs damaged |
 | 9 | Reports — stock, sales, profit, Excel export |
@@ -406,6 +414,16 @@ every report a lie. Dispatched-but-unpaid and delivered-but-unpaid belong in the
 ### Assumptions made
 
 - EUR is the accounting base currency
+- Shop in English for now (question 7 is open)
+- At most 5 of one size per order, and at most 3 unconfirmed orders per phone per day, so a
+  prankster can't tie up the stock with fake orders. Real orders get confirmed by phone anyway.
+- A customer is recognised by phone number. The shop never overwrites their saved details (anyone
+  can type anyone's number); each order keeps the address that parcel goes to.
+- Each price is converted to MKD/ALL and rounded on its own, and the order total is the sum of those,
+  so it matches the prices the customer saw item by item
+- The shop's country is remembered in a cookie; on a first visit a Macedonian-language browser
+  defaults to North Macedonia, anything else to Kosovo
+- Reserved stock is held until the order is confirmed or cancelled; there's no automatic expiry
 - Guest checkout only; no customer logins
 - Single stock pool, Prishtina
 - COD only, collected in the customer's local currency

@@ -1,0 +1,93 @@
+@if (failed()) {
+  <section class="message">
+    <h1>The shop couldn’t load just now</h1>
+    <p class="muted">Please refresh in a moment.</p>
+  </section>
+} @else if (!cards().length && !filtering()) {
+  <section class="message">
+    <h1>New pieces are on their way</h1>
+    <p class="muted">The shop is being stocked. Follow us to see them first.</p>
+  </section>
+} @else {
+  <h1 class="sr-only">{{ categoryName() ?? 'Shop' }}</h1>
+
+  <nav class="categories" aria-label="Categories">
+    <a routerLink="/" [queryParams]="{}" [class.on]="!category()" [attr.aria-current]="!category() ? 'page' : null">All</a>
+    @for (c of categories(); track c.id) {
+      <a
+        routerLink="/"
+        [queryParams]="{ category: c.slug }"
+        [class.on]="category() === c.slug"
+        [attr.aria-current]="category() === c.slug ? 'page' : null"
+      >{{ c.name }}</a>
+    }
+  </nav>
+
+  @if (sizes().length > 1 || colours().length > 1) {
+    <div class="filters">
+      @if (sizes().length > 1) {
+        <label class="filter">
+          <span class="sr-only">Size</span>
+          <select [value]="size() ?? ''" (change)="filter('size', $any($event.target).value)">
+            <option value="" [attr.selected]="!size() ? '' : null">Any size</option>
+            @for (s of sizes(); track s) {
+              <option [value]="s" [attr.selected]="size() === s ? '' : null">Size {{ s }}</option>
+            }
+          </select>
+        </label>
+      }
+      @if (colours().length > 1) {
+        <label class="filter">
+          <span class="sr-only">Colour</span>
+          <select [value]="colour() ?? ''" (change)="filter('colour', $any($event.target).value)">
+            <option value="" [attr.selected]="!colour() ? '' : null">Any colour</option>
+            @for (c of colours(); track c.slug) {
+              <option [value]="c.slug" [attr.selected]="colour() === c.slug ? '' : null">{{ c.name }}</option>
+            }
+          </select>
+        </label>
+      }
+    </div>
+  }
+
+  @if (!cards().length) {
+    <section class="message">
+      <p>Nothing in stock matches that just now.</p>
+      <a class="btn" routerLink="/" [queryParams]="category() ? { category: category() } : {}">Clear size and colour</a>
+    </section>
+  } @else {
+    <ul class="grid">
+      @for (c of cards(); track c.slug; let i = $index) {
+        <li>
+          <a class="card-link" [routerLink]="['/p', c.slug]" [queryParams]="c.colourQuery ? { colour: c.colourQuery } : {}">
+            <div class="photo" [class.sold-out]="c.soldOut">
+              @if (c.image) {
+                <img [src]="c.image" [alt]="c.name" [attr.loading]="i < 4 ? 'eager' : 'lazy'" />
+              } @else {
+                <span class="no-photo brand" aria-hidden="true">{{ c.name.charAt(0) }}</span>
+              }
+              @if (c.soldOut) {
+                <span class="flag">Sold out</span>
+              } @else if (c.wasEur) {
+                <span class="flag flag-sale">Sale</span>
+              }
+            </div>
+            <span class="name">{{ c.name }}</span>
+            <span class="price">
+              @if (c.priceVaries) { <span class="muted">from</span> }
+              <strong>{{ shop.price(c.priceEur) }}</strong>
+              @if (c.wasEur) { <s class="muted">{{ shop.price(c.wasEur) }}</s> }
+            </span>
+            @if (c.colours.length > 1) {
+              <span class="swatches" [attr.aria-label]="c.colours.length + ' colours'">
+                @for (col of c.colours.slice(0, 6); track col.name) {
+                  <span class="swatch" [style.background]="col.hex ?? 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'" [title]="col.name"></span>
+                }
+              </span>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  }
+}

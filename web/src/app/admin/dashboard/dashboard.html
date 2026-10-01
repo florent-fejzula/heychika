@@ -4,6 +4,13 @@
   @if (error()) {
     <p class="notice notice-error">Couldn’t load the numbers. Check your connection and refresh.</p>
   } @else if (summary(); as s) {
+    @if (s.toConfirm > 0) {
+      <a class="card waiting" routerLink="/admin/orders">
+        <strong>{{ s.toConfirm }} new {{ s.toConfirm === 1 ? 'order' : 'orders' }}</strong>
+        <span>to confirm →</span>
+      </a>
+    }
+
     <section class="tiles" aria-label="Summary">
       <div class="card tile">
         <span class="label">Designs</span>
@@ -48,10 +55,13 @@
       <section class="card stack empty">
         <h2>Nothing in the shop yet</h2>
         <p class="muted">
-          Products, stock and orders are being built next. Meanwhile, check the exchange rates and
-          delivery fees are right.
+          Add a design with its colours, sizes and photos, mark it Active and shown in the shop, and receive
+          some stock for it. Then it’s for sale. Check the exchange rates and delivery fees in settings too.
         </p>
-        <a class="btn" routerLink="/admin/settings">Open settings</a>
+        <div class="toolbar">
+          <a class="btn btn-primary" routerLink="/admin/products/new">Add a design</a>
+          <a class="btn" routerLink="/admin/settings">Open settings</a>
+        </div>
       </section>
     }
   } @else {

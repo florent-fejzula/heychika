@@ -83,6 +83,7 @@ export class ProductEditor {
         await this.router.navigate(['/admin/products', newId]);
       } else {
         await this.catalogue.updateProduct(this.product()!.id, input);
+        this.product.update((p) => (p ? { ...p, ...input } : p));
         this.form.markAsPristine();
         this.message.set({ kind: 'ok', text: 'Saved.' });
       }
@@ -90,6 +91,27 @@ export class ProductEditor {
       this.message.set({ kind: 'error', text: (e as Error).message });
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  /** The design's page in the shop, once it's for sale (as saved, not as being edited). */
+  protected readonly shopLink = computed(() => {
+    const p = this.product();
+    return p && p.status === 'active' && p.show_online ? `${location.origin}/p/${p.slug}` : null;
+  });
+  protected readonly linkCopied = signal(false);
+
+  // The DM workflow: a customer asks about a dress, she pastes its link, the
+  // customer orders it themselves.
+  protected async copyShopLink(): Promise<void> {
+    const link = this.shopLink();
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      this.linkCopied.set(true);
+      setTimeout(() => this.linkCopied.set(false), 2000);
+    } catch {
+      window.open(link, '_blank', 'noopener');
     }
   }
 

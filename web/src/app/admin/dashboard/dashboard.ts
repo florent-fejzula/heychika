@@ -19,6 +19,8 @@ interface Summary {
   lowStock: { sku: string; available: number }[];
   awaitingCash: number;
   awaitingCashValue: string;
+  /** New orders from the shop, waiting for a call to confirm. */
+  toConfirm: number;
 }
 
 @Component({
@@ -38,7 +40,7 @@ export class Dashboard {
   }
 
   private async load(): Promise<void> {
-    const [products, stock, unpaid] = await Promise.all([
+    const [products, stock, unpaid, waiting] = await Promise.all([
       this.supabase.from('products').select('*', { count: 'exact', head: true }).neq('status', 'archived'),
       this.supabase
         .from('stock')
@@ -50,8 +52,9 @@ export class Dashboard {
         .select('total_eur')
         .in('status', ['dispatched', 'delivered'])
         .eq('payment_status', 'unpaid'),
+      this.supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'new'),
     ]);
-    if (products.error || stock.error || unpaid.error) throw new Error('load failed');
+    if (products.error || stock.error || unpaid.error || waiting.error) throw new Error('load failed');
 
     const rows = stock.data ?? [];
     const value = rows.reduce((sum, r) => sum + r.qty_physical * Number(r.variant?.cost_eur ?? 0), 0);
@@ -68,6 +71,7 @@ export class Dashboard {
         .sort((a, b) => a.available - b.available),
       awaitingCash: unpaid.data?.length ?? 0,
       awaitingCashValue: formatMoney(owed, 'EUR'),
+      toConfirm: waiting.count ?? 0,
     });
   }
 }

@@ -1,0 +1,331 @@
+.message {
+  padding: 64px 0;
+  text-align: center;
+
+  h1 {
+    font-family: var(--font-brand);
+    font-size: 2rem;
+  }
+
+  p {
+    margin: 8px 0 20px;
+  }
+}
+
+.product {
+  display: grid;
+  gap: 20px;
+
+  @media (min-width: 820px) {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+}
+
+// Full-bleed on a phone: the photo is the product.
+.media {
+  margin: calc(-1 * var(--gutter)) calc(-1 * var(--gutter)) 0;
+
+  @media (min-width: 820px) {
+    margin: 0;
+    position: sticky;
+    top: 76px;
+  }
+}
+
+.gallery {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  aspect-ratio: 4 / 5;
+  background: #f1ebe7;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (min-width: 820px) {
+    border-radius: var(--radius);
+  }
+
+  img {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    scroll-snap-align: start;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
+.no-photo {
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+  color: var(--muted);
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+  padding: 8px var(--gutter) 0;
+  overflow-x: auto;
+
+  @media (min-width: 820px) {
+    padding: 10px 0 0;
+  }
+}
+
+.dot {
+  flex: none;
+  width: 48px;
+  height: 60px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f1ebe7;
+  cursor: pointer;
+  opacity: 0.6;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.on {
+    border-color: var(--ink);
+    opacity: 1;
+  }
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.crumb {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: -10px;
+}
+
+h1 {
+  font-family: var(--font-brand);
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: -8px 0 0;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+
+  .muted {
+    font-size: 1rem;
+  }
+}
+
+.choose {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+
+  legend {
+    padding: 0;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+
+    strong {
+      color: var(--ink);
+      font-weight: 500;
+    }
+  }
+}
+
+.one-colour {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+
+  strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+}
+
+.colours,
+.sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// Radio buttons drawn as swatches and size boxes; still real radios underneath.
+.colour,
+.size {
+  position: relative;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    pointer-events: none;
+  }
+}
+
+.colour {
+  display: inline-flex;
+  padding: 3px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+
+  &:has(input:checked) {
+    border-color: var(--ink);
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &.faded .dab {
+    opacity: 0.4;
+  }
+}
+
+.dab {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.size {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-weight: 500;
+
+  &:has(input:checked) {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &.gone {
+    cursor: default;
+    color: var(--muted);
+    background: transparent;
+    text-decoration: line-through;
+  }
+}
+
+.buy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .btn {
+    min-height: 52px;
+    font-size: 1rem;
+  }
+}
+
+.few {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.added {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ok);
+
+  a {
+    color: var(--ink);
+    font-weight: 500;
+  }
+}
+
+.share {
+  align-self: flex-start;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.text {
+  margin: 0;
+
+  h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  p {
+    margin: 0;
+    white-space: pre-line;
+  }
+}
+
+.delivery {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  font-size: 0.875rem;
+
+  p {
+    margin: 0;
+  }
+
+  p + p {
+    margin-top: 4px;
+    color: var(--ink-soft);
+  }
+}

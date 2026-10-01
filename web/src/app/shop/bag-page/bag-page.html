@@ -1,0 +1,71 @@
+<div class="narrow">
+  <h1>Your bag</h1>
+
+  @for (note of contents.notices(); track note) {
+    <p class="notice" role="status">{{ note }}</p>
+  }
+
+  @switch (contents.state()) {
+    @case ('loading') {
+      <p class="muted">Loading your bag…</p>
+    }
+    @case ('error') {
+      <p class="notice notice-error">Your bag couldn’t load. Check your connection and refresh.</p>
+    }
+    @default {
+      @if (!contents.rows().length) {
+        <section class="empty">
+          <p>Your bag is empty.</p>
+          <a class="btn btn-primary" routerLink="/">See what’s in the shop</a>
+        </section>
+      } @else {
+        <ul class="lines">
+          @for (row of contents.rows(); track row.item.variantId) {
+            <li class="line">
+              <a class="thumb" [routerLink]="['/p', row.item.product.slug]">
+                @if (row.item.image) {
+                  <img [src]="row.item.image" alt="" />
+                }
+              </a>
+              <div class="what">
+                <a class="name" [routerLink]="['/p', row.item.product.slug]">{{ row.item.product.name }}</a>
+                <span class="muted">{{ row.item.color.name }} · {{ row.item.size }}</span>
+                <span class="each">{{ shop.price(row.item.priceEur) }}</span>
+              </div>
+              <div class="qty">
+                <div class="stepper" role="group" [attr.aria-label]="'How many ' + row.item.product.name">
+                  <button type="button" (click)="change(row.item.variantId, row.qty - 1)"
+                          [attr.aria-label]="row.qty === 1 ? 'Remove' : 'One fewer'">−</button>
+                  <span aria-live="polite">{{ row.qty }}</span>
+                  <button type="button" (click)="change(row.item.variantId, row.qty + 1)" [disabled]="row.qty >= row.max"
+                          aria-label="One more">+</button>
+                </div>
+                <button class="remove" type="button" (click)="bag.remove(row.item.variantId)">Remove</button>
+              </div>
+            </li>
+          }
+        </ul>
+
+        @if (contents.totals(); as t) {
+          <section class="summary">
+            <dl>
+              <div><dt>Items</dt><dd>{{ shop.money(t.items) }}</dd></div>
+              <div>
+                <dt>Delivery to {{ countryName() }}</dt>
+                <dd>{{ t.delivery === 0 ? 'Free' : shop.money(t.delivery) }}</dd>
+              </div>
+              <div class="total"><dt>Total</dt><dd>{{ shop.money(t.total) }}</dd></div>
+            </dl>
+            @if (t.toFreeDeliveryEur) {
+              <p class="muted hint">Add {{ shop.price(t.toFreeDeliveryEur) }} more for free delivery.</p>
+            }
+            <a class="btn btn-primary btn-block" routerLink="/checkout">Checkout</a>
+            <p class="muted hint">You pay in cash when it arrives.</p>
+          </section>
+        } @else {
+          <p class="notice notice-error">Delivery isn’t available to {{ countryName() }} right now. Choose another country at the top.</p>
+        }
+      }
+    }
+  }
+</div>

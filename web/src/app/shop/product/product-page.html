@@ -1,0 +1,158 @@
+@if (failed()) {
+  <section class="message">
+    <h1>This page couldn’t load just now</h1>
+    <p class="muted">Please refresh in a moment.</p>
+    <a class="btn" routerLink="/">Back to the shop</a>
+  </section>
+} @else if (!p()) {
+  <section class="message">
+    <h1>This piece isn’t available any more</h1>
+    <p class="muted">It may have sold out or been taken down. There’s more in the shop.</p>
+    <a class="btn btn-primary" routerLink="/">See what’s in the shop</a>
+  </section>
+} @else {
+  @let product = p()!;
+  <article class="product">
+    <div class="media">
+      @if (photos().length) {
+        <div class="gallery" #gallery (scroll)="onScroll(gallery)" tabindex="0" aria-label="Photos">
+          @for (photo of photos(); track photo.full; let i = $index) {
+            <img
+              [src]="photo.full"
+              [alt]="product.name + (photos().length > 1 ? ', photo ' + (i + 1) + ' of ' + photos().length : '')"
+              [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+            />
+          }
+        </div>
+        @if (photos().length > 1) {
+          <div class="dots">
+            @for (photo of photos(); track photo.full; let i = $index) {
+              <button
+                type="button"
+                class="dot"
+                [class.on]="photoIndex() === i"
+                [attr.aria-label]="'Photo ' + (i + 1)"
+                [attr.aria-current]="photoIndex() === i ? 'true' : null"
+                (click)="showPhoto(i)"
+              >
+                <img [src]="photo.thumb" alt="" />
+              </button>
+            }
+          </div>
+        }
+      } @else {
+        <div class="gallery no-photo"><span class="brand" aria-hidden="true">{{ product.name.charAt(0) }}</span></div>
+      }
+    </div>
+
+    <div class="info">
+      <a class="crumb" routerLink="/" [queryParams]="{ category: categorySlug() }">{{ product.category.name }}</a>
+      <h1>{{ product.name }}</h1>
+
+      @if (shown(); as price) {
+        <p class="price">
+          @if (price.from) { <span class="muted">from</span> }
+          <strong>{{ shop.price(price.eur) }}</strong>
+          @if (price.was && price.was > price.eur) {
+            <s class="muted">{{ shop.price(price.was) }}</s>
+          }
+        </p>
+      }
+
+      @if (colours().length > 1) {
+        <fieldset class="choose">
+          <legend>Colour: <strong>{{ colourName() }}</strong></legend>
+          <div class="colours">
+            @for (c of colours(); track c.id) {
+              <label class="colour" [class.faded]="!c.inStock" [title]="c.name + (c.inStock ? '' : ' (sold out)')">
+                <input type="radio" name="colour" [checked]="colourId() === c.id" (change)="chooseColour(c.id)" />
+                <span
+                  class="dab"
+                  [style.background]="c.hex ?? 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'"
+                ></span>
+                <span class="sr-only">{{ c.name }}{{ c.inStock ? '' : ', sold out' }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      } @else if (colourName()) {
+        <p class="one-colour">Colour: <strong>{{ colourName() }}</strong></p>
+      }
+
+      <fieldset class="choose">
+        <legend>Size@if (sizes().length === 1) {: <strong>{{ sizes()[0].label }}</strong>}</legend>
+        @if (sizes().length > 1) {
+          <div class="sizes">
+            @for (s of sizes(); track s.id) {
+              @let state = sizeState(s.id);
+              <label class="size" [class.gone]="state !== 'ok'">
+                <input
+                  type="radio"
+                  name="size"
+                  [checked]="sizeId() === s.id"
+                  [disabled]="state !== 'ok'"
+                  (change)="chooseSize(s.id)"
+                />
+                <span>{{ s.label }}</span>
+                @if (state === 'sold_out') { <span class="sr-only">, sold out</span> }
+                @if (state === 'none') { <span class="sr-only">, not made in this colour</span> }
+              </label>
+            }
+          </div>
+        }
+      </fieldset>
+
+      <div class="buy">
+        @if (fewLeft(); as n) {
+          <p class="few">Only {{ n }} left</p>
+        }
+
+        @if (sizeId() !== null && variant() && variant()!.available === 0) {
+          <button class="btn btn-block" type="button" disabled>Sold out</button>
+        } @else if (sizeId() === null) {
+          <button class="btn btn-primary btn-block" type="button" disabled>Choose a size</button>
+        } @else if (canAdd() === 0) {
+          <button class="btn btn-block" type="button" disabled>
+            {{ inBag() >= MAX_PER_ITEM ? 'The most you can order is ' + MAX_PER_ITEM : 'All we have is in your bag' }}
+          </button>
+        } @else {
+          <button class="btn btn-primary btn-block" type="button" (click)="add()">Add to bag</button>
+        }
+
+        @if (justAdded()) {
+          <p class="added" role="status">
+            Added to your bag.
+            <a routerLink="/bag">View bag</a>
+            <a routerLink="/checkout">Checkout</a>
+          </p>
+        }
+      </div>
+
+      <button class="btn btn-small share" type="button" (click)="share()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v6h14v-6" /></svg>
+        {{ shared() === 'copied' ? 'Link copied' : 'Share' }}
+      </button>
+
+      @if (product.description) {
+        <div class="text">
+          <h2>Details</h2>
+          <p>{{ product.description }}</p>
+        </div>
+      }
+      @if (product.material) {
+        <p class="text"><span class="muted">Material:</span> {{ product.material }}</p>
+      }
+
+      @if (delivery(); as d) {
+        <div class="delivery">
+          <p>
+            Delivery to {{ d.country }}:
+            <strong>{{ d.free ? 'free' : d.fee }}</strong>@if (d.days) {, {{ d.days }}}.
+            @if (d.freeOver && !d.free) { Free over {{ d.freeOver }}. }
+          </p>
+          <p>Pay in cash when it arrives. No card needed.</p>
+        </div>
+      }
+    </div>
+  </article>
+}

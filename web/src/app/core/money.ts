@@ -18,8 +18,9 @@ export function localPrice(eur: number, currency: Currency, fx: FxSettings): num
   if (currency === 'EUR') return eur;
   const [rate, step] = currency === 'MKD' ? [fx.mkd_per_eur, fx.mkd_rounding] : [fx.all_per_eur, fx.all_rounding];
   // The epsilon stops float noise (e.g. 31.000000000004) from bumping an exact
-  // multiple up a whole step.
-  return Math.ceil((eur * rate) / step - 1e-9) * step;
+  // multiple up a whole step. `|| 0` turns the -0 that a zero price gives into 0,
+  // which would otherwise print as "-0 MKD".
+  return Math.ceil((eur * rate) / step - 1e-9) * step || 0;
 }
 
 export function formatMoney(amount: number, currency: Currency): string {
@@ -64,4 +65,55 @@ export function parseCount(text: string): number | null {
 /** Formats an amount in euros or any purchase currency (USD, TRY). */
 export function formatCode(amount: number, code: string): string {
   return code === 'EUR' ? formatMoney(amount, 'EUR') : formatPlain(amount, code);
+}
+
+// ---------------------------------------------------------------------------
+// Bag totals
+
+export interface DeliveryZone {
+  country: Country;
+  currency: Currency;
+  fee_eur: number;
+  free_over_eur: number | null;
+  est_days: string | null;
+}
+
+export interface PricedLine {
+  priceEur: number;
+  qty: number;
+}
+
+export interface BagTotals {
+  subtotalEur: number;
+  /** Items in the customer's currency, each price rounded the way the shop shows it. */
+  items: number;
+  /** Zero when the bag reaches the zone's free-delivery threshold. */
+  delivery: number;
+  total: number;
+  /** How much more (in EUR) would make delivery free, or null when there's no threshold or it's met. */
+  toFreeDeliveryEur: number | null;
+}
+
+// Must match public.place_order(), which is what the courier actually collects:
+// each item converted and rounded on its own, then added up, so the total is
+// the sum of the prices the customer saw. (Tested against the database.)
+export function bagTotals(lines: PricedLine[], zone: DeliveryZone, fx: FxSettings): BagTotals {
+  const currency = zone.currency;
+  const subtotalEur = round2(lines.reduce((sum, l) => sum + l.qty * l.priceEur, 0));
+  const items = lines.reduce((sum, l) => sum + l.qty * localPrice(l.priceEur, currency, fx), 0);
+
+  const free = zone.free_over_eur !== null && subtotalEur >= zone.free_over_eur;
+  const delivery = free ? 0 : localPrice(zone.fee_eur, currency, fx);
+
+  return {
+    subtotalEur,
+    items: round2(items),
+    delivery,
+    total: round2(items + delivery),
+    toFreeDeliveryEur: zone.free_over_eur !== null && !free ? round2(zone.free_over_eur - subtotalEur) : null,
+  };
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }

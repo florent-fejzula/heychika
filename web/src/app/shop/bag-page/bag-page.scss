@@ -1,0 +1,175 @@
+.narrow {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+h1 {
+  font-family: var(--font-brand);
+  font-size: 2rem;
+}
+
+.notice {
+  margin: 0;
+}
+
+.empty {
+  padding: 32px 0;
+  text-align: center;
+
+  p {
+    margin: 0 0 16px;
+  }
+}
+
+.lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.thumb {
+  display: block;
+  aspect-ratio: 4 / 5;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f1ebe7;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.9375rem;
+
+  .name {
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .muted {
+    font-size: 0.8125rem;
+  }
+
+  .each {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.qty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+
+  button {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 1.125rem;
+    cursor: pointer;
+    color: var(--ink);
+
+    &:disabled {
+      color: var(--line);
+      cursor: default;
+    }
+  }
+
+  span {
+    min-width: 20px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.remove {
+  border: 0;
+  background: none;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  dl {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  dt {
+    color: var(--ink-soft);
+  }
+
+  dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .total {
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    font-size: 1.125rem;
+    font-weight: 600;
+
+    dt {
+      color: var(--ink);
+    }
+  }
+
+  .btn {
+    min-height: 52px;
+    font-size: 1rem;
+  }
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.875rem;
+  text-align: center;
+}

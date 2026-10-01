@@ -1,0 +1,48 @@
+<div class="stack">
+  <h1>Orders</h1>
+
+  @if (error(); as message) {
+    <p class="notice notice-error">{{ message }}</p>
+  } @else if (rows() === null) {
+    <p class="muted">Loading…</p>
+  } @else if (!rows()!.length) {
+    <section class="card stack empty">
+      <h2>No orders yet</h2>
+      <p class="muted">
+        Orders customers place in the shop arrive here with their name, phone and address already filled in.
+        Send them a link to a product and they can order it themselves.
+      </p>
+    </section>
+  } @else {
+    @for (section of sections(); track section.title) {
+      <h2>
+        {{ section.title }}
+        @if (section.counted) {
+          <span class="badge" [class.badge-muted]="!section.orders.length">{{ section.orders.length }}</span>
+        }
+      </h2>
+      @if (!section.orders.length) {
+        <p class="muted">Nothing waiting.</p>
+      }
+      <ul class="list">
+        @for (o of section.orders; track o.id) {
+          <li>
+            <a class="card item" [routerLink]="['/admin/orders', o.id]">
+              <span class="body">
+                <strong>{{ o.delivery_name || 'No name' }}</strong>
+                <span class="muted">{{ o.order_number }} · {{ o.delivery_city }}, {{ countryName[o.country] }}</span>
+              </span>
+              <span class="nums">
+                <span>{{ total(o) }}</span>
+                <span class="muted">{{ items(o) }} {{ items(o) === 1 ? 'item' : 'items' }} · {{ when(o) }}</span>
+                @if (o.status !== 'new') {
+                  <span class="badge badge-muted">{{ label[o.status] }}</span>
+                }
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

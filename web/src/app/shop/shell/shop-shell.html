@@ -1,0 +1,50 @@
+<div class="shop">
+  <header class="top">
+    <a class="brand wordmark" routerLink="/">{{ shop.storeName() }}</a>
+
+    <div class="tools">
+      <label class="country">
+        <span class="sr-only">Delivering to</span>
+        <select [value]="shop.country()" (change)="chooseCountry($any($event.target).value)">
+          @for (c of countries; track c.code) {
+            <option [value]="c.code" [attr.selected]="c.code === shop.country() ? '' : null">{{ c.name }} · {{ c.currency }}</option>
+          }
+        </select>
+      </label>
+
+      <a class="bag" routerLink="/bag" [attr.aria-label]="'Bag, ' + bag.count() + (bag.count() === 1 ? ' item' : ' items')">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 8h12l-1 12H7L6 8zm3 0V6a3 3 0 0 1 6 0v2" />
+        </svg>
+        @if (bag.count() > 0) {
+          <span class="count">{{ bag.count() }}</span>
+        }
+      </a>
+    </div>
+  </header>
+
+  <main class="page">
+    <router-outlet />
+  </main>
+
+  <footer class="foot">
+    <p class="cod">Pay cash on delivery · Kosovo, North Macedonia and Albania</p>
+    <nav class="links" aria-label="More">
+      <a routerLink="/order">Track an order</a>
+      @if (shop.context()?.settings; as s) {
+        @if (s.instagram_url) {
+          <a [href]="s.instagram_url" target="_blank" rel="noopener">Instagram</a>
+        }
+        @if (s.tiktok_url) {
+          <a [href]="s.tiktok_url" target="_blank" rel="noopener">TikTok</a>
+        }
+        @if (s.facebook_url) {
+          <a [href]="s.facebook_url" target="_blank" rel="noopener">Facebook</a>
+        }
+        @if (s.contact_phone) {
+          <a [href]="'tel:' + s.contact_phone">{{ s.contact_phone }}</a>
+        }
+      }
+    </nav>
+  </footer>
+</div>

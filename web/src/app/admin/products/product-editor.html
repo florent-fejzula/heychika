@@ -79,6 +79,15 @@
         </div>
         <small class="muted">Customers see a design only when it is Active <em>and</em> shown in the shop.</small>
 
+        @if (shopLink(); as link) {
+          <div class="toolbar live">
+            <a class="btn btn-small" [href]="link" target="_blank" rel="noopener">View in shop</a>
+            <button class="btn btn-small" type="button" (click)="copyShopLink()">
+              {{ linkCopied() ? 'Link copied' : 'Copy link to send in a DM' }}
+            </button>
+          </div>
+        }
+
         @if (message(); as m) {
           <p class="notice" [class.notice-ok]="m.kind === 'ok'" [class.notice-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
         }

@@ -1,12 +1,8 @@
 import { Routes } from '@angular/router';
 import { staffGuard } from './core/auth';
+import { productResolver, productsResolver, shopContextResolver } from './shop/resolvers';
 
 export const routes: Routes = [
-  {
-    path: '',
-    title: 'Hey Chika',
-    loadComponent: () => import('./shop/landing/landing').then((m) => m.Landing),
-  },
   {
     path: 'admin/login',
     title: 'Sign in · Hey Chika',
@@ -75,17 +71,58 @@ export const routes: Routes = [
       {
         path: 'orders',
         title: 'Orders · Hey Chika',
-        loadComponent: () => import('./admin/coming-soon/coming-soon').then((m) => m.ComingSoon),
-        data: {
-          heading: 'Orders',
-          phase: 7,
-          blurb: 'Orders customers place themselves on the shop, ready to pack. Scan to dispatch, mark the cash collected.',
-        },
+        loadComponent: () => import('./admin/orders/order-list').then((m) => m.OrderList),
+      },
+      {
+        path: 'orders/:id',
+        title: 'Order · Hey Chika',
+        loadComponent: () => import('./admin/orders/order-detail').then((m) => m.OrderDetail),
       },
       {
         path: 'settings',
         title: 'Settings · Hey Chika',
         loadComponent: () => import('./admin/settings/settings').then((m) => m.Settings),
+      },
+    ],
+  },
+
+  // The shop. Last, so its catch-all doesn't swallow /admin.
+  {
+    path: '',
+    loadComponent: () => import('./shop/shell/shop-shell').then((m) => m.ShopShell),
+    resolve: { context: shopContextResolver },
+    children: [
+      {
+        path: '',
+        title: 'Hey Chika',
+        loadComponent: () => import('./shop/home/home').then((m) => m.Home),
+        resolve: { products: productsResolver },
+      },
+      {
+        // The product page sets its own title, from the product.
+        path: 'p/:slug',
+        loadComponent: () => import('./shop/product/product-page').then((m) => m.ProductPage),
+        resolve: { product: productResolver },
+      },
+      {
+        path: 'bag',
+        title: 'Your bag · Hey Chika',
+        loadComponent: () => import('./shop/bag-page/bag-page').then((m) => m.BagPage),
+      },
+      {
+        path: 'checkout',
+        title: 'Checkout · Hey Chika',
+        loadComponent: () => import('./shop/checkout/checkout').then((m) => m.Checkout),
+      },
+      {
+        path: 'order',
+        title: 'Track an order · Hey Chika',
+        loadComponent: () => import('./shop/order/order-page').then((m) => m.OrderPage),
+      },
+      {
+        path: 'order/:number',
+        title: 'Your order · Hey Chika',
+        loadComponent: () => import('./shop/order/order-page').then((m) => m.OrderPage),
       },
     ],
   },

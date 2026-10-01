@@ -1,0 +1,152 @@
+.narrow {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+
+  > .btn {
+    align-self: flex-start;
+  }
+}
+
+h1 {
+  font-family: var(--font-brand);
+  font-size: 2rem;
+}
+
+header p {
+  margin: 8px 0 0;
+}
+
+.thanks {
+  padding: 16px 0 4px;
+
+  h1 {
+    font-size: 2.5rem;
+  }
+}
+
+.eyebrow {
+  margin: 0 0 4px !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ok);
+}
+
+.number {
+  white-space: nowrap;
+}
+
+.pay {
+  font-size: 1.0625rem;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  counter-reset: step;
+
+  li {
+    padding-top: 10px;
+    border-top: 3px solid var(--line);
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  li.done {
+    border-color: var(--ok);
+    color: var(--ink);
+    font-weight: 500;
+  }
+}
+
+.status {
+  margin: 0;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  dl {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  dt {
+    color: var(--ink-soft);
+  }
+
+  dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .total {
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    font-weight: 600;
+
+    dt {
+      color: var(--ink);
+    }
+  }
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9375rem;
+  }
+
+  .muted {
+    display: block;
+    font-size: 0.8125rem;
+  }
+}
+
+.amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.small {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .notice {
+    margin: 0;
+  }
+}

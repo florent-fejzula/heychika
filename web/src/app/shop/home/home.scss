@@ -1,0 +1,166 @@
+.message {
+  padding: 64px 0;
+  text-align: center;
+
+  h1 {
+    font-family: var(--font-brand);
+    font-size: 2rem;
+  }
+
+  p {
+    margin: 8px 0 16px;
+  }
+}
+
+// Scrolls sideways on a phone rather than wrapping into a wall of chips.
+.categories {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 0 var(--gutter) 4px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  a {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 0.9375rem;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &.on {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #fff;
+    }
+  }
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+
+  select {
+    min-height: 40px;
+    padding: 6px 12px;
+    font-size: 0.9375rem;
+  }
+}
+
+.grid {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 12px;
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 20px;
+  }
+
+  @media (min-width: 1000px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.card-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-decoration: none;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #f1ebe7;
+  margin-bottom: 4px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.sold-out img {
+    opacity: 0.55;
+  }
+}
+
+.no-photo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: var(--muted);
+}
+
+.flag {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.flag-sale {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.name {
+  font-size: 0.9375rem;
+  line-height: 1.3;
+}
+
+.price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+
+  strong {
+    font-weight: 600;
+  }
+
+  .muted {
+    font-size: 0.8125rem;
+  }
+}
+
+.swatches {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+
+  .swatch {
+    width: 12px;
+    height: 12px;
+  }
+}

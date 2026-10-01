@@ -1,0 +1,139 @@
+<div class="checkout">
+  <h1>Checkout</h1>
+
+  @switch (contents.state()) {
+    @case ('loading') {
+      <p class="muted">Loading your bag…</p>
+    }
+    @case ('error') {
+      <p class="notice notice-error">Your bag couldn’t load. Check your connection and refresh.</p>
+    }
+    @default {
+      @if (!contents.rows().length) {
+        @for (note of contents.notices(); track note) {
+          <p class="notice" role="status">{{ note }}</p>
+        }
+        <section class="empty">
+          <p>Your bag is empty.</p>
+          <a class="btn btn-primary" routerLink="/">See what’s in the shop</a>
+        </section>
+      } @else {
+        <form class="layout" [formGroup]="form" (ngSubmit)="place()" novalidate>
+          <div class="details">
+            <fieldset class="block">
+              <legend>Delivering to</legend>
+              <div class="countries">
+                @for (c of countries; track c.code) {
+                  <label class="country">
+                    <input type="radio" name="country" [checked]="shop.country() === c.code" (change)="chooseCountry(c.code)" />
+                    <span>{{ c.name }}</span>
+                    <small>Pay in {{ c.currency }}</small>
+                  </label>
+                }
+              </div>
+            </fieldset>
+
+            <fieldset class="block">
+              <legend>Your details</legend>
+              <div class="grid-2">
+                <label class="field" [class.invalid]="showError('first_name')">
+                  <span>First name</span>
+                  <input formControlName="first_name" autocomplete="given-name" />
+                  @if (showError('first_name')) { <small class="error">{{ errorFor('first_name') }}</small> }
+                </label>
+                <label class="field" [class.invalid]="showError('last_name')">
+                  <span>Last name</span>
+                  <input formControlName="last_name" autocomplete="family-name" />
+                  @if (showError('last_name')) { <small class="error">{{ errorFor('last_name') }}</small> }
+                </label>
+              </div>
+
+              <label class="field" [class.invalid]="showError('phone')">
+                <span>Phone</span>
+                <input formControlName="phone" type="tel" inputmode="tel" autocomplete="tel" [placeholder]="phoneExample()" />
+                @if (showError('phone')) {
+                  <small class="error">{{ errorFor('phone') }}</small>
+                } @else {
+                  <small>We’ll call to confirm before sending it. The courier calls on delivery.</small>
+                }
+              </label>
+            </fieldset>
+
+            <fieldset class="block">
+              <legend>Address</legend>
+              <label class="field" [class.invalid]="showError('city')">
+                <span>Town or city</span>
+                <input formControlName="city" autocomplete="address-level2" />
+                @if (showError('city')) { <small class="error">{{ errorFor('city') }}</small> }
+              </label>
+              <label class="field" [class.invalid]="showError('address')">
+                <span>Street and number</span>
+                <input formControlName="address" autocomplete="street-address" />
+                @if (showError('address')) { <small class="error">{{ errorFor('address') }}</small> }
+              </label>
+              <label class="field postal" [class.invalid]="showError('postal_code')">
+                <span>Postcode <span class="muted">(if you know it)</span></span>
+                <input formControlName="postal_code" autocomplete="postal-code" inputmode="numeric" />
+                @if (showError('postal_code')) { <small class="error">{{ errorFor('postal_code') }}</small> }
+              </label>
+              <label class="field" [class.invalid]="showError('notes')">
+                <span>Anything we should know? <span class="muted">(optional)</span></span>
+                <textarea formControlName="notes" rows="2" placeholder="e.g. call after 5pm, or a landmark near the house"></textarea>
+                @if (showError('notes')) { <small class="error">{{ errorFor('notes') }}</small> }
+              </label>
+            </fieldset>
+
+            <div class="trap" aria-hidden="true">
+              <label>Website <input formControlName="website" tabindex="-1" autocomplete="off" /></label>
+            </div>
+          </div>
+
+          <aside class="summary">
+            <h2>Your order</h2>
+            <ul class="items">
+              @for (row of contents.rows(); track row.item.variantId) {
+                <li>
+                  <span class="thumb">
+                    @if (row.item.image) { <img [src]="row.item.image" alt="" /> }
+                    @if (row.qty > 1) { <span class="times">{{ row.qty }}</span> }
+                  </span>
+                  <span class="what">
+                    <span>{{ row.item.product.name }}</span>
+                    <span class="muted">{{ row.item.color.name }} · {{ row.item.size }}</span>
+                  </span>
+                  <span class="amount">{{ shop.price(row.item.priceEur) }}@if (row.qty > 1) { <span class="muted"> × {{ row.qty }}</span> }</span>
+                </li>
+              }
+            </ul>
+            <a class="edit" routerLink="/bag">Change bag</a>
+
+            @if (contents.totals(); as t) {
+              <dl>
+                <div><dt>Items</dt><dd>{{ shop.money(t.items) }}</dd></div>
+                <div>
+                  <dt>Delivery@if (days()) {<span class="muted"> ({{ days() }})</span>}</dt>
+                  <dd>{{ t.delivery === 0 ? 'Free' : shop.money(t.delivery) }}</dd>
+                </div>
+                <div class="total"><dt>To pay on delivery</dt><dd>{{ shop.money(t.total) }}</dd></div>
+              </dl>
+
+              @for (note of contents.notices(); track note) {
+                <p class="notice" role="status">{{ note }}</p>
+              }
+              @if (problem(); as message) {
+                <p class="notice notice-error" role="alert">{{ message }}</p>
+              }
+
+              <button class="btn btn-primary btn-block place" type="submit" [disabled]="placing()">
+                {{ placing() ? 'Placing your order…' : 'Place order' }}
+              </button>
+              <p class="muted fine">You pay {{ shop.money(t.total) }} in cash when it arrives. Nothing to pay now.</p>
+            } @else {
+              <p class="notice notice-error">We can’t deliver to {{ countryName() }} right now. Choose another country.</p>
+            }
+          </aside>
+        </form>
+      }
+    }
+  }
+</div>
