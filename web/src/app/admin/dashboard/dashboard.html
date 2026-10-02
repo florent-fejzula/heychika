@@ -4,6 +4,12 @@
   @if (error()) {
     <p class="notice notice-error">Couldn’t load the numbers. Check your connection and refresh.</p>
   } @else if (summary(); as s) {
+    @if (waitingLimit() !== null && s.toConfirm >= waitingLimit()!) {
+      <p class="notice notice-error" role="alert">
+        The shop has paused new orders: {{ s.toConfirm }} are waiting to be confirmed. Confirm or cancel some and it opens
+        again. If they look fake, cancel them; the limit is in Settings.
+      </p>
+    }
     @if (s.toConfirm > 0) {
       <a class="card waiting" routerLink="/admin/orders" [queryParams]="{ stage: 'confirm' }">
         <strong>{{ s.toConfirm }} new {{ s.toConfirm === 1 ? 'order' : 'orders' }}</strong>
@@ -16,6 +22,16 @@
         <span>to pack and send →</span>
       </a>
     }
+
+    <a class="card month link" routerLink="/admin/reports">
+      <span class="label">This month</span>
+      @if (month(); as m) {
+        <strong>{{ m.sales }} sales · {{ m.profit }} profit</strong>
+        <span class="muted">{{ m.orders }} paid {{ m.orders === 1 ? 'order' : 'orders' }} · Reports →</span>
+      } @else {
+        <span class="muted">Reports →</span>
+      }
+    </a>
 
     <section class="tiles" aria-label="Summary">
       <div class="card tile">

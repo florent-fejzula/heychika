@@ -80,3 +80,8 @@ input.ng-invalid.ng-touched {
     bottom: 16px;
   }
 }
+
+textarea {
+  resize: vertical;
+  line-height: 1.5;
+}

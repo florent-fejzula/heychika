@@ -132,6 +132,40 @@
           </label>
         </section>
 
+        <!-- Shop pages -->
+        <section class="card stack">
+          <div>
+            <h2>Shop pages</h2>
+            <p class="muted hint">
+              The words on <a href="/about" target="_blank">About us</a> and on
+              <a href="/delivery" target="_blank">Delivery &amp; returns</a>, under the delivery fees above. Leave an empty
+              line to start a new paragraph.
+            </p>
+          </div>
+          <label class="field">
+            <span>About us</span>
+            <textarea formControlName="about_text" rows="6"></textarea>
+          </label>
+          <label class="field">
+            <span>Returns</span>
+            <textarea formControlName="returns_text" rows="6"></textarea>
+            <small>Say how long customers have, what condition items must be in, and who pays to send them back.</small>
+          </label>
+        </section>
+
+        <!-- Orders -->
+        <section class="card stack">
+          <h2>Orders</h2>
+          <label class="field narrow">
+            <span>Pause the shop at this many orders waiting to be confirmed</span>
+            <input type="number" inputmode="numeric" step="1" min="1" formControlName="max_waiting_orders" />
+            <small>
+              Protects the stock from a flood of fake orders. When this many shop orders are waiting for a call, the
+              shop asks new customers to message you instead. Confirming or cancelling orders opens it again.
+            </small>
+          </label>
+        </section>
+
         <section class="card stack">
           <h2>Categories, colours &amp; sizes</h2>
           <p class="muted hint">The choices offered when adding a design. Add a new colour or category here.</p>

@@ -17,6 +17,9 @@ interface SettingsRow {
   mkd_rounding: number;
   all_rounding: number;
   default_markup_pct: number;
+  about_text: string;
+  returns_text: string;
+  max_waiting_orders: number;
   fx_updated_at: string;
 }
 
@@ -61,6 +64,9 @@ export class Settings {
     instagram_url: ['', Validators.pattern(URL_PATTERN)],
     tiktok_url: ['', Validators.pattern(URL_PATTERN)],
     facebook_url: ['', Validators.pattern(URL_PATTERN)],
+    about_text: [''],
+    returns_text: [''],
+    max_waiting_orders: [50, [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
     zones: this.fb.array<ZoneGroup>([]),
   });
 
@@ -153,6 +159,9 @@ export class Settings {
       mkd_rounding: Number(row.mkd_rounding),
       all_rounding: Number(row.all_rounding),
       default_markup_pct: Number(row.default_markup_pct),
+      max_waiting_orders: Number(row.max_waiting_orders),
+      about_text: row.about_text ?? '',
+      returns_text: row.returns_text ?? '',
       contact_phone: row.contact_phone ?? '',
       contact_email: row.contact_email ?? '',
       instagram_url: row.instagram_url ?? '',

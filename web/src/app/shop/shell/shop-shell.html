@@ -30,7 +30,9 @@
   <footer class="foot">
     <p class="cod">Pay cash on delivery · Kosovo, North Macedonia and Albania</p>
     <nav class="links" aria-label="More">
+      <a routerLink="/delivery">Delivery &amp; returns</a>
       <a routerLink="/order">Track an order</a>
+      <a routerLink="/about">About us</a>
       @if (shop.context()?.settings; as s) {
         @if (s.instagram_url) {
           <a [href]="s.instagram_url" target="_blank" rel="noopener">Instagram</a>

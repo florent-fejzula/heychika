@@ -1,0 +1,106 @@
+<div class="stack">
+  <h1>Reports</h1>
+  <app-reports-tabs />
+
+  <div class="bar">
+    <p class="muted">As of now</p>
+    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report()">Download for Excel</button>
+  </div>
+
+  @if (error(); as message) {
+    <p class="notice notice-error">{{ message }}</p>
+  } @else if (report(); as r) {
+    <section class="tiles" aria-label="Summary">
+      <div class="card tile">
+        <span class="label">Couriers owe you</span>
+        <strong>{{ euros(r.deliveredEur) }}</strong>
+        <span class="muted">{{ inCurrencies(r.deliveredTotal) }} · {{ r.delivered.length }} delivered, not paid in</span>
+      </div>
+      <div class="card tile">
+        <span class="label">Out for delivery</span>
+        <strong>{{ euros(r.onTheWayEur) }}</strong>
+        <span class="muted">{{ inCurrencies(r.onTheWayTotal) }} · {{ r.onTheWay.length }} {{ r.onTheWay.length === 1 ? 'parcel' : 'parcels' }} to collect</span>
+      </div>
+    </section>
+
+    <section class="card stack">
+      <h2>Delivered, cash not in yet</h2>
+      @if (!r.delivered.length) {
+        <p class="muted small">Nothing. Every delivered order has its cash recorded.</p>
+      } @else {
+        <p class="muted small">Check these against what the courier pays out, then record the cash on each order.</p>
+        <ul class="list">
+          @for (o of r.delivered; track o.id) {
+            <li>
+              <a class="owed" [routerLink]="['/admin/orders', o.id]">
+                <span class="who">
+                  <strong>{{ o.customer }}</strong>
+                  <span class="muted">{{ o.orderNumber }} · {{ o.city }}, {{ countryName[o.country] }}@if (o.courier) { · {{ o.courier }}}</span>
+                </span>
+                <span class="amount">
+                  <strong>{{ due(o) }}</strong>
+                  <span class="muted" [class.late]="o.days >= chaseAfter">delivered {{ ago(o.days) }}</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="card stack">
+      <h2>Out for delivery</h2>
+      @if (!r.onTheWay.length) {
+        <p class="muted small">No parcels are out right now.</p>
+      } @else {
+        <ul class="list">
+          @for (o of r.onTheWay; track o.id) {
+            <li>
+              <a class="owed" [routerLink]="['/admin/orders', o.id]">
+                <span class="who">
+                  <strong>{{ o.customer }}</strong>
+                  <span class="muted">{{ o.orderNumber }} · {{ o.city }}, {{ countryName[o.country] }}@if (o.courier) { · {{ o.courier }}}</span>
+                </span>
+                <span class="amount">
+                  <strong>{{ due(o) }}</strong>
+                  <span class="muted" [class.late]="o.days >= chaseAfter">sent {{ ago(o.days) }}</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="card stack">
+      <h2>On the way back</h2>
+      @if (!r.comingBack.length) {
+        <p class="muted small">Nothing is on its way back.</p>
+      } @else {
+        <p class="muted small">Parcels that couldn’t be delivered and items handed back at the door. They still count as on the road until they’re back and checked in with <strong>Something came back</strong> on the order.</p>
+        <ul class="list">
+          @for (c of r.comingBack; track c.id) {
+            <li>
+              <a class="owed" [routerLink]="['/admin/orders', c.id]">
+                <span class="who">
+                  <strong>{{ c.customer }}</strong>
+                  <span class="muted">{{ c.orderNumber }} · {{ c.why === 'not_delivered' ? 'not delivered' : 'handed back at the door' }}</span>
+                  <ul class="items">
+                    @for (i of c.items; track $index) {
+                      <li>{{ i.qty }} × {{ i.name }}, {{ i.colour }} {{ i.size }}</li>
+                    }
+                  </ul>
+                </span>
+                <span class="amount">
+                  <span class="muted" [class.late]="c.days >= chaseAfter">{{ c.since ? 'since ' + dayLabel(c.since) : '' }}</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  } @else {
+    <p class="muted">Loading…</p>
+  }
+</div>

@@ -12,17 +12,31 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+app.disable('x-powered-by');
+
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
+ * Security headers on every response.
  *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * - No other site may show these pages in a frame, so the admin can't be
+ *   overlaid with a fake page that tricks a click (clickjacking).
+ * - Browsers must not guess file types, and links to other sites don't carry
+ *   the full address (order numbers are in some of them).
+ * - The camera is for scanning barcodes in the admin; nothing else gets it.
+ * - HTTPS only, once a browser has seen the site over HTTPS.
+ *
+ * Deliberately no script-src policy: the server-rendered pages carry inline
+ * scripts (the data handed to the browser, event replay), and the risk it
+ * guards against is already covered by Angular escaping everything it shows.
  */
+app.use((_req, res, next) => {
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'");
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(), payment=()');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+  next();
+});
 
 /**
  * Serve static files from /browser

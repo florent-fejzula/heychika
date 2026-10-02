@@ -37,7 +37,7 @@ The schema leaves room for these. None of them is built.
 | Database | Postgres (Supabase) | Integrity constraints + real reporting |
 | Auth / Storage | Supabase | Bundled; Firebase-shaped DX |
 | Images | Supabase Storage + transforms | Resizing without a separate service |
-| Hosting | Vercel or Cloudflare Pages | Free tier is sufficient |
+| Hosting | Firebase App Hosting (any Node host works) | Runs the SSR server as it is; known ground. Static hosts (Vercel, Cloudflare Pages) can't run it unchanged |
 | Barcodes | `bwip-js` (render), `@zxing/browser` (scan) | Cross-platform; works on iOS Safari |
 
 **On Firestore:** rejected for this project, not on principle. Two reasons. The rules this app
@@ -323,9 +323,10 @@ They work from their phones with a DM open in the other app. Desktop is the seco
 6. Confirmation + tracking by order number and phone
 7. Static pages — about, delivery & returns, contact
 
-**Built:** 1–6. Home and category listing are one page, filtered by category, size and colour
+**Built:** all seven. About and Delivery & returns are two pages (contact details sit on About); their
+words are edited in Settings. Home and category listing are one page, filtered by category, size and colour
 (not price: with ~50 designs it adds little). A size or colour filter shows only what is in stock
-in it. Static pages come with launch (phase 10).
+in it.
 
 **The share button matters more than it looks.** Customers live in Instagram DMs and won't all move
 to a website. The realistic flow for a long time is: customer DMs, sister pastes a product link,
@@ -365,8 +366,8 @@ screen, because self-service checkout is the actual goal.
 | 6 ✅ | Shop — browse, product page, cart, checkout, order creation |
 | 7 ✅ | Order management — status flow, scan-to-dispatch, COD collection |
 | 8 ✅ | Returns — refunds, failed delivery, saleable vs damaged |
-| 9 | Reports — stock, sales, profit, Excel export |
-| 10 | Launch — backup, hardening, static pages, social links |
+| 9 ✅ | Reports — stock, sales, profit, Excel export |
+| 10 ✅ | Launch — backup, hardening, static pages, social links |
 
 Phases 1–5 are usable internally: real stock, real costs, real margins, before a single customer
 sees anything. Phases 6–7 are what she actually asked for.
@@ -391,6 +392,21 @@ every report a lie. Dispatched-but-unpaid and delivered-but-unpaid belong in the
 - Purchases by trip and supplier
 - Outstanding — dispatched or delivered but unpaid
 - Excel export on all of the above
+
+**Built** as four reports under Today: Sales, Owed, Stock, Buying. The rules they follow:
+
+- An order counts on the day its cash was recorded (`paid_at`), in Kosovo time. Returns come off the order
+  they belong to, so a month's figures can drop a little when something from it comes back later.
+- Sold = `qty − returned_qty − refused_qty`. Each item sells at `unit_price_in_currency / currency_per_eur`
+  (what the customer actually paid, rounding included), not the EUR list price. Profit is against the cost
+  frozen at dispatch. Items with no cost (counted in, never bought on a trip) are flagged, not hidden.
+- Cash in is `amount_collected − refunds`, shown in each currency as handed over and in EUR at the order's
+  rate. Delivery fees are in cash, not in sales: they roughly pay the courier.
+- Owed splits delivered-unpaid (the courier has the cash) from still-out-for-delivery, and lists what's on its
+  way back (undelivered parcels, items handed back at the door).
+- Stock is valued at weighted-average cost and at today's price; reserved items are still on the shelf.
+- Excel files are written in the browser with no library (`core/xlsx.ts`): SheetJS on npm is unmaintained
+  with open advisories, and CSV breaks on these countries' Excel settings (semicolons, ë and ç).
 
 ---
 
@@ -434,6 +450,11 @@ every report a lie. Dispatched-but-unpaid and delivered-but-unpaid belong in the
 - Orders typed in from a DM start confirmed, can include designs not shown online (not retired
   ones), and can use a price agreed in the chat. Staff are trusted with customer details, so a DM
   order updates the customer's saved address; a shop order never does
+- At most 50 shop orders waiting to be confirmed at once (changeable in Settings). Past that the shop pauses
+  and says to message instead: the per-phone limit alone doesn't stop someone typing new numbers
+- The shipped returns text says 14 days, unworn with tags, customer pays return postage unless the item was
+  wrong or faulty. It's a placeholder for the owners to rewrite (question 6 is still open)
+- Backups are a nightly GitHub Actions job, encrypted because the repository is public, kept 30 days
 - Guest checkout only; no customer logins
 - Single stock pool, Prishtina
 - COD only, collected in the customer's local currency

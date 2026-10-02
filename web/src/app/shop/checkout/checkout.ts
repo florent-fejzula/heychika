@@ -157,6 +157,12 @@ export class Checkout {
           'You already have orders waiting for us to confirm. We’ll call you soon. If you need to change one, message us.',
         );
         break;
+      case 'busy':
+        this.problem.set(
+          'We have a lot of orders waiting to be confirmed, so the shop has paused new ones for a little while. ' +
+            'Send us a message and we’ll take your order there, or try again later.',
+        );
+        break;
       case 'invalid':
         if (problem.field in this.form.controls) {
           const control = this.form.controls[problem.field as Field];

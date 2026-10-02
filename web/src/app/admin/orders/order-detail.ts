@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { RouterLink } from '@angular/router';
 import { COUNTRY_NAME, formatMoney, parseAmount } from '../../core/money';
 import { OrderDetail as Order, OrderLine, Orders, PAYMENT_LABEL, STATUS_LABEL, phoneDigits } from '../../core/orders';
+import { soldQty, unitSaleEur } from '../../core/reports';
 
 type Panel = 'cancel' | 'delivered' | 'failed' | 'cash' | 'edit' | null;
 
@@ -67,11 +68,13 @@ export class OrderDetail {
     return Math.max(0, o.total_in_currency - back);
   });
 
+  // Counted the way the sales report counts it, so the two agree: what the customer
+  // kept, at the price they paid, less what it cost when it was sent.
   protected readonly cogs = computed(() => {
     const o = this.order();
     if (!o || o.lines.some((l) => l.unit_cost_eur === null)) return null;
-    const cost = o.lines.reduce((sum, l) => sum + (l.qty - l.returned_qty) * (l.unit_cost_eur ?? 0), 0);
-    const sold = o.lines.reduce((sum, l) => sum + (l.qty - l.returned_qty) * l.unit_price_eur, 0);
+    const cost = o.lines.reduce((sum, l) => sum + soldQty(l) * (l.unit_cost_eur ?? 0), 0);
+    const sold = o.lines.reduce((sum, l) => sum + soldQty(l) * unitSaleEur(l, o.currency_per_eur), 0);
     return { cost, profit: sold - cost };
   });
 

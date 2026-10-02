@@ -1,0 +1,59 @@
+<div class="stack">
+  <h1>Reports</h1>
+  <app-reports-tabs />
+
+  <app-period-picker [key]="key()" [from]="period().from" [to]="period().to" (changed)="choosePeriod($event)" />
+
+  <div class="bar">
+    <p class="muted" aria-live="polite">{{ label() }}{{ loading() ? ' · loading…' : '' }}</p>
+    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report() || loading()">Download for Excel</button>
+  </div>
+
+  @if (error(); as message) {
+    <p class="notice notice-error">{{ message }}</p>
+  } @else if (report(); as r) {
+    <div class="stack" [class.stale]="loading()">
+      @if (!r.trips.length) {
+        <section class="card stack empty">
+          <h2>No buying trips in this period</h2>
+          <p class="muted">A trip shows here once it has been received into stock.</p>
+        </section>
+      } @else {
+        <section class="tiles" aria-label="Summary">
+          <div class="card tile">
+            <span class="label">Spent</span>
+            <strong>{{ euros(r.totals.totalEur) }}</strong>
+            <span class="muted">{{ r.totals.trips }} {{ r.totals.trips === 1 ? 'trip' : 'trips' }} · {{ r.totals.items }} items</span>
+          </div>
+          <div class="card tile">
+            <span class="label">An item cost</span>
+            <strong>{{ euros(r.totals.items ? r.totals.totalEur / r.totals.items : 0) }}</strong>
+            <span class="muted">on average, with trip costs</span>
+          </div>
+          <div class="card tile">
+            <span class="label">Goods</span>
+            <strong>{{ euros(r.totals.goodsEur) }}</strong>
+            <span class="muted">what the clothes cost</span>
+          </div>
+          <div class="card tile">
+            <span class="label">Trip costs</span>
+            <strong>{{ euros(r.totals.extraEur) }}</strong>
+            <span class="muted">travel, freight, customs</span>
+          </div>
+        </section>
+
+        <section class="card stack">
+          <h2>Trips</h2>
+          <app-report-table [head]="['Trip', 'Items', 'Trip costs', 'Total']" [rows]="trips(r)" [foot]="foot(r)" />
+        </section>
+
+        <section class="card stack">
+          <h2>By supplier</h2>
+          <app-report-table [head]="['Supplier', 'Items', 'Trip costs', 'Total']" [rows]="suppliers(r)" [foot]="foot(r)" />
+        </section>
+      }
+    </div>
+  } @else {
+    <p class="muted">Loading…</p>
+  }
+</div>

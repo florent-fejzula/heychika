@@ -1,0 +1,48 @@
+<article class="info">
+  <h1>About us</h1>
+
+  @if (text(); as paras) {
+    @for (p of paras; track $index) {
+      <p>{{ p }}</p>
+    }
+  } @else {
+    <p class="muted">This page couldn’t load just now. Please refresh in a moment.</p>
+  }
+
+  @if (contact(); as c) {
+    @if (c.any) {
+      <section>
+        <h2>Get in touch</h2>
+        <ul class="contact">
+          @if (c.instagram) {
+            <li><a [href]="c.instagram" target="_blank" rel="noopener">Instagram</a></li>
+          }
+          @if (c.tiktok) {
+            <li><a [href]="c.tiktok" target="_blank" rel="noopener">TikTok</a></li>
+          }
+          @if (c.facebook) {
+            <li><a [href]="c.facebook" target="_blank" rel="noopener">Facebook</a></li>
+          }
+          @if (c.phone) {
+            <li>
+              <a [href]="'tel:' + c.phone">{{ c.phone }}</a>
+              @if (c.whatsapp) {
+                · <a [href]="c.whatsapp" target="_blank" rel="noopener">WhatsApp</a>
+              }
+              @if (c.viber) {
+                · <a [href]="c.viber">Viber</a>
+              }
+            </li>
+          }
+          @if (c.email) {
+            <li><a [href]="'mailto:' + c.email">{{ c.email }}</a></li>
+          }
+        </ul>
+      </section>
+    }
+  }
+
+  <p class="more">
+    <a routerLink="/delivery">Delivery &amp; returns</a> · <a routerLink="/order">Track an order</a>
+  </p>
+</article>

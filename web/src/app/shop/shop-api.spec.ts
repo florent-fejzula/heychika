@@ -116,6 +116,7 @@ describe('problemOf', () => {
     expect(problemOf({ message: 'not_available', details: '12' })).toEqual({ kind: 'not_available', variantId: 12 });
     expect(problemOf({ message: 'price_changed', details: '3400' })).toEqual({ kind: 'price_changed', total: 3400 });
     expect(problemOf({ message: 'too_many_orders' })).toEqual({ kind: 'too_many_orders' });
+    expect(problemOf({ message: 'shop_busy' })).toEqual({ kind: 'busy' });
     expect(problemOf({ message: 'invalid_order', details: 'phone' })).toEqual({ kind: 'invalid', field: 'phone' });
     expect(problemOf({ message: 'TypeError: Failed to fetch' })).toEqual({ kind: 'offline' });
     expect(problemOf({ message: 'something else' })).toEqual({ kind: 'unknown' });

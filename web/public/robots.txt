@@ -1,0 +1,7 @@
+# The shop is for everyone to find. The admin, the bag, checkout and order pages
+# are private to whoever is using them, so search engines are asked to stay out.
+User-agent: *
+Disallow: /admin
+Disallow: /bag
+Disallow: /checkout
+Disallow: /order

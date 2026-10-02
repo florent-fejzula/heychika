@@ -242,7 +242,9 @@ describe('OrderDetail', () => {
     expect(el.textContent).toContain('RT-2026-0001');
     expect(el.textContent).toContain('1 × Wrap dress · Black M — back on the shelf');
     expect(el.textContent).toContain('Refunded 1,550 MKD by cash');
-    expect(el.textContent).toContain('€22.00 · €28.00'); // cost 10 + 12; sold 25 + 25
+    // Cost 10 + 12. Sold at 1550 MKD each as the customer paid, which at 61.5 is
+    // €25.20, not the €25 list price; the sales report counts it the same way.
+    expect(el.textContent).toContain('€22.00 · €28.41');
     expect(el.querySelector('a[href="/admin/orders/7/return"]')).toBeTruthy();
     expect(el.textContent).not.toContain('Change items');
   });

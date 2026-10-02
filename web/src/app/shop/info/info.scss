@@ -1,0 +1,81 @@
+.info {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  h1 {
+    font-family: var(--font-brand);
+    font-size: 2rem;
+  }
+
+  h2 {
+    margin-top: 12px;
+    font-size: 1.0625rem;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.zones {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+
+  th,
+  td {
+    padding: 10px 8px 10px 0;
+    border-top: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  thead th {
+    border-top: 0;
+    padding-top: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+
+  tbody th {
+    font-weight: 500;
+  }
+
+  small {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+.contact {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.more {
+  margin-top: 12px !important;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.message {
+  align-items: flex-start;
+  padding-top: 24px;
+}

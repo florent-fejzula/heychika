@@ -26,7 +26,7 @@ export class AdminShell {
   protected readonly staff = this.auth.staff;
 
   protected readonly nav: NavItem[] = [
-    { path: '/admin', label: 'Today', exact: true, icon: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
+    { path: '/admin', label: 'Today', exact: true, also: ['/admin/reports'], icon: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
     { path: '/admin/products', label: 'Products', icon: 'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01' },
     { path: '/admin/scan', label: 'Scan', icon: 'M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10' },
     { path: '/admin/stock', label: 'Stock', icon: 'M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8' },

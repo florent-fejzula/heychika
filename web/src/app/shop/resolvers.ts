@@ -1,7 +1,7 @@
-import { inject } from '@angular/core';
+import { RESPONSE_INIT, inject } from '@angular/core';
 import { ResolveFn } from '@angular/router';
 import { supabaseConfigured } from '../core/supabase';
-import { ShopApi, ShopProduct } from './shop-api';
+import { ShopApi, ShopPages, ShopProduct } from './shop-api';
 import { ShopState } from './shop-state';
 
 /** What a page got: its data, or a note that the database couldn't be reached. */
@@ -37,9 +37,23 @@ export const productsResolver: ResolveFn<Loaded<ShopProduct[]>> = async () => {
 
 export const productResolver: ResolveFn<Loaded<ShopProduct | null>> = async (route) => {
   const api = inject(ShopApi);
+  const response = inject(RESPONSE_INIT, { optional: true });
   if (!supabaseConfigured) return { ok: true, value: null };
   try {
-    return { ok: true, value: await api.product(route.paramMap.get('slug') ?? '') };
+    const value = await api.product(route.paramMap.get('slug') ?? '');
+    // A dead link still shows a friendly page, but tells search engines it's gone.
+    if (!value && response) response.status = 404;
+    return { ok: true, value };
+  } catch {
+    return { ok: false };
+  }
+};
+
+export const pagesResolver: ResolveFn<Loaded<ShopPages>> = async () => {
+  const api = inject(ShopApi);
+  if (!supabaseConfigured) return { ok: false };
+  try {
+    return { ok: true, value: await api.pages() };
   } catch {
     return { ok: false };
   }

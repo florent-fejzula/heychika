@@ -23,6 +23,12 @@ export interface ShopCategory {
   slug: string;
 }
 
+/** The words on the About and Delivery & returns pages, as the owners wrote them in Settings. */
+export interface ShopPages {
+  about_text: string;
+  returns_text: string;
+}
+
 export interface ShopContext {
   settings: ShopSettings;
   zones: DeliveryZone[];
@@ -118,6 +124,7 @@ export type CheckoutProblem =
   | { kind: 'not_available'; variantId: number }
   | { kind: 'price_changed'; total: number }
   | { kind: 'too_many_orders' }
+  | { kind: 'busy' }
   | { kind: 'invalid'; field: string }
   | { kind: 'offline' }
   | { kind: 'unknown' };
@@ -234,6 +241,14 @@ export class ShopApi {
         })),
         categories: (categories.data ?? []).map((c) => ({ id: c.id, name: c.name, slug: slugify(c.name) })),
       };
+    });
+  }
+
+  pages(): Promise<ShopPages> {
+    return this.once('shop-pages', async () => {
+      const { data, error } = await this.sb.from('settings').select('about_text, returns_text').single<ShopPages>();
+      if (error) throw error;
+      return data;
     });
   }
 
@@ -377,6 +392,7 @@ export function problemOf(error: { message?: string; details?: string | null; hi
   if (/not_available/.test(message)) return { kind: 'not_available', variantId: Number(detail) };
   if (/price_changed/.test(message)) return { kind: 'price_changed', total: Number(detail) };
   if (/too_many_orders/.test(message)) return { kind: 'too_many_orders' };
+  if (/shop_busy/.test(message)) return { kind: 'busy' };
   if (/invalid_order/.test(message)) return { kind: 'invalid', field: detail };
   if (/failed to fetch|networkerror|load failed/i.test(message)) return { kind: 'offline' };
   return { kind: 'unknown' };

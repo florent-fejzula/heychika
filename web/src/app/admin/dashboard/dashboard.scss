@@ -81,3 +81,23 @@
   text-decoration: none;
   color: inherit;
 }
+
+.month {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .label {
+    font-size: 0.8125rem;
+    color: var(--ink-soft);
+  }
+
+  strong {
+    font-size: 1.125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .muted {
+    font-size: 0.8125rem;
+  }
+}

@@ -1,0 +1,126 @@
+// Shared by every report page.
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  .btn {
+    flex: none;
+  }
+}
+
+.stale {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (min-width: 700px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  .label {
+    font-size: 0.8125rem;
+    color: var(--ink-soft);
+  }
+
+  strong {
+    font-size: 1.375rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .muted {
+    font-size: 0.75rem;
+  }
+}
+
+.loss {
+  color: var(--danger);
+}
+
+.small {
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.empty {
+  align-items: flex-start;
+
+  p {
+    margin: 0;
+  }
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li + li {
+    border-top: 1px solid var(--line);
+  }
+}
+
+.owed {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  color: inherit;
+  text-decoration: none;
+
+  .who {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    .muted {
+      font-size: 0.8125rem;
+    }
+  }
+
+  .amount {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    .muted {
+      font-size: 0.75rem;
+    }
+  }
+
+  .late {
+    color: var(--danger);
+  }
+}
+
+.items {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}

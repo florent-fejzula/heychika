@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { explain } from './errors';
-import { Supabase } from './supabase';
+import { Supabase, allRows } from './supabase';
 
 export interface StockRow {
   id: number;
@@ -65,15 +65,17 @@ export class Inventory {
   private readonly sb = inject(Supabase).client;
 
   async overview(): Promise<StockRow[]> {
-    const { data, error } = await this.sb
-      .from('variants')
-      .select(
-        'id, sku, active, cost_eur, product:products(id, name, status), color:colors(name, hex), size:sizes(label, sort_order),' +
-          'stock(qty_physical, qty_reserved, qty_available, qty_in_transit, qty_damaged, min_stock)',
-      )
-      .limit(2000)
-      .overrideTypes<StockRow[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the stock.');
+    const data = await allRows<StockRow>((from, to) =>
+      this.sb
+        .from('variants')
+        .select(
+          'id, sku, active, cost_eur, product:products(id, name, status), color:colors(name, hex), size:sizes(label, sort_order),' +
+            'stock(qty_physical, qty_reserved, qty_available, qty_in_transit, qty_damaged, min_stock)',
+        )
+        .order('id')
+        .range(from, to)
+        .overrideTypes<StockRow[], { merge: false }>(),
+    ).catch((e) => fail(e, 'Couldn’t load the stock.'));
     return data.map((v) => ({ ...v, stock: first(v.stock) }));
   }
 

@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { formatMoney } from '../../core/money';
+import { Reports, periodFor, salesReport } from '../../core/reports';
 import { Supabase } from '../../core/supabase';
 
 interface StockRow {
@@ -33,12 +34,30 @@ interface Summary {
 })
 export class Dashboard {
   private readonly supabase = inject(Supabase).client;
+  private readonly reports = inject(Reports);
 
   protected readonly summary = signal<Summary | null>(null);
+  /** How many waiting orders pause the shop (see Settings). */
+  protected readonly waitingLimit = signal<number | null>(null);
   protected readonly error = signal(false);
+  /** This month's sales so far, for a glance; the detail is in Reports. */
+  protected readonly month = signal<{ sales: string; profit: string; orders: number } | null>(null);
 
   constructor() {
     this.load().catch(() => this.error.set(true));
+    // On its own: if it fails, the rest of the page still shows.
+    this.supabase
+      .from('settings')
+      .select('max_waiting_orders')
+      .single<{ max_waiting_orders: number }>()
+      .then(({ data }) => this.waitingLimit.set(data ? Number(data.max_waiting_orders) : null));
+    this.reports
+      .sales(periodFor('month'))
+      .then((rows) => {
+        const r = salesReport(rows);
+        this.month.set({ sales: formatMoney(r.sales, 'EUR'), profit: formatMoney(r.profit, 'EUR'), orders: r.orders });
+      })
+      .catch(() => undefined);
   }
 
   private async load(): Promise<void> {

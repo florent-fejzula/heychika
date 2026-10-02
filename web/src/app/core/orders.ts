@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { explain } from './errors';
 import { Country, Currency, DeliveryZone, FxSettings } from './money';
-import { Supabase } from './supabase';
+import { Supabase, allRows } from './supabase';
 
 export type OrderStatus =
   | 'new' | 'confirmed' | 'dispatched' | 'delivered' | 'completed'
@@ -245,13 +245,17 @@ export class Orders {
   // ---------------------------------------------------------------- reading
 
   async list(): Promise<OrderSummary[]> {
-    const { data, error } = await this.sb
-      .from('orders')
-      .select('id, order_number, channel, status, payment_status, country, currency, total_in_currency, delivery_name, delivery_phone, delivery_city, created_at, lines:order_lines(qty)')
-      .order('created_at', { ascending: false })
-      .limit(1000)
-      .overrideTypes<OrderSummary[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the orders.');
+    // All of them, not the newest thousand: an old order whose cash never came must
+    // still show under Cash due.
+    const data = await allRows<OrderSummary>((from, to) =>
+      this.sb
+        .from('orders')
+        .select('id, order_number, channel, status, payment_status, country, currency, total_in_currency, delivery_name, delivery_phone, delivery_city, created_at, lines:order_lines(qty)')
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .range(from, to)
+        .overrideTypes<OrderSummary[], { merge: false }>(),
+    ).catch((e) => fail(e, 'Couldn’t load the orders.'));
     return data.map((o) => ({ ...o, total_in_currency: num(o.total_in_currency) }));
   }
 
@@ -298,13 +302,16 @@ export class Orders {
 
   /** Everything that could go on an order typed in by hand: active sizes of designs that aren't retired. */
   async sellable(): Promise<SellableItem[]> {
-    const { data, error } = await this.sb
-      .from('variants')
-      .select('id, sku, barcode, price_eur, active, product:products(id, name, status), color:colors(name, hex, sort_order), size:sizes(label, sort_order), stock(qty_available)')
-      .eq('active', true)
-      .limit(5000)
-      .overrideTypes<(Omit<SellableItem, 'available'> & { active: boolean; stock: { qty_available: number } | { qty_available: number }[] | null })[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the products.');
+    type Row = Omit<SellableItem, 'available'> & { active: boolean; stock: { qty_available: number } | { qty_available: number }[] | null };
+    const data = await allRows<Row>((from, to) =>
+      this.sb
+        .from('variants')
+        .select('id, sku, barcode, price_eur, active, product:products(id, name, status), color:colors(name, hex, sort_order), size:sizes(label, sort_order), stock(qty_available)')
+        .eq('active', true)
+        .order('id')
+        .range(from, to)
+        .overrideTypes<Row[], { merge: false }>(),
+    ).catch((e) => fail(e, 'Couldn’t load the products.'));
     return data
       .filter((v) => v.product.status !== 'archived')
       .map(({ stock, active: _a, ...v }) => {
@@ -341,13 +348,15 @@ export class Orders {
   // ---------------------------------------------------------------- customers
 
   async customers(): Promise<CustomerSummary[]> {
-    const { data, error } = await this.sb
-      .from('customers')
-      .select('*, orders(id, status, payment_status, total_eur, created_at)')
-      .order('created_at', { ascending: false })
-      .limit(2000)
-      .overrideTypes<CustomerSummary[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the customers.');
+    const data = await allRows<CustomerSummary>((from, to) =>
+      this.sb
+        .from('customers')
+        .select('*, orders(id, status, payment_status, total_eur, created_at)')
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .range(from, to)
+        .overrideTypes<CustomerSummary[], { merge: false }>(),
+    ).catch((e) => fail(e, 'Couldn’t load the customers.'));
     return data.map((c) => ({ ...c, orders: c.orders.map((o) => ({ ...o, total_eur: num(o.total_eur) })) }));
   }
 

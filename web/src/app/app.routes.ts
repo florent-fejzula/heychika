@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { staffGuard } from './core/auth';
-import { productResolver, productsResolver, shopContextResolver } from './shop/resolvers';
+import { pagesResolver, productResolver, productsResolver, shopContextResolver } from './shop/resolvers';
 
 export const routes: Routes = [
   {
@@ -109,6 +109,26 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/customers/customer-detail').then((m) => m.CustomerDetail),
       },
       {
+        path: 'reports',
+        title: 'Sales · Hey Chika',
+        loadComponent: () => import('./admin/reports/sales-report').then((m) => m.SalesReport),
+      },
+      {
+        path: 'reports/owed',
+        title: 'Money owed · Hey Chika',
+        loadComponent: () => import('./admin/reports/owed-report').then((m) => m.OwedReport),
+      },
+      {
+        path: 'reports/stock',
+        title: 'Stock value · Hey Chika',
+        loadComponent: () => import('./admin/reports/stock-report').then((m) => m.StockReport),
+      },
+      {
+        path: 'reports/buying',
+        title: 'Buying · Hey Chika',
+        loadComponent: () => import('./admin/reports/buying-report').then((m) => m.BuyingReport),
+      },
+      {
         path: 'settings',
         title: 'Settings · Hey Chika',
         loadComponent: () => import('./admin/settings/settings').then((m) => m.Settings),
@@ -154,7 +174,23 @@ export const routes: Routes = [
         title: 'Your order · Hey Chika',
         loadComponent: () => import('./shop/order/order-page').then((m) => m.OrderPage),
       },
+      {
+        path: 'about',
+        title: 'About us · Hey Chika',
+        loadComponent: () => import('./shop/info/info-pages').then((m) => m.AboutPage),
+        resolve: { pages: pagesResolver },
+      },
+      {
+        path: 'delivery',
+        title: 'Delivery & returns · Hey Chika',
+        loadComponent: () => import('./shop/info/info-pages').then((m) => m.DeliveryPage),
+        resolve: { pages: pagesResolver },
+      },
+      {
+        path: '**',
+        title: 'Not found · Hey Chika',
+        loadComponent: () => import('./shop/info/info-pages').then((m) => m.NotFoundPage),
+      },
     ],
   },
-  { path: '**', redirectTo: '' },
 ];

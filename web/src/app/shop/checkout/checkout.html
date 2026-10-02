@@ -127,7 +127,10 @@
               <button class="btn btn-primary btn-block place" type="submit" [disabled]="placing()">
                 {{ placing() ? 'Placing your order…' : 'Place order' }}
               </button>
-              <p class="muted fine">You pay {{ shop.money(t.total) }} in cash when it arrives. Nothing to pay now.</p>
+              <p class="muted fine">
+                You pay {{ shop.money(t.total) }} in cash when it arrives. Nothing to pay now.
+                <a routerLink="/delivery" target="_blank">Delivery &amp; returns</a>
+              </p>
             } @else {
               <p class="notice notice-error">We can’t deliver to {{ countryName() }} right now. Choose another country.</p>
             }

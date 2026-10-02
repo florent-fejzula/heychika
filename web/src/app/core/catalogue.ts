@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { explain } from './errors';
 import { prepareImage, thumbPath } from './images';
-import { Supabase } from './supabase';
+import { Supabase, allRows } from './supabase';
 
 export type SizeType = 'letter' | 'numeric' | 'one_size';
 export type ProductStatus = 'draft' | 'active' | 'archived';
@@ -319,15 +319,17 @@ export class Catalogue {
   // ------------------------------------------------------- labels and scans
 
   async labelVariants(): Promise<LabelVariant[]> {
-    const { data, error } = await this.sb
-      .from('variants')
-      .select(
-        'id, sku, barcode, price_eur, active, product:products(id, name, status), color:colors(name),' +
-          'size:sizes(label, sort_order), stock(qty_physical)',
-      )
-      .limit(2000)
-      .overrideTypes<LabelVariant[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the products.');
+    const data = await allRows<LabelVariant>((from, to) =>
+      this.sb
+        .from('variants')
+        .select(
+          'id, sku, barcode, price_eur, active, product:products(id, name, status), color:colors(name),' +
+            'size:sizes(label, sort_order), stock(qty_physical)',
+        )
+        .order('id')
+        .range(from, to)
+        .overrideTypes<LabelVariant[], { merge: false }>(),
+    ).catch((e) => fail(e, 'Couldn’t load the products.'));
     return data.map((v) => ({ ...v, stock: first(v.stock) }));
   }
 

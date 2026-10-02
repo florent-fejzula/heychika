@@ -1,0 +1,70 @@
+<div class="stack">
+  <h1>Reports</h1>
+  <app-reports-tabs />
+
+  <div class="bar">
+    <p class="muted">As of now</p>
+    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report()">Download for Excel</button>
+  </div>
+
+  @if (error(); as message) {
+    <p class="notice notice-error">{{ message }}</p>
+  } @else if (report(); as r) {
+    @if (!r.lines.length) {
+      <section class="card stack empty">
+        <h2>No stock yet</h2>
+        <p class="muted">Receive a buying trip and what it brought in shows here, with what it’s worth.</p>
+      </section>
+    } @else {
+      <section class="tiles" aria-label="Summary">
+        <div class="card tile">
+          <span class="label">On the shelf</span>
+          <strong>{{ euros(r.totals.valueCost) }}</strong>
+          <span class="muted">{{ r.totals.shelf }} items, at what they cost</span>
+        </div>
+        <div class="card tile">
+          <span class="label">If it all sold</span>
+          <strong>{{ euros(r.totals.valuePrice) }}</strong>
+          <span class="muted">at today’s prices: {{ euros(r.totals.valuePrice - r.totals.valueCost, true) }} profit</span>
+        </div>
+        <div class="card tile">
+          <span class="label">On the road</span>
+          <strong>{{ r.totals.road }}</strong>
+          <span class="muted">items, {{ euros(r.totals.roadCost, true) }} at cost</span>
+        </div>
+        <div class="card tile">
+          <span class="label">Damaged</span>
+          <strong>{{ r.totals.damaged }}</strong>
+          <span class="muted">items, {{ euros(r.totals.damagedCost, true) }} at cost</span>
+        </div>
+      </section>
+
+      @if (r.totals.soldOut || r.totals.low) {
+        <p class="notice">
+          @if (r.totals.soldOut) {{{ r.totals.soldOut }} {{ r.totals.soldOut === 1 ? 'size is' : 'sizes are' }} sold out}@if (r.totals.soldOut && r.totals.low) {, and }@if (r.totals.low) {{{ r.totals.low }} running low}.
+          <a routerLink="/admin/stock">See which</a>
+        </p>
+      }
+      @if (r.totals.uncosted > 0) {
+        <p class="notice">
+          {{ r.totals.uncosted }} {{ r.totals.uncosted === 1 ? 'item has' : 'items have' }} no cost recorded (counted in rather than
+          received from a buying trip), so the value at cost is lower than it really is.
+        </p>
+      }
+
+      <p class="muted small">On the shelf includes items held for orders not sent yet ({{ r.totals.reserved }} now).</p>
+
+      <section class="card stack">
+        <h2>By category</h2>
+        <app-report-table [head]="head('Category')" [rows]="rows(r.byCategory)" [foot]="foot(r)" />
+      </section>
+
+      <section class="card stack">
+        <h2>By design</h2>
+        <app-report-table [head]="head('Design')" [rows]="rows(r.byDesign)" [foot]="foot(r)" />
+      </section>
+    }
+  } @else {
+    <p class="muted">Loading…</p>
+  }
+</div>

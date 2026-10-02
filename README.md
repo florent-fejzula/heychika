@@ -13,7 +13,8 @@ web/        the Angular app: public shop at /, admin at /admin
 
 ## Status
 
-**Phases 1–8 are done** (foundation, catalogue, barcodes, buying trips, stock, the shop, orders, returns).
+**All ten phases are done.** What's left before opening is outside the code: photos, the owners' own words
+on the About and returns pages, a domain, and the checklist under [Going live](#going-live).
 
 - **The shop**, at `/`: browse by category, size and colour; a product page with colour and size
   pickers, photos for the chosen colour, a share button and a link preview for DMs; the bag; and
@@ -36,7 +37,7 @@ web/        the Angular app: public shop at /, admin at /admin
 - **Customers:** everyone who ordered, with what they paid for, parcels that came back, their orders,
   and a note about them
 - Full database schema for every phase, with the stock engine, purchasing, costing and checkout
-  working and tested (132 database tests)
+  working and tested (142 database tests, 292 app tests)
 - Admin login (owners only), phone-first layout, a live "Today" dashboard, Settings (exchange
   rates, delivery fees, shop details)
 - **Products:** add a design, tick its colours and sizes to create every SKU and barcode at once,
@@ -49,8 +50,23 @@ web/        the Angular app: public shop at /, admin at /admin
 - **Stock:** what is on the shelf, reserved, on the road and damaged, with filters for what is running
   low or sold out; recount, mark damage and write off with a reason; the full history of every size
 - **Categories, colours & sizes:** add new ones without touching code
+- **Reports**, under Today, each one downloadable as an Excel file:
+  - *Sales*: for this month, last month, this year, last year, all time or chosen dates. Sales, profit, margin
+    and the cash that came in (in each currency as it was handed over), by design, category, country, shop or DM,
+    and month.
+  - *Owed*: what each courier still owes for delivered parcels, what's out for delivery, and what's on its way back.
+  - *Stock*: what the shelf is worth at cost and at today's prices, by category and design.
+  - *Buying*: what each trip and supplier cost, and what an item cost on average with the trip costs.
 
-Still to come: reports and Excel export (phase 9), and launch (10).
+  A sale counts on the day its cash is recorded, less anything that came back since. Each item counts at the price
+  the customer paid in their currency, turned into euros at the order's own rate, against what it cost when it was
+  sent. Delivery fees are cash in but not sales. The order page's profit is worked out the same way.
+- **Shop pages:** About us, and Delivery & returns (fees for each country in its own money, how paying works,
+  the returns policy). The owners write the words in Settings. Dead links answer "not found" (404).
+- **A brake on fake orders:** past 50 shop orders waiting to be confirmed (changeable in Settings), the shop
+  pauses and asks customers to message instead, so nobody can tie up the stock with made-up orders. Today
+  says when it's paused. Orders typed in from a DM are never stopped.
+- **Nightly encrypted backups** of the database and every photo (see [Backups](#backups))
 
 ### Trying the shop with demo products
 
@@ -163,19 +179,86 @@ enforces regardless of connection count.
 - **Each new migration grants its own access.** Migration 6 revokes Supabase's default
   grant-everything, so a new table is invisible to the app until you grant and add policies.
   Fail-closed is deliberate.
+- **What the public can reach is listed in `launch.test.js`**: every table, column and function the shop
+  can see or call, and the staff functions. A migration that opens anything else, or leaves row-level
+  security off a new table, fails those tests. When opening something is deliberate, change the list in
+  the same commit.
 - Add a test in `supabase/tests/` for any rule that protects money or stock.
 
-## Deploying
+## Going live
 
-Server rendering only runs for hostnames on an allow-list (Angular's protection against
-server-side request forgery). Locally that's `localhost`. In production, set:
+### Hosting
+
+The shop is a Node server (`web/src/server.ts`: Express plus Angular's server rendering), so it needs a host
+that runs Node, not a static host. **Firebase App Hosting** runs it as it is: create a backend, connect this
+GitHub repository, set the app root directory to `web`, and every push to `main` deploys. It needs the
+Blaze (pay-as-you-go) plan, but a shop this size stays inside the free monthly allowance. Any other Node
+host works too: build with `npm run build` and run `node dist/web/server/server.mjs` (it listens on `PORT`).
+
+Server rendering only runs for hostnames on an allow-list (Angular's protection against server-side
+request forgery). Locally that's `localhost`. On the host, set this environment variable to the shop's
+domain and the host's own address:
 
 ```sh
-NG_ALLOWED_HOSTS=heychika.com,www.heychika.com
+NG_ALLOWED_HOSTS=heychika.com,www.heychika.com,<the address the host gives you>
 ```
 
-Without it the shop still works but silently falls back to rendering in the browser, which is
-slower on mobile data.
+Without it the shop still works but silently falls back to rendering in the browser, which is slower on
+mobile data, and product links pasted into a DM lose their preview.
+
+### Checklist
+
+1. **Database up to date:** every file in `supabase/migrations/` has been run, in order.
+2. **Demo products gone:** run `supabase/demo/remove-demo-data.sql` if the demo was ever loaded.
+3. **Settings:** today's exchange rates, the delivery fee and days for each country, the phone (with its
+   country code, so WhatsApp and Viber links work), email and social links.
+4. **Shop pages:** rewrite About us and Returns in Settings in the owners' own words. The returns text
+   that ships is only a starting point: decide how many days, what condition, and who pays to send it back.
+5. **Supabase → Authentication → URL Configuration:** set the Site URL to the shop's address.
+6. **Sign-ups off** (see setup step 1) and each owner has a strong password.
+7. **Backups set up** (below), and one run by hand from the Actions tab that went green.
+8. **One real order end to end:** place it on a phone, confirm it, pack it by scanning, mark it delivered with
+   the cash, and see it in Reports. Then cancel or return it.
+
+Supabase pauses a free project after a week with no activity. A live shop has visitors every day, so that
+only matters before launch: open the admin now and then until it's live.
+
+## Backups
+
+Supabase's free plan keeps no backups. `.github/workflows/backup.yml` makes one every night: the whole
+database (in the format Supabase's own backup guide uses) and every product photo, packed, **encrypted**,
+and kept for 30 days as a download on the workflow run. The repository is public, so the encryption is what
+keeps customers' names and addresses private: without the passphrase the file is noise.
+
+**Setting it up** (once): in GitHub, Settings → Secrets and variables → Actions → *New repository secret*:
+
+- `SUPABASE_DB_URL`: in Supabase, **Connect** (top of the dashboard) → *Session pooler* → the URI, with
+  the database password filled in. (The pooler one, because GitHub's machines can't reach the direct
+  address.)
+- `BACKUP_PASSPHRASE`: a long passphrase. **Keep it somewhere safe outside GitHub** (a password manager):
+  without it no backup can be opened, and GitHub won't show it to you again.
+
+Then Actions → *Nightly backup* → *Run workflow*, and check it goes green with a download at the bottom.
+GitHub emails if a night fails.
+
+**Restoring** (Git Bash has `gpg`; `psql` comes with PostgreSQL):
+
+```sh
+gpg -d heychika-2026-10-02.tar.gz.gpg > backup.tar.gz   # asks for the passphrase
+tar -xzf backup.tar.gz                                    # makes backup/
+psql --single-transaction --variable ON_ERROR_STOP=1 \
+  --file backup/roles.sql --file backup/schema.sql \
+  --command 'SET session_replication_role = replica' \
+  --file backup/data.sql --dbname "<a new, empty Supabase project's connection URI>"
+```
+
+Then upload what's in `backup/photos/` into the new project's `product-images` bucket (Storage in the
+dashboard), keeping the folders, and point the app at the new project (setup step 4). Check the owners can
+log in; if not, add them again (setup step 3). Restore into a new project rather than over the live one, so
+nothing is lost if it goes wrong.
+
+Paying for Supabase Pro adds daily backups of its own, with a restore button; this workflow is the free
+equivalent.
 
 ## Versions
 

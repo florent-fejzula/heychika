@@ -1,0 +1,105 @@
+# Nightly backup of the shop: the whole database and every product photo,
+# encrypted, kept for 30 days as a download on the workflow run.
+#
+# Supabase's free plan keeps no backups of its own. This repository is public, so
+# the backup is encrypted before it leaves the runner: without the passphrase it's
+# noise. Setting up and restoring: README → Backups.
+
+name: Nightly backup
+
+on:
+  schedule:
+    - cron: '30 1 * * *' # 01:30 UTC: the middle of the night in Prishtina, winter or summer
+  workflow_dispatch: # "Run workflow" in the Actions tab, for a backup right now
+
+permissions:
+  contents: read
+  actions: write # only for the last step, which keeps the schedule switched on
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      SUPABASE_URL: https://dwbzioxfeznokwanikzh.supabase.co
+    steps:
+      - name: Check it's set up
+        id: setup
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] && [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::warning::Backups aren't set up yet, so nothing was backed up. See README → Backups."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Both SUPABASE_DB_URL and BACKUP_PASSPHRASE are needed. See README → Backups."
+            exit 1
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: supabase/setup-cli@v1
+        if: steps.setup.outputs.ready == 'true'
+        with:
+          version: latest
+
+      # The same three files Supabase's own backup guide makes, so its restore
+      # steps work on them unchanged.
+      - name: Dump the database
+        if: steps.setup.outputs.ready == 'true'
+        run: |
+          mkdir -p backup
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/data.sql --use-copy --data-only
+          ls -l backup
+
+      # The photos live in storage, not the database. The bucket is public, so
+      # they're fetched by their public addresses.
+      - name: Download the product photos
+        if: steps.setup.outputs.ready == 'true'
+        run: |
+          command -v psql >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client)
+          psql "$SUPABASE_DB_URL" -At -c "select name from storage.objects where bucket_id = 'product-images' order by name" > photos.txt
+          mkdir -p backup/photos
+          while IFS= read -r name; do
+            [ -n "$name" ] || continue
+            mkdir -p "backup/photos/$(dirname "$name")"
+            curl -sSf --retry 3 -o "backup/photos/$name" "$SUPABASE_URL/storage/v1/object/public/product-images/$name"
+          done < photos.txt
+          echo "$(grep -c . photos.txt || true) photos"
+          rm photos.txt
+
+      - name: Pack and encrypt
+        if: steps.setup.outputs.ready == 'true'
+        run: |
+          name="heychika-$(date -u +%Y-%m-%d)"
+          tar -czf "$name.tar.gz" backup
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+              --symmetric --cipher-algo AES256 -o "$name.tar.gz.gpg" "$name.tar.gz" <<< "$BACKUP_PASSPHRASE"
+          rm -rf backup "$name.tar.gz"
+          ls -l "$name.tar.gz.gpg"
+          echo "BACKUP_NAME=$name" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.setup.outputs.ready == 'true'
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: ${{ env.BACKUP_NAME }}.tar.gz.gpg
+          retention-days: 30
+          compression-level: 0 # already compressed and encrypted
+          if-no-files-found: error
+
+      # GitHub switches off scheduled workflows in a repository that has had no
+      # commits for 60 days. Re-enabling it each night resets that clock. If this
+      # ever stops working, GitHub emails a warning first: re-enable it in the
+      # Actions tab.
+      - name: Keep the nightly schedule switched on
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method PUT "repos/${{ github.repository }}/actions/workflows/backup.yml/enable"
