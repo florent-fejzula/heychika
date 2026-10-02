@@ -39,6 +39,23 @@ app.use((_req, res, next) => {
 });
 
 /**
+ * Hosting puts a proxy in front of this server, which adds X-Forwarded-* headers
+ * (the visitor's IP, the port, and more). Angular trusts only -host and -proto; any
+ * other one makes it play safe and send the page unrendered, so it loads slower and
+ * shared product links lose their preview. Nothing here uses the others, so they
+ * are dropped before Angular sees the request. -host is still checked against
+ * NG_ALLOWED_HOSTS.
+ */
+app.use((req, _res, next) => {
+  for (const name of Object.keys(req.headers)) {
+    if (name.startsWith('x-forwarded-') && name !== 'x-forwarded-host' && name !== 'x-forwarded-proto') {
+      delete req.headers[name];
+    }
+  }
+  next();
+});
+
+/**
  * Serve static files from /browser
  */
 app.use(
