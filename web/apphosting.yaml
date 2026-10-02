@@ -1,0 +1,17 @@
+# Firebase App Hosting settings (README → Going live).
+
+runConfig:
+  # Nobody waiting = nothing running = nothing to pay. The first visitor after a
+  # quiet spell waits a second or two longer.
+  minInstances: 0
+  # One instance serves many visitors at once; two is plenty for this shop and
+  # caps the bill if something (or someone) floods it.
+  maxInstances: 2
+
+env:
+  # Server rendering only runs for these addresses (Angular's protection against
+  # server-side request forgery). Add the shop's own domain here when it has one.
+  - variable: NG_ALLOWED_HOSTS
+    value: heychika--heychika-45afb.europe-west4.hosted.app
+    availability:
+      - RUNTIME
