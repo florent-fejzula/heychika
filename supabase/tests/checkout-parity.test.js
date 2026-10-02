@@ -27,6 +27,9 @@ test('the total the shop shows is the total the database charges, across 60 rand
   const rand = rng(20261004);
   const pick = (list) => list[Math.floor(rand() * list.length)];
 
+  // Sixty orders all waiting at once would otherwise hit the brake on fake orders.
+  await db.query('update settings set max_waiting_orders = 1000');
+
   const p = await product(db);
   const variants = [];
   for (const size of ['XS', 'S', 'M', 'L', 'XL', 'XXL']) {
