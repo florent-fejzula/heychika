@@ -9,9 +9,11 @@ runConfig:
   maxInstances: 2
 
 env:
-  # Server rendering only runs for these addresses (Angular's protection against
-  # server-side request forgery). Add the shop's own domain here when it has one.
+  # The addresses the server answers (Angular's protection against server-side
+  # request forgery); anything else gets a 400. Firebase hands requests to the
+  # server under Cloud Run's own address (the run.app one), so that must be here
+  # too, or every page fails. Add the shop's own domain when it has one.
   - variable: NG_ALLOWED_HOSTS
-    value: heychika--heychika-45afb.europe-west4.hosted.app
+    value: heychika--heychika-45afb.europe-west4.hosted.app,heychika-241520649298.europe-west4.run.app
     availability:
       - RUNTIME
