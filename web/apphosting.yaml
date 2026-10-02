@@ -18,11 +18,5 @@ env:
     availability:
       - RUNTIME
 
-  # Google's front door adds X-Forwarded-* headers to every request. Angular trusts
-  # only -host and -proto by default; any other one makes it play safe and send the
-  # page unrendered (browser-only). These are set by Google, not by visitors, and
-  # the host is still checked against the list above.
-  - variable: NG_TRUST_PROXY_HEADERS
-    value: x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port
-    availability:
-      - RUNTIME
+  # Not NG_TRUST_PROXY_HEADERS: App Hosting sets that itself and refuses the build
+  # if it's set here. The extra proxy headers are dropped in src/server.ts instead.
