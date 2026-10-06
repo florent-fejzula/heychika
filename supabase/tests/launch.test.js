@@ -135,9 +135,9 @@ test('logged-in users can call only the staff functions, each of which checks fo
      where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute') order by 1`)).map((r) => r.f);
   assert.deepEqual(callable, [
     'cancel_order', 'confirm_order', 'correct_variant_codes', 'create_manual_order', 'dispatch_order', 'edit_order_items',
-    'local_price', 'mark_delivered', 'mark_delivery_failed', 'place_order', 'receive_purchase', 'record_payment',
-    'record_return', 'record_stock_change', 'reorder_images', 'retry_delivery', 'set_primary_image', 'track_order',
-    'update_order_details',
+    'link_barcode', 'local_price', 'mark_delivered', 'mark_delivery_failed', 'place_order', 'receive_purchase',
+    'record_payment', 'record_return', 'record_stock_change', 'reorder_images', 'retry_delivery', 'save_trip_item',
+    'set_primary_image', 'track_order', 'update_order_details',
   ]);
 
   // Every one that changes something refuses a logged-in stranger.

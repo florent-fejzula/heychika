@@ -37,16 +37,22 @@ on the About and returns pages, a domain, and the checklist under [Going live](#
 - **Customers:** everyone who ordered, with what they paid for, parcels that came back, their orders,
   and a note about them
 - Full database schema for every phase, with the stock engine, purchasing, costing and checkout
-  working and tested (142 database tests, 292 app tests)
+  working and tested (154 database tests, 297 app tests)
 - Admin login (owners only), phone-first layout, a live "Today" dashboard, Settings (exchange
   rates, delivery fees, shop details)
-- **Products:** add a design, tick its colours and sizes to create every SKU and barcode at once,
-  set prices, upload photos (shrunk automatically), choose the cover and order
-- **Labels:** print barcode stickers on A4 sheets or a label printer roll
+- **Add stock, one form** (Products → *Add product*, Stock → *Add stock*, or *Add item* on a buying trip):
+  photos, name, category, colours, sizes, how many of each, what was paid, and the selling price, which
+  is suggested from the real cost (trip costs included) plus the markup in Settings. It creates the design,
+  every size with its SKU, and the stock in one step. Picking a design that exists restocks it.
+- **Barcodes from the tags:** the clothes arrive with barcodes. *Scan the tags* (on a trip or a design) links
+  one tag per size to it; after that, scanning any of its tags finds it when packing, looking up or adding
+  to an order. Every size also keeps its own SKU, which can be typed instead.
+- **Products:** edit a design, its sizes and prices, photos (shrunk automatically), cover and order
+- **Labels:** print barcode stickers, only for items that came without a barcode on the tag
 - **Scan:** look an item up with a USB/Bluetooth scanner, the phone camera, or by typing its SKU
-- **Buying trips:** enter what was bought on a trip (a grid of colours × sizes per design), the trip's
-  costs and the exchange rate. It shows what each item will really cost *before* you press Receive;
-  receiving puts the items on the shelf and fixes their cost
+- **Buying trips:** the trip's costs and exchange rate, then *Add item* for each thing bought. It shows
+  what each item will really cost *before* you press Receive; receiving puts the items on the shelf and
+  fixes their cost. Adding straight to stock (no trip) records the cost as typed, through a trip of its own
 - **Stock:** what is on the shelf, reserved, on the road and damaged, with filters for what is running
   low or sold out; recount, mark damage and write off with a reason; the full history of every size
 - **Categories, colours & sizes:** add new ones without touching code
@@ -78,10 +84,10 @@ you placed. Both are tested, and the removal only touches designs whose link sta
 
 ### Getting a design into the shop
 
-A design shows in the shop when it is **Active**, **Show in online shop** is ticked, and it has at
-least one active size. A size can be ordered only while it has stock, so receive a buying trip (or
-recount) first. On the design's page in the admin, **Copy link to send in a DM** gives the link to
-paste to a customer.
+*Add stock* puts a new product in the shop straight away, unless *Show it in the online shop* is
+unticked. Otherwise a design shows in the shop when it is **Active**, **Show in online shop** is ticked,
+and it has at least one active size; a size can be ordered only while it has stock. On the design's page
+in the admin, **Copy link to send in a DM** gives the link to paste to a customer.
 
 ## First-time setup
 

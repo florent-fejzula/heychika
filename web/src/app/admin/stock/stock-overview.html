@@ -1,5 +1,8 @@
 <div class="stack">
-  <h1>Stock</h1>
+  <div class="page-head">
+    <h1>Stock</h1>
+    <a class="btn btn-primary" routerLink="/admin/stock/add">Add stock</a>
+  </div>
   <app-stock-tabs />
 
   @if (error(); as message) {
@@ -17,10 +20,10 @@
     @if (!rows()!.length) {
       <section class="card stack empty">
         <h2>No stock yet</h2>
-        <p class="muted">Add your designs under Products, then record a buying trip to put items on the shelf.</p>
+        <p class="muted">Add what you have: one product at a time, or a whole buying trip so its travel and customs costs count.</p>
         <div class="toolbar">
-          <a class="btn" routerLink="/admin/products">Products</a>
-          <a class="btn btn-primary" routerLink="/admin/stock/purchases/new">New buying trip</a>
+          <a class="btn btn-primary" routerLink="/admin/stock/add">Add stock</a>
+          <a class="btn" routerLink="/admin/stock/purchases/new">New buying trip</a>
         </div>
       </section>
     } @else {

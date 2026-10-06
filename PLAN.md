@@ -346,8 +346,19 @@ code at all — just a focused input.
 
 **Built so far:** lookup (point 3) and dispatch (point 2: Pack & send on each order; an item that
 isn't in the order is refused loudly), plus adding items to a hand-typed order by scanning. Stock-in
-is by the buying-trip grid, which is faster than scanning items that have no stickers yet. Labels need to be at least ~45 mm wide to scan
-reliably (measured; see `web/scripts/check-barcodes.mjs`), so the label sizes offered stop there.
+is by the Add item form, which is faster than scanning one item at a time.
+
+**The clothes arrive with barcodes on their tags** (the supplier's, usually EAN-13), so nothing gets
+printed or stuck. *Scan the tags* links one tag per size to that size (`link_barcode`): the variant's
+`barcode` takes the tag's code, its SKU stays. One code, one size: a code already on another size is
+refused, which is also how a supplier that prints the same code on every size would show up. Labels
+remain for anything that comes without a tag; they need to be at least ~45 mm wide to scan reliably
+(measured; see `web/scripts/check-barcodes.mjs`), so the label sizes offered stop there.
+
+**Adding stock is one form** (`save_trip_item`): design, sizes and quantities in one call, onto a draft
+trip or, with no trip, straight onto the shelf through a trip of its own ("Added by hand") that is
+received at once, so cost and history work the same way. The first version made her create the design,
+then its sizes, then open the trip and pick the design: five screens for one bag of clothes.
 
 ---
 

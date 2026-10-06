@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Catalogue, Category, Colour, ProductDetail, ProductInput, ProductStatus, Size, VariantRow } from '../../core/catalogue';
+import { BarcodeLinker, LinkableSize, isLinked } from '../shared/barcode-linker';
 import { ImageManager } from './image-manager';
 import { VariantManager } from './variant-manager';
 
@@ -9,7 +10,7 @@ const blankToNull = (s: string): string | null => (s.trim() === '' ? null : s.tr
 
 @Component({
   selector: 'app-product-editor',
-  imports: [ReactiveFormsModule, RouterLink, VariantManager, ImageManager],
+  imports: [ReactiveFormsModule, RouterLink, VariantManager, ImageManager, BarcodeLinker],
   templateUrl: './product-editor.html',
   styleUrl: './product-editor.scss',
 })
@@ -19,6 +20,12 @@ export class ProductEditor {
 
   /** From the route (`products/:id`). Absent on `products/new`. */
   readonly id = input<string>();
+  /** `?added=6`: just added this many items to stock, from the Add stock form. */
+  readonly added = input<string>();
+  /** `?photos=1`: photos that didn't upload there. */
+  readonly photos = input<string>();
+
+  protected readonly showLinker = signal(false);
 
   protected readonly isNew = computed(() => this.id() === undefined);
   protected readonly state = signal<'loading' | 'ready' | 'missing' | 'error'>('loading');
@@ -31,6 +38,19 @@ export class ProductEditor {
   protected readonly sizes = signal<Size[]>([]);
   protected readonly product = signal<ProductDetail | null>(null);
   protected readonly variants = signal<VariantRow[] | null>(null);
+
+  /** Its sizes, for linking the barcodes on their tags. */
+  protected readonly linkable = computed<LinkableSize[]>(() =>
+    (this.variants() ?? []).map((v) => ({
+      variantId: v.id,
+      design: this.product()?.name ?? '',
+      colour: v.color.name,
+      size: v.size.label,
+      sku: v.sku,
+      barcode: v.barcode,
+    })),
+  );
+  protected readonly unlinkedCount = computed(() => this.linkable().filter((s) => !isLinked(s)).length);
 
   /** Colours this design actually comes in, for tagging photos. */
   protected readonly usedColours = computed(() => {
@@ -113,6 +133,12 @@ export class ProductEditor {
     } catch {
       window.open(link, '_blank', 'noopener');
     }
+  }
+
+  /** After a barcode is linked: the sizes again, with their new codes. */
+  protected async reloadVariants(): Promise<void> {
+    const p = this.product();
+    if (p) this.variants.set(await this.catalogue.listVariants(p.id));
   }
 
   protected async remove(): Promise<void> {

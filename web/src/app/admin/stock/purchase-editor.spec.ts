@@ -16,7 +16,7 @@ function line(id: number, qty: number, price: number, over: Partial<PurchaseLine
   return {
     id, purchase_id: 9, variant_id: id, qty, unit_price: price, unit_price_eur: null, allocated_extra_eur: null, unit_landed_cost_eur: null,
     variant: {
-      sku: `DR-001-BLK-${id}`, cost_eur: cost, product: { id: 5, name: 'Wrap dress' }, color: { name: 'Black', hex: '#111' },
+      sku: `DR-001-BLK-${id}`, barcode: `DR-001-BLK-${id}`, cost_eur: cost, product: { id: 5, name: 'Wrap dress' }, color: { name: 'Black', hex: '#111' },
       size: { label: id === 1 ? 'S' : 'M', sort_order: id * 10 }, stock,
     },
     ...over,
@@ -128,7 +128,7 @@ describe('PurchaseEditor', () => {
       expect(purchases.create).toHaveBeenCalledWith(expect.objectContaining({
         reference: 'Istanbul, October', currency: 'TRY', currency_per_eur: 38.5, extra_costs_eur: 198.5, allocation_method: 'by_value', supplier_name: null,
       }));
-      expect(navigate).toHaveBeenCalledWith(['/admin/stock/purchases', 42]);
+      expect(navigate).toHaveBeenCalledWith(['/admin/stock/purchases', 42, 'add']);
     });
 
     it('keeps euros at exactly 1 per euro', async () => {
@@ -204,7 +204,7 @@ describe('PurchaseEditor', () => {
   });
 
   describe('receiving', () => {
-    it('asks first, then puts the goods on the shelf and offers to print the labels', async () => {
+    it('asks first, then puts the goods on the shelf and offers to scan the tags', async () => {
       const { fixture, purchases, el } = await setup('9', purchase(), [line(1, 50, 10), line(2, 30, 30)]);
       const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
       expect(button(el, 'Receive 80 items')!.disabled).toBe(false);
@@ -216,7 +216,11 @@ describe('PurchaseEditor', () => {
       expect(confirm.mock.calls[0][0]).toContain('can’t be undone');
       expect(purchases.receive).toHaveBeenCalledWith(9);
       expect(el.querySelector('.done')?.textContent).toContain('on the shelf');
-      expect(el.querySelector('.done a[href="/admin/labels?purchase=9"]')).toBeTruthy();
+      // The clothes come with barcodes on their tags: nothing to print.
+      expect(el.querySelector('.done a[href^="/admin/labels"]')).toBeNull();
+      button(el, 'Scan the tags')!.click();
+      await settle(fixture);
+      expect(el.querySelector('app-barcode-linker')).toBeTruthy();
     });
 
     it('does nothing if the question is answered no', async () => {
@@ -280,9 +284,30 @@ describe('PurchaseEditor', () => {
       expect(el.querySelector('.line .landed strong')!.textContent).toBe('€99.99');
     });
 
-    it('still offers to print the labels', async () => {
-      const { el } = await setup('9', done, stored);
-      expect(el.querySelector('a[href="/admin/labels?purchase=9"]')).toBeTruthy();
+    it('can still link the barcodes on the tags, with labels only for what has none', async () => {
+      const { fixture, el } = await setup('9', done, [stored[0], line(2, 30, 30, { variant: { ...stored[1].variant, barcode: '8691234567890' } })]);
+      expect(el.textContent).toContain('1 of 2 sizes done');
+      expect(el.querySelector('a[href^="/admin/labels"]')).toBeNull();
+      button(el, 'Scan the tags')!.click();
+      await settle(fixture);
+      expect(el.querySelector('app-barcode-linker')).toBeTruthy();
+      expect(el.querySelector('a[href="/admin/labels?purchase=9"]')!.textContent).toContain('Print a label');
+    });
+  });
+
+  describe('adding items', () => {
+    it('sends each thing bought to the Add item form, and back to it to change one', async () => {
+      const { el } = await setup('9', purchase(), [line(1, 5, 10)]);
+      expect(el.querySelector('a[href="/admin/stock/purchases/9/add"]')!.textContent).toContain('Add item');
+      expect(el.querySelector('a[href="/admin/stock/purchases/9/add?design=5"]')!.textContent).toContain('Change');
+    });
+
+    it('says what was just added and offers the next one', async () => {
+      const { fixture, el } = await setup('9', purchase(), [line(1, 5, 10)]);
+      fixture.componentRef.setInput('added', 'Wrap dress: 5 items');
+      await settle(fixture);
+      expect(el.querySelector('.done')!.textContent).toContain('Added Wrap dress: 5 items');
+      expect(el.querySelector('.done a')!.textContent).toContain('Add another item');
     });
   });
 

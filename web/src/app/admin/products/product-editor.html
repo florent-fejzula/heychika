@@ -19,9 +19,28 @@
       <div class="page-head">
         <h1>{{ product()?.name ?? 'New design' }}</h1>
         @if (product(); as p) {
-          <span class="muted code">{{ p.category.code }}-{{ p.model_code }}</span>
+          <span class="head-side">
+            <span class="muted code">{{ p.category.code }}-{{ p.model_code }}</span>
+            <a class="btn btn-small" routerLink="/admin/stock/add" [queryParams]="{ design: p.id }">Add stock</a>
+          </span>
         }
       </div>
+
+      @if (added(); as n) {
+        <section class="card stack done" role="status">
+          <h2>Added {{ n }} {{ n === '1' ? 'item' : 'items' }} to stock</h2>
+          @if (photos()) {
+            <p class="notice notice-error">{{ photos() }} {{ photos() === '1' ? 'photo' : 'photos' }} didn’t upload. Add them again under Photos below.</p>
+          }
+          <p class="muted">It’s on the shelf with its cost{{ product()?.show_online ? ', and for sale in the shop' : '' }}.</p>
+          <div class="toolbar">
+            @if (unlinkedCount() && !showLinker()) {
+              <button class="btn btn-primary" type="button" (click)="showLinker.set(true)">Scan the tags</button>
+            }
+            <a class="btn" routerLink="/admin/stock/add">Add another product</a>
+          </div>
+        </section>
+      }
 
       <form class="card stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
         @if (isNew()) {
@@ -109,6 +128,26 @@
         />
 
         <app-image-manager [productId]="p.id" [colours]="usedColours()" />
+
+        @if (linkable().length) {
+          <section class="card stack">
+            <h2>Barcodes on the tags</h2>
+            @if (showLinker()) {
+              <app-barcode-linker [sizes]="linkable()" (changed)="reloadVariants()" />
+              <p class="muted small">No barcode on its tag? <a routerLink="/admin/labels" [queryParams]="{ product: p.id }">Print a label</a> instead.</p>
+            } @else {
+              <p class="muted">
+                @if (unlinkedCount()) {
+                  Scan one tag of each size once, and scanning any of its tags finds it from then on.
+                  {{ linkable().length - unlinkedCount() }} of {{ linkable().length }} sizes done.
+                } @else {
+                  Every size is linked to the barcode on its tag.
+                }
+              </p>
+              <div><button class="btn" type="button" (click)="showLinker.set(true)">Scan the tags</button></div>
+            }
+          </section>
+        }
 
         @if (variants() !== null && variants()!.length === 0) {
           <section class="card stack">

@@ -1,0 +1,161 @@
+.lead {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+}
+
+.small {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.chip.small {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 0.875rem;
+}
+
+.chosen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .btn {
+    margin-left: auto;
+  }
+}
+
+.match {
+  justify-content: flex-start;
+  border-radius: var(--radius-sm);
+  gap: 6px;
+}
+
+// Photos: square previews in a row, the add button last.
+.photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.photo,
+.add-photo {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.photo {
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+}
+
+.add-photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+  }
+}
+
+// The colour x size grid: one small number box per size.
+.grid-wrap {
+  overflow-x: auto;
+}
+
+.grid {
+  border-collapse: collapse;
+
+  th {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-align: left;
+    padding: 4px 8px 4px 0;
+    white-space: nowrap;
+  }
+
+  th .swatch {
+    display: inline-block;
+    vertical-align: -3px;
+    margin-right: 4px;
+  }
+
+  thead th {
+    text-align: center;
+    color: var(--ink-soft);
+  }
+
+  td {
+    padding: 3px;
+  }
+
+  input {
+    width: 52px;
+    min-height: 40px;
+    padding: 6px;
+    text-align: center;
+  }
+}
+
+.fill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    width: 64px;
+    min-height: 36px;
+    padding: 6px;
+    text-align: center;
+  }
+}
+
+.estimate {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+
+  .btn {
+    margin-left: 4px;
+  }
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap);
+}

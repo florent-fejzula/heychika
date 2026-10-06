@@ -32,3 +32,24 @@ textarea {
 p {
   margin: 0;
 }
+
+.small {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.done {
+  border-color: var(--ok);
+  background: #f3faf5;
+
+  p {
+    margin: 0;
+  }
+}
+
+.head-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}

@@ -24,9 +24,9 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/products/product-list').then((m) => m.ProductList),
       },
       {
+        // A new design is added with its stock, in one form.
         path: 'products/new',
-        title: 'New design · Hey Chika',
-        loadComponent: () => import('./admin/products/product-editor').then((m) => m.ProductEditor),
+        redirectTo: '/admin/stock/add',
       },
       {
         path: 'products/:id',
@@ -52,6 +52,16 @@ export const routes: Routes = [
         path: 'stock',
         title: 'Stock · Hey Chika',
         loadComponent: () => import('./admin/stock/stock-overview').then((m) => m.StockOverview),
+      },
+      {
+        path: 'stock/add',
+        title: 'Add stock · Hey Chika',
+        loadComponent: () => import('./admin/stock/add-item').then((m) => m.AddItem),
+      },
+      {
+        path: 'stock/purchases/:id/add',
+        title: 'Add item · Hey Chika',
+        loadComponent: () => import('./admin/stock/add-item').then((m) => m.AddItem),
       },
       {
         path: 'stock/purchases',

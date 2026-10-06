@@ -26,11 +26,26 @@
       @if (justReceived()) {
         <section class="card stack done" role="status">
           <h2>Received. The items are on the shelf.</h2>
-          <p class="muted">Each item now has its real cost. Next, stick a barcode on each one.</p>
+          <p class="muted">Each item now has its real cost, trip costs included.</p>
           <div class="toolbar">
-            <a class="btn btn-primary" routerLink="/admin/labels" [queryParams]="{ purchase: purchase()!.id }">Print labels for these items</a>
+            @if (unlinkedCount()) {
+              <button class="btn btn-primary" type="button" (click)="showLinker.set(true)">Scan the tags</button>
+            }
             <a class="btn" routerLink="/admin/stock">See the stock</a>
           </div>
+        </section>
+      } @else if (added(); as what) {
+        <section class="card stack done" role="status">
+          <h2>Added {{ what }}</h2>
+          @if (photos()) {
+            <p class="notice notice-error">{{ photos() }} {{ photos() === '1' ? 'photo' : 'photos' }} didn’t upload. Add them again on the design’s page.</p>
+          }
+          @if (isDraft()) {
+            <p class="muted">Anything else from this trip? When everything’s in, press Receive at the bottom.</p>
+            <div class="toolbar">
+              <a class="btn btn-primary" [routerLink]="['/admin/stock/purchases', purchase()!.id, 'add']">Add another item</a>
+            </div>
+          }
         </section>
       }
 
@@ -114,19 +129,26 @@
       }
 
       @if (purchase(); as p) {
-        @if (isDraft()) {
-          <app-purchase-lines [purchaseId]="p.id" [currency]="p.currency" [designs]="designs()" [lines]="lines()" (saved)="linesSaved()" />
-        }
-
         <!-- What is on the trip -->
         <section class="card stack">
-          <h2>Items on this trip</h2>
+          <div class="page-head">
+            <h2>Items on this trip</h2>
+            @if (isDraft()) {
+              <a class="btn btn-primary btn-small" [routerLink]="['/admin/stock/purchases', p.id, 'add']">+ Add item</a>
+            }
+          </div>
           @if (!groups().length) {
-            <p class="muted">Nothing yet. @if (isDraft()) { Choose a design above and enter how many you bought. }</p>
+            <p class="muted">Nothing yet. @if (isDraft()) { Press <strong>Add item</strong> for each thing you bought. }</p>
           }
           @for (g of groups(); track g.id) {
             <div class="design">
-              <h3><span>{{ g.name }}</span> <span class="muted">{{ g.qty }} {{ g.qty === 1 ? 'item' : 'items' }}</span></h3>
+              <h3>
+                <span>{{ g.name }}</span>
+                <span class="muted">{{ g.qty }} {{ g.qty === 1 ? 'item' : 'items' }}</span>
+                @if (isDraft()) {
+                  <a class="btn btn-small" [routerLink]="['/admin/stock/purchases', p.id, 'add']" [queryParams]="{ design: g.id }">Change</a>
+                }
+              </h3>
               @for (r of g.rows; track r.line.id) {
                 <div class="line">
                   <div class="what">
@@ -186,9 +208,32 @@
           </section>
         } @else {
           <div class="toolbar">
-            <a class="btn" routerLink="/admin/labels" [queryParams]="{ purchase: p.id }">Print labels</a>
             <a class="btn" routerLink="/admin/stock">See the stock</a>
           </div>
+        }
+
+        <!-- The barcodes already on the tags -->
+        @if (lines().length) {
+          <section class="card stack">
+            <h2>Barcodes on the tags</h2>
+            @if (showLinker()) {
+              <app-barcode-linker [sizes]="linkable()" (changed)="reloadLines()" />
+              <p class="muted small">
+                Something with no barcode on its tag?
+                <a routerLink="/admin/labels" [queryParams]="{ purchase: p.id }">Print a label</a> for it instead.
+              </p>
+            } @else {
+              <p class="muted">
+                @if (unlinkedCount()) {
+                  Scan one tag of each size once, and from then on scanning any of its tags finds it: when packing, looking it up, or adding it to an order.
+                  {{ linkable().length - unlinkedCount() }} of {{ linkable().length }} sizes done.
+                } @else {
+                  Every size on this trip is linked to the barcode on its tag.
+                }
+              </p>
+              <div><button class="btn" type="button" (click)="showLinker.set(true)">Scan the tags</button></div>
+            }
+          </section>
         }
       } @else {
         <p class="muted">After you create the trip, you can add the items you bought.</p>

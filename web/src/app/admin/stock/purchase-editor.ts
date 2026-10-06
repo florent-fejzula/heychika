@@ -2,11 +2,10 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Catalogue, ProductSummary } from '../../core/catalogue';
 import { landedCosts, weightedAverage } from '../../core/costing';
 import { formatCode, formatMoney, parseAmount, parseRate } from '../../core/money';
 import { PurchaseInput, PurchaseLine, PurchaseRow, PurchaseCurrency, Purchases } from '../../core/purchases';
-import { PurchaseLines } from './purchase-lines';
+import { BarcodeLinker, LinkableSize, isLinked } from '../shared/barcode-linker';
 
 interface Row {
   line: PurchaseLine;
@@ -31,17 +30,35 @@ const blankToNull = (s: string): string | null => (s.trim() === '' ? null : s.tr
 
 @Component({
   selector: 'app-purchase-editor',
-  imports: [ReactiveFormsModule, RouterLink, PurchaseLines],
+  imports: [ReactiveFormsModule, RouterLink, BarcodeLinker],
   templateUrl: './purchase-editor.html',
   styleUrl: './purchase-editor.scss',
 })
 export class PurchaseEditor {
   private readonly purchases = inject(Purchases);
-  private readonly catalogue = inject(Catalogue);
   private readonly router = inject(Router);
 
   /** From the route (`stock/purchases/:id`). Absent on `stock/purchases/new`. */
   readonly id = input<string>();
+  /** `?added=Wrap dress: 6 items`, after the Add item form. */
+  readonly added = input<string>();
+  /** `?photos=2`: photos that didn't upload. */
+  readonly photos = input<string>();
+
+  protected readonly showLinker = signal(false);
+
+  /** Every size on the trip, for linking the barcodes on their tags. */
+  protected readonly linkable = computed<LinkableSize[]>(() =>
+    this.lines().map((l) => ({
+      variantId: l.variant_id,
+      design: l.variant.product.name,
+      colour: l.variant.color.name,
+      size: l.variant.size.label,
+      sku: l.variant.sku,
+      barcode: l.variant.barcode,
+    })),
+  );
+  protected readonly unlinkedCount = computed(() => this.linkable().filter((s) => !isLinked(s)).length);
 
   protected readonly isNew = computed(() => this.id() === undefined);
   protected readonly state = signal<'loading' | 'ready' | 'missing' | 'error'>('loading');
@@ -54,7 +71,6 @@ export class PurchaseEditor {
 
   protected readonly purchase = signal<PurchaseRow | null>(null);
   protected readonly lines = signal<PurchaseLine[]>([]);
-  protected readonly designs = signal<ProductSummary[]>([]);
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     reference: ['', [Validators.required, Validators.maxLength(80)]],
@@ -168,7 +184,8 @@ export class PurchaseEditor {
     try {
       if (this.isNew()) {
         const newId = await this.purchases.create(input);
-        await this.router.navigate(['/admin/stock/purchases', newId]);
+        // Straight on to what was bought: that's what she came to enter.
+        await this.router.navigate(['/admin/stock/purchases', newId, 'add']);
       } else {
         await this.purchases.update(this.purchase()!.id, input);
         this.purchase.set(await this.purchases.get(this.purchase()!.id));
@@ -190,7 +207,7 @@ export class PurchaseEditor {
     });
   }
 
-  protected async linesSaved(): Promise<void> {
+  protected async reloadLines(): Promise<void> {
     const p = this.purchase();
     if (p) this.lines.set(await this.purchases.lines(p.id));
   }
@@ -260,8 +277,6 @@ export class PurchaseEditor {
     this.message.set(null);
     this.justReceived.set(false);
     try {
-      this.designs.set(await this.catalogue.listProducts());
-
       if (id === undefined) {
         this.purchase.set(null);
         this.lines.set([]);

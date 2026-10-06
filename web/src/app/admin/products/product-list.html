@@ -1,7 +1,7 @@
 <div class="stack">
   <div class="page-head">
     <h1>Products</h1>
-    <a class="btn btn-primary" routerLink="/admin/products/new">New design</a>
+    <a class="btn btn-primary" routerLink="/admin/stock/add">Add product</a>
   </div>
 
   @if (error(); as message) {
@@ -30,7 +30,7 @@
       <section class="card stack empty">
         <h2>No designs yet</h2>
         <p class="muted">A design is one style, like “black satin wrap dress”. You add its colours and sizes on the next screen.</p>
-        <a class="btn btn-primary" routerLink="/admin/products/new">Add the first design</a>
+        <a class="btn btn-primary" routerLink="/admin/stock/add">Add the first product</a>
       </section>
     } @else if (shown().length === 0) {
       <p class="muted">Nothing matches. Try clearing the search or filters.</p>

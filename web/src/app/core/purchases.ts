@@ -42,6 +42,7 @@ export interface PurchaseLine {
   unit_landed_cost_eur: number | null;
   variant: {
     sku: string;
+    barcode: string;
     cost_eur: number;
     product: { id: number; name: string };
     color: { name: string; hex: string | null };
@@ -49,6 +50,35 @@ export interface PurchaseLine {
     stock: { qty_physical: number } | null;
   };
 }
+
+/** One item onto a trip (or straight into stock): see save_trip_item in the migrations. */
+export interface TripItem {
+  /** An existing design, or null for a new one. */
+  product_id: number | null;
+  category_id?: number;
+  name?: string;
+  show_online?: boolean;
+  /** Selling price in euros, for every size listed. */
+  price_eur: number;
+  /** What was paid per item, in the trip's currency (euros when added by hand). */
+  unit_price: number;
+  /** qty 0 takes that size off the trip. */
+  lines: { color_id: number; size_id: number; qty: number }[];
+}
+
+export interface SavedItem {
+  product_id: number;
+  purchase_id: number;
+  variant_ids: number[];
+}
+
+const ITEM_PROBLEM: Record<string, string> = {
+  name: 'Give it a name.',
+  category: 'Choose a category.',
+  price: 'Enter the selling price in euros.',
+  unit_price: 'Enter what you paid per item.',
+  lines: 'Enter how many you have in at least one colour and size.',
+};
 
 function fail(error: unknown, fallback?: string): never {
   throw new Error(explain(error, fallback));
@@ -103,7 +133,7 @@ export class Purchases {
       .from('purchase_lines')
       .select(
         'id, purchase_id, variant_id, qty, unit_price, unit_price_eur, allocated_extra_eur, unit_landed_cost_eur,' +
-          'variant:variants(sku, cost_eur, product:products(id, name), color:colors(name, hex), size:sizes(label, sort_order), stock(qty_physical))',
+          'variant:variants(sku, barcode, cost_eur, product:products(id, name), color:colors(name, hex), size:sizes(label, sort_order), stock(qty_physical))',
       )
       .eq('purchase_id', purchaseId)
       .order('id')
@@ -125,6 +155,40 @@ export class Purchases {
     if (!variantIds.length) return;
     const { error } = await this.sb.from('purchase_lines').delete().eq('purchase_id', purchaseId).in('variant_id', variantIds);
     if (error) fail(error, 'Couldn’t remove those items.');
+  }
+
+  /**
+   * One item in one go: creates the design and any sizes it doesn't have yet, and
+   * sets how many of each are on the trip. With no trip, the items go straight on
+   * the shelf.
+   */
+  async saveItem(purchaseId: number | null, item: TripItem): Promise<SavedItem> {
+    const { data, error } = await this.sb.rpc('save_trip_item', { p_purchase_id: purchaseId, p_item: item });
+    if (error) {
+      if (/invalid_item/.test(error.message)) throw new Error(ITEM_PROBLEM[error.details ?? ''] ?? 'Check the details and try again.');
+      if (/purchase_received/.test(error.message)) throw new Error('This trip has already been received. Start a new one for these items.');
+      fail(error, 'Couldn’t save the item.');
+    }
+    return data as SavedItem;
+  }
+
+  /** The markup from Settings, used to suggest a selling price from what an item cost. */
+  async markup(): Promise<number> {
+    const { data, error } = await this.sb.from('settings').select('default_markup_pct').single<{ default_markup_pct: number }>();
+    if (error) return 50;
+    return Number(data.default_markup_pct);
+  }
+
+  /** Links the barcode on an item's tag to its size. null puts it back to the SKU. */
+  async linkBarcode(variantId: number, barcode: string | null): Promise<void> {
+    const { error } = await this.sb.rpc('link_barcode', { p_variant_id: variantId, p_barcode: barcode });
+    if (error) {
+      if (/barcode_in_use/.test(error.message)) {
+        throw new Error(`That barcode is already on ${error.details}. One barcode can only belong to one size.`);
+      }
+      if (/invalid_barcode/.test(error.message)) throw new Error('That doesn’t look like a barcode. Try scanning it again.');
+      fail(error, 'Couldn’t link the barcode.');
+    }
   }
 
   /** Puts the goods on the shelf and records what each item really cost. Cannot be undone. */

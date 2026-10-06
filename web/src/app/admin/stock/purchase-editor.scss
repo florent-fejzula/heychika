@@ -59,13 +59,23 @@ textarea {
   }
 }
 
+.small {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
 .design {
   h3 {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
     gap: 12px;
     margin: 4px 0;
     font-size: 1rem;
+
+    > span:first-child {
+      flex: 1;
+      min-width: 0;
+    }
 
     .muted {
       font-weight: 400;
