@@ -40,15 +40,23 @@ app.use((_req, res, next) => {
 
 /**
  * Hosting puts a proxy in front of this server, which adds X-Forwarded-* headers
- * (the visitor's IP, the port, and more). Angular trusts only -host and -proto; any
- * other one makes it play safe and send the page unrendered, so it loads slower and
- * shared product links lose their preview. Nothing here uses the others, so they
- * are dropped before Angular sees the request. -host is still checked against
- * NG_ALLOWED_HOSTS.
+ * (the visitor's IP, the protocol, the port). Angular only trusts the ones named in
+ * NG_TRUST_PROXY_HEADERS (by default -host and -proto; Firebase App Hosting sets it
+ * to -host alone), and any other one makes it play safe and send the page
+ * unrendered, so it loads slower and shared product links lose their preview.
+ * Nothing here uses the others, so they're dropped before Angular sees the request.
+ * -host is still checked against NG_ALLOWED_HOSTS.
  */
+const trustedProxyHeaders = new Set(
+  (process.env['NG_TRUST_PROXY_HEADERS'] ?? 'x-forwarded-host,x-forwarded-proto')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean),
+);
+
 app.use((req, _res, next) => {
   for (const name of Object.keys(req.headers)) {
-    if (name.startsWith('x-forwarded-') && name !== 'x-forwarded-host' && name !== 'x-forwarded-proto') {
+    if (name.startsWith('x-forwarded-') && !trustedProxyHeaders.has(name)) {
       delete req.headers[name];
     }
   }
