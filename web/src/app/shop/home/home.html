@@ -19,7 +19,7 @@
         [queryParams]="{ category: c.slug }"
         [class.on]="category() === c.slug"
         [attr.aria-current]="category() === c.slug ? 'page' : null"
-      >{{ c.name }}</a>
+      >{{ c.name | named: c.name_sq }}</a>
     }
   </nav>
 
@@ -30,8 +30,8 @@
           <span class="sr-only">{{ 'shop.size' | t }}</span>
           <select [value]="size() ?? ''" (change)="filter('size', $any($event.target).value)">
             <option value="" [attr.selected]="!size() ? '' : null">{{ 'shop.home.anySize' | t }}</option>
-            @for (s of sizes(); track s) {
-              <option [value]="s" [attr.selected]="size() === s ? '' : null">{{ 'shop.home.sizeN' | t: { size: s } }}</option>
+            @for (s of sizes(); track s.label) {
+              <option [value]="s.label" [attr.selected]="size() === s.label ? '' : null">{{ 'shop.home.sizeN' | t: { size: (s.label | named: s.label_sq) } }}</option>
             }
           </select>
         </label>
@@ -42,7 +42,7 @@
           <select [value]="colour() ?? ''" (change)="filter('colour', $any($event.target).value)">
             <option value="" [attr.selected]="!colour() ? '' : null">{{ 'shop.home.anyColour' | t }}</option>
             @for (c of colours(); track c.slug) {
-              <option [value]="c.slug" [attr.selected]="colour() === c.slug ? '' : null">{{ c.name }}</option>
+              <option [value]="c.slug" [attr.selected]="colour() === c.slug ? '' : null">{{ c.name | named: c.name_sq }}</option>
             }
           </select>
         </label>
@@ -81,7 +81,7 @@
             @if (c.colours.length > 1) {
               <span class="swatches" [attr.aria-label]="'shop.home.colours' | t: { count: c.colours.length }">
                 @for (col of c.colours.slice(0, 6); track col.name) {
-                  <span class="swatch" [style.background]="col.hex ?? 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'" [title]="col.name"></span>
+                  <span class="swatch" [style.background]="col.hex ?? 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'" [title]="col.name | named: col.name_sq"></span>
                 }
               </span>
             }

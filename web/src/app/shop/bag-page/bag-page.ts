@@ -1,13 +1,13 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { I18n, TranslatePipe } from '../../core/i18n';
+import { I18n, NamedPipe, TranslatePipe } from '../../core/i18n';
 import { Bag } from '../bag';
 import { BagContents } from '../bag-contents';
 import { ShopState } from '../shop-state';
 
 @Component({
   selector: 'app-bag-page',
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, NamedPipe],
   templateUrl: './bag-page.html',
   styleUrl: './bag-page.scss',
 })

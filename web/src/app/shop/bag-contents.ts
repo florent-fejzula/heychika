@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Bag, MAX_PER_ITEM } from './bag';
-import { t } from '../core/i18n';
+import { named, t } from '../core/i18n';
 import { BagTotals, bagTotals } from '../core/money';
 import { BagItem, ShopApi } from './shop-api';
 import { ShopState } from './shop-state';
@@ -104,5 +104,5 @@ export class BagContents {
 }
 
 export function describe(item: BagItem): string {
-  return `${item.product.name} (${item.color.name}, ${item.size})`;
+  return `${item.product.name} (${named(item.color.name, item.color.name_sq)}, ${named(item.size, item.size_sq)})`;
 }

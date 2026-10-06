@@ -1,7 +1,7 @@
 import { Component, ElementRef, computed, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { I18n, TranslatePipe } from '../../core/i18n';
+import { I18n, NamedPipe, TranslatePipe } from '../../core/i18n';
 import { COUNTRY_CURRENCY, Country } from '../../core/money';
 import { Bag } from '../bag';
 import { BagContents, describe } from '../bag-contents';
@@ -25,7 +25,7 @@ type Field = 'first_name' | 'last_name' | 'phone' | 'city' | 'address' | 'postal
 
 @Component({
   selector: 'app-checkout',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, NamedPipe],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss',
 })

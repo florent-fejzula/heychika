@@ -15,10 +15,12 @@
     <!-- Categories -->
     <section class="card stack">
       <h2>{{ 'admin.lists.categories' | t }}</h2>
+      <div class="row head" aria-hidden="true"><span></span><span>{{ 'admin.lists.english' | t }}</span><span>{{ 'admin.lists.albanian' | t }}</span></div>
       @for (c of categories(); track c.id) {
         <div class="row" [class.off]="!c.active">
           <code>{{ c.code }}</code>
           <input class="name" type="text" [value]="c.name" [attr.aria-label]="'admin.lists.nameOf' | t: { code: c.code }" (change)="rename('categories', c.id, $any($event.target).value)" />
+          <input class="name" type="text" lang="sq" [value]="c.name_sq ?? ''" [placeholder]="c.name" [attr.aria-label]="'admin.lists.sqNameOf' | t: { code: c.code }" (change)="renameSq('categories', c.id, $any($event.target).value)" />
           <span class="muted type">{{ 'admin.lists.sizeType.' + c.size_type | t }}</span>
           <label class="check"><input type="checkbox" [checked]="c.active" (change)="setActive('categories', c.id, $any($event.target).checked)" /> {{ 'admin.lists.on' | t }}</label>
           <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'admin.lists.deleteX' | t: { name: c.name }" (click)="remove('categories', c.id, c.name)">✕</button>
@@ -27,6 +29,7 @@
       <form class="add" (submit)="addCategory($event)">
         <input name="code" class="short" type="text" placeholder="DR" maxlength="3" [attr.aria-label]="'admin.lists.newCategoryCode' | t" autocomplete="off" />
         <input name="name" type="text" [placeholder]="'admin.lists.categoryPlaceholder' | t" [attr.aria-label]="'admin.lists.newCategoryName' | t" autocomplete="off" />
+        <input name="name_sq" type="text" lang="sq" [placeholder]="'admin.lists.categoryPlaceholderSq' | t" [attr.aria-label]="'admin.lists.newSqName' | t" autocomplete="off" />
         <select name="type" [attr.aria-label]="'admin.lists.sizeKind' | t">
           @for (t of sizeTypes; track t) {
             <option [value]="t">{{ 'admin.lists.sizeType.' + t | t }}</option>
@@ -40,10 +43,12 @@
     <!-- Colours -->
     <section class="card stack">
       <h2>{{ 'admin.common.colours' | t }}</h2>
+      <div class="row head" aria-hidden="true"><span></span><span>{{ 'admin.lists.english' | t }}</span><span>{{ 'admin.lists.albanian' | t }}</span></div>
       @for (c of colours(); track c.id) {
         <div class="row" [class.off]="!c.active">
           <code>{{ c.code }}</code>
           <input class="name" type="text" [value]="c.name" [attr.aria-label]="'admin.lists.nameOf' | t: { code: c.code }" (change)="rename('colors', c.id, $any($event.target).value)" />
+          <input class="name" type="text" lang="sq" [value]="c.name_sq ?? ''" [placeholder]="c.name" [attr.aria-label]="'admin.lists.sqNameOf' | t: { code: c.code }" (change)="renameSq('colors', c.id, $any($event.target).value)" />
           <input class="hex" type="color" [value]="c.hex ?? '#cccccc'" [attr.aria-label]="'admin.lists.swatchFor' | t: { name: c.name }" (change)="setHex(c.id, $any($event.target).value)" />
           <label class="check"><input type="checkbox" [checked]="c.active" (change)="setActive('colors', c.id, $any($event.target).checked)" /> {{ 'admin.lists.on' | t }}</label>
           <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'admin.lists.deleteX' | t: { name: c.name }" (click)="remove('colors', c.id, c.name)">✕</button>
@@ -52,6 +57,7 @@
       <form class="add" (submit)="addColour($event)">
         <input name="code" class="short" type="text" placeholder="LIL" maxlength="3" [attr.aria-label]="'admin.lists.newColourCode' | t" autocomplete="off" />
         <input name="name" type="text" [placeholder]="'admin.lists.colourPlaceholder' | t" [attr.aria-label]="'admin.lists.newColourName' | t" autocomplete="off" />
+        <input name="name_sq" type="text" lang="sq" [placeholder]="'admin.lists.colourPlaceholderSq' | t" [attr.aria-label]="'admin.lists.newSqName' | t" autocomplete="off" />
         <input name="hex" class="hex" type="color" value="#c8a2c8" [attr.aria-label]="'admin.lists.newColourSwatch' | t" />
         <button class="btn btn-small" type="submit">{{ 'admin.lists.add' | t }}</button>
       </form>
@@ -61,10 +67,12 @@
     <!-- Sizes -->
     <section class="card stack">
       <h2>{{ 'admin.common.sizes' | t }}</h2>
+      <div class="row head" aria-hidden="true"><span></span><span>{{ 'admin.lists.english' | t }}</span><span>{{ 'admin.lists.albanian' | t }}</span></div>
       @for (s of sizes(); track s.id) {
         <div class="row" [class.off]="!s.active">
           <code>{{ s.code }}</code>
           <input class="name" type="text" [value]="s.label" [attr.aria-label]="'admin.lists.labelOf' | t: { code: s.code }" (change)="rename('sizes', s.id, $any($event.target).value)" />
+          <input class="name" type="text" lang="sq" [value]="s.label_sq ?? ''" [placeholder]="s.label" [attr.aria-label]="'admin.lists.sqNameOf' | t: { code: s.code }" (change)="renameSq('sizes', s.id, $any($event.target).value)" />
           <span class="muted type">{{ 'admin.lists.sizeType.' + s.size_type | t }}</span>
           <label class="check"><input type="checkbox" [checked]="s.active" (change)="setActive('sizes', s.id, $any($event.target).checked)" /> {{ 'admin.lists.on' | t }}</label>
           <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'admin.lists.deleteX' | t: { name: s.label }" (click)="remove('sizes', s.id, s.label)">✕</button>
@@ -73,6 +81,7 @@
       <form class="add" (submit)="addSize($event)">
         <input name="code" class="short" type="text" placeholder="46" maxlength="5" [attr.aria-label]="'admin.lists.newSizeCode' | t" autocomplete="off" />
         <input name="name" type="text" placeholder="46" [attr.aria-label]="'admin.lists.newSizeLabel' | t" autocomplete="off" />
+        <input name="name_sq" type="text" lang="sq" [placeholder]="'admin.lists.sizePlaceholderSq' | t" [attr.aria-label]="'admin.lists.newSqName' | t" autocomplete="off" />
         <select name="type" [attr.aria-label]="'admin.lists.sizeKind' | t">
           @for (t of sizeTypes; track t) {
             <option [value]="t">{{ 'admin.lists.sizeType.' + t | t }}</option>

@@ -544,7 +544,7 @@
     },
     "lists": {
       "title": "Categories, colours & sizes",
-      "intro": "These are the choices offered when adding a design. A code is part of every SKU, so once something uses it the code is locked; the name can always change. To stop offering one, switch it off instead of deleting it.",
+      "intro": "These are the choices offered when adding a design. A code is part of every SKU, so once something uses it the code is locked; the name can always change. To stop offering one, switch it off instead of deleting it. The shop shows the Albanian name to anyone reading it in Albanian; left empty, it shows the English one.",
       "categories": "Categories",
       "nameOf": "Name of {{code}}",
       "labelOf": "Label of {{code}}",
@@ -580,7 +580,14 @@
       "confirmDelete": "Delete “{{name}}”? If anything uses it, it will be kept and you can hide it instead.",
       "nameIt": "Give it a name.",
       "codeTaken": "The code {{code}} is already taken.",
-      "added": "Added {{name}}."
+      "added": "Added {{name}}.",
+      "english": "English",
+      "albanian": "Albanian",
+      "sqNameOf": "Albanian name of {{code}}",
+      "newSqName": "Its name in Albanian",
+      "categoryPlaceholderSq": "Fustane",
+      "colourPlaceholderSq": "Jargavan",
+      "sizePlaceholderSq": "In Albanian, if different"
     },
     "labels": {
       "title": "Labels",

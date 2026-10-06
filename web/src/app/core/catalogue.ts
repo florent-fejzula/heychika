@@ -10,6 +10,8 @@ export interface Category {
   id: number;
   code: string;
   name: string;
+  /** Its name in the shop when read in Albanian; empty means the same as `name`. */
+  name_sq?: string | null;
   size_type: SizeType;
   sort_order: number;
   active: boolean;
@@ -19,6 +21,7 @@ export interface Colour {
   id: number;
   code: string;
   name: string;
+  name_sq?: string | null;
   hex: string | null;
   sort_order: number;
   active: boolean;
@@ -28,6 +31,7 @@ export interface Size {
   id: number;
   code: string;
   label: string;
+  label_sq?: string | null;
   size_type: SizeType;
   sort_order: number;
   active: boolean;

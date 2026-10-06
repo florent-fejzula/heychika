@@ -2,7 +2,7 @@ import { Component, ElementRef, PLATFORM_ID, computed, effect, inject, input, li
 import { isPlatformBrowser } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { I18n, TranslatePipe } from '../../core/i18n';
+import { I18n, NamedPipe, TranslatePipe } from '../../core/i18n';
 import { Bag, MAX_PER_ITEM } from '../bag';
 import { Loaded } from '../resolvers';
 import { ShopApi, ShopProduct, ShopVariant, slugify } from '../shop-api';
@@ -13,7 +13,7 @@ const FEW_LEFT = 3;
 
 @Component({
   selector: 'app-product-page',
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, NamedPipe],
   templateUrl: './product-page.html',
   styleUrl: './product-page.scss',
 })
@@ -66,7 +66,10 @@ export class ProductPage {
 
   protected readonly categorySlug = computed(() => slugify(this.p()?.category.name ?? ''));
 
-  protected readonly colourName = computed(() => this.colours().find((c) => c.id === this.colourId())?.name ?? '');
+  protected readonly colourName = computed(() => {
+    const c = this.colours().find((c) => c.id === this.colourId());
+    return c ? this.i18n.named(c.name, c.name_sq) : '';
+  });
 
   protected readonly variant = computed(() =>
     this.p()?.variants.find((v) => v.color.id === this.colourId() && v.size.id === this.sizeId()) ?? null,

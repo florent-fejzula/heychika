@@ -46,7 +46,7 @@
     </div>
 
     <div class="info">
-      <a class="crumb" routerLink="/" [queryParams]="{ category: categorySlug() }">{{ product.category.name }}</a>
+      <a class="crumb" routerLink="/" [queryParams]="{ category: categorySlug() }">{{ product.category.name | named: product.category.name_sq }}</a>
       <h1>{{ product.name }}</h1>
 
       @if (shown(); as price) {
@@ -64,13 +64,14 @@
           <legend>{{ 'shop.product.colourIs' | t }} <strong>{{ colourName() }}</strong></legend>
           <div class="colours">
             @for (c of colours(); track c.id) {
-              <label class="colour" [class.faded]="!c.inStock" [title]="c.inStock ? c.name : ('shop.product.soldOutTitle' | t: { name: c.name })">
+              @let name = c.name | named: c.name_sq;
+              <label class="colour" [class.faded]="!c.inStock" [title]="c.inStock ? name : ('shop.product.soldOutTitle' | t: { name })">
                 <input type="radio" name="colour" [checked]="colourId() === c.id" (change)="chooseColour(c.id)" />
                 <span
                   class="dab"
                   [style.background]="c.hex ?? 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'"
                 ></span>
-                <span class="sr-only">{{ c.name }}{{ c.inStock ? '' : ('shop.product.soldOutSr' | t) }}</span>
+                <span class="sr-only">{{ name }}{{ c.inStock ? '' : ('shop.product.soldOutSr' | t) }}</span>
               </label>
             }
           </div>
@@ -80,7 +81,7 @@
       }
 
       <fieldset class="choose">
-        <legend>{{ 'shop.size' | t }}@if (sizes().length === 1) {: <strong>{{ sizes()[0].label }}</strong>}</legend>
+        <legend>{{ 'shop.size' | t }}@if (sizes().length === 1) {: <strong>{{ sizes()[0].label | named: sizes()[0].label_sq }}</strong>}</legend>
         @if (sizes().length > 1) {
           <div class="sizes">
             @for (s of sizes(); track s.id) {
@@ -93,7 +94,7 @@
                   [disabled]="state !== 'ok'"
                   (change)="chooseSize(s.id)"
                 />
-                <span>{{ s.label }}</span>
+                <span>{{ s.label | named: s.label_sq }}</span>
                 @if (state === 'sold_out') { <span class="sr-only">{{ 'shop.product.soldOutSr' | t }}</span> }
                 @if (state === 'none') { <span class="sr-only">{{ 'shop.product.notMadeSr' | t }}</span> }
               </label>

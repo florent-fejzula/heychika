@@ -17,9 +17,14 @@ export interface ShopSettings {
   all_rounding: number;
 }
 
+// Categories, colours and sizes carry an Albanian name beside the English one
+// (`name | named: name_sq`). Links and filters use the English name, so a shared
+// link works whatever language the reader has on.
+
 export interface ShopCategory {
   id: number;
   name: string;
+  name_sq?: string | null;
   slug: string;
 }
 
@@ -38,7 +43,15 @@ export interface ShopContext {
 export interface ShopColour {
   id: number;
   name: string;
+  name_sq?: string | null;
   hex: string | null;
+  sort_order: number;
+}
+
+export interface ShopSize {
+  id: number;
+  label: string;
+  label_sq?: string | null;
   sort_order: number;
 }
 
@@ -47,7 +60,7 @@ export interface ShopVariant {
   price_eur: number;
   compare_at_price_eur: number | null;
   color: ShopColour;
-  size: { id: number; label: string; sort_order: number };
+  size: ShopSize;
   available: number;
 }
 
@@ -66,7 +79,7 @@ export interface ShopProduct {
   material: string | null;
   featured: boolean;
   created_at: string;
-  category: { id: number; name: string; sort_order: number };
+  category: { id: number; name: string; name_sq?: string | null; sort_order: number };
   /** Active sizes only, ordered by colour then size. */
   variants: ShopVariant[];
   /** Cover first, then in the order she arranged them. */
@@ -79,8 +92,9 @@ export interface BagItem {
   priceEur: number;
   available: number;
   product: { slug: string; name: string };
-  color: { name: string; hex: string | null };
+  color: { name: string; name_sq?: string | null; hex: string | null };
   size: string;
+  size_sq?: string | null;
   image: string | null;
 }
 
@@ -115,7 +129,8 @@ export interface TrackedOrder {
   first_name: string;
   delivery_fee: number;
   total: number;
-  lines: { name: string; color: string; size: string; qty: number; price: number }[];
+  /** color_sq and size_sq: the Albanian names as they are now (the order keeps the English ones it was placed with). */
+  lines: { name: string; color: string; color_sq?: string | null; size: string; size_sq?: string | null; qty: number; price: number }[];
 }
 
 /** Why checkout refused an order, in a form the checkout page can act on. */
@@ -137,10 +152,13 @@ export class CheckoutError extends Error {
 
 const BUCKET = 'product-images';
 
+// Categories, colours and sizes are read whole (*) rather than column by column,
+// so the shop keeps working on a database that doesn't have the Albanian names
+// yet. Everything in those three tables is public anyway.
 const PRODUCT_SELECT =
   'id, slug, name, description, material, featured, created_at, status, show_online,' +
-  'category:categories(id, name, sort_order),' +
-  'variants(id, price_eur, compare_at_price_eur, active, color:colors(id, name, hex, sort_order), size:sizes(id, label, sort_order), stock(qty_available)),' +
+  'category:categories(*),' +
+  'variants(id, price_eur, compare_at_price_eur, active, color:colors(*), size:sizes(*), stock(qty_available)),' +
   'images:product_images(storage_path, color_id, is_primary, sort_order)';
 
 interface RawVariant {
@@ -149,7 +167,7 @@ interface RawVariant {
   compare_at_price_eur: number | null;
   active: boolean;
   color: ShopColour;
-  size: { id: number; label: string; sort_order: number };
+  size: ShopSize;
   stock: { qty_available: number } | { qty_available: number }[] | null;
 }
 
@@ -180,18 +198,28 @@ function forSale(p: { status: string; show_online: boolean }): boolean {
   return p.status === 'active' && p.show_online;
 }
 
+function colour(c: ShopColour): ShopColour {
+  return { id: c.id, name: c.name, name_sq: c.name_sq ?? null, hex: c.hex, sort_order: c.sort_order };
+}
+
+function size(s: ShopSize): ShopSize {
+  return { id: s.id, label: s.label, label_sq: s.label_sq ?? null, sort_order: s.sort_order };
+}
+
 function shape(p: RawProduct): ShopProduct {
   const { status: _s, show_online: _o, ...rest } = p;
+  const c = p.category;
   return {
     ...rest,
+    category: { id: c.id, name: c.name, name_sq: c.name_sq ?? null, sort_order: c.sort_order },
     variants: p.variants
       .filter((v) => v.active)
       .map((v) => ({
         id: v.id,
         price_eur: Number(v.price_eur),
         compare_at_price_eur: v.compare_at_price_eur === null ? null : Number(v.compare_at_price_eur),
-        color: v.color,
-        size: v.size,
+        color: colour(v.color),
+        size: size(v.size),
         available: available(v.stock),
       }))
       .sort((a, b) => a.color.sort_order - b.color.sort_order || a.color.name.localeCompare(b.color.name) || a.size.sort_order - b.size.sort_order),
@@ -219,7 +247,7 @@ export class ShopApi {
           .select('store_name, contact_phone, contact_email, instagram_url, tiktok_url, facebook_url, mkd_per_eur, all_per_eur, mkd_rounding, all_rounding')
           .single<ShopSettings>(),
         this.sb.from('delivery_zones').select('country, currency, fee_eur, free_over_eur, est_days, active').eq('active', true),
-        this.sb.from('categories').select('id, name, sort_order').eq('active', true).order('sort_order'),
+        this.sb.from('categories').select('*').eq('active', true).order('sort_order'),
       ]);
       if (settings.error || zones.error || categories.error) throw settings.error ?? zones.error ?? categories.error;
 
@@ -239,7 +267,7 @@ export class ShopApi {
           free_over_eur: z.free_over_eur === null ? null : Number(z.free_over_eur),
           est_days: z.est_days,
         })),
-        categories: (categories.data ?? []).map((c) => ({ id: c.id, name: c.name, slug: slugify(c.name) })),
+        categories: (categories.data ?? []).map((c) => ({ id: c.id, name: c.name, name_sq: c.name_sq ?? null, slug: slugify(c.name) })),
       };
     });
   }
@@ -288,7 +316,7 @@ export class ShopApi {
     const { data, error } = await this.sb
       .from('variants')
       .select(
-        'id, price_eur, active, color:colors(id, name, hex), size:sizes(label), stock(qty_available),' +
+        'id, price_eur, active, color:colors(*), size:sizes(*), stock(qty_available),' +
           'product:products(slug, name, status, show_online, images:product_images(storage_path, color_id, is_primary, sort_order))',
       )
       .in('id', variantIds)
@@ -297,8 +325,8 @@ export class ShopApi {
           id: number;
           price_eur: number;
           active: boolean;
-          color: { id: number; name: string; hex: string | null };
-          size: { label: string };
+          color: ShopColour;
+          size: ShopSize;
           stock: RawVariant['stock'];
           product: { slug: string; name: string; status: string; show_online: boolean; images: ShopImage[] };
         }[],
@@ -315,8 +343,9 @@ export class ShopApi {
           priceEur: Number(v.price_eur),
           available: available(v.stock),
           product: { slug: v.product.slug, name: v.product.name },
-          color: { name: v.color.name, hex: v.color.hex },
+          color: { name: v.color.name, name_sq: v.color.name_sq ?? null, hex: v.color.hex },
           size: v.size.label,
+          size_sq: v.size.label_sq ?? null,
           image: image ? this.imageUrl(image.storage_path, true) : null,
         };
       });

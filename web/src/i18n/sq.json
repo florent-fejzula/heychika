@@ -544,7 +544,7 @@
     },
     "lists": {
       "title": "Kategoritë, ngjyrat dhe masat",
-      "intro": "Këto janë zgjedhjet kur shton një model. Kodi është pjesë e çdo SKU-je, ndaj sapo përdoret diçka, kodi bllokohet; emri mund të ndryshohet gjithmonë. Që të mos ofrohet më, fike në vend që ta fshish.",
+      "intro": "Këto janë zgjedhjet kur shton një model. Kodi është pjesë e çdo SKU-je, ndaj sapo përdoret diçka, kodi bllokohet; emri mund të ndryshohet gjithmonë. Që të mos ofrohet më, fike në vend që ta fshish. Dyqani ua shfaq emrin në shqip atyre që e lexojnë në shqip; po e le bosh, shfaqet ai në anglisht.",
       "categories": "Kategoritë",
       "nameOf": "Emri i {{code}}",
       "labelOf": "Emërtimi i {{code}}",
@@ -553,7 +553,7 @@
       "swatchFor": "Ngjyra për {{name}}",
       "newCategoryCode": "Kodi i kategorisë së re",
       "newCategoryName": "Emri i kategorisë së re",
-      "categoryPlaceholder": "Fustane",
+      "categoryPlaceholder": "Dresses",
       "sizeKind": "Lloji i masave",
       "sizeType": {
         "letter": "Shkronja (S, M, L)",
@@ -573,14 +573,21 @@
       },
       "newColourCode": "Kodi i ngjyrës së re",
       "newColourName": "Emri i ngjyrës së re",
-      "colourPlaceholder": "Jargavan",
+      "colourPlaceholder": "Lilac",
       "newColourSwatch": "Ngjyra e re",
       "newSizeCode": "Kodi i masës së re",
       "newSizeLabel": "Emërtimi i masës së re",
       "confirmDelete": "Ta fshij “{{name}}”? Nëse përdoret diku, mbetet dhe mund ta fshehësh në vend të kësaj.",
       "nameIt": "Jepi një emër.",
       "codeTaken": "Kodi {{code}} është i zënë.",
-      "added": "U shtua {{name}}."
+      "added": "U shtua {{name}}.",
+      "english": "Anglisht",
+      "albanian": "Shqip",
+      "sqNameOf": "Emri në shqip i {{code}}",
+      "newSqName": "Emri në shqip",
+      "categoryPlaceholderSq": "Fustane",
+      "colourPlaceholderSq": "Jargavan",
+      "sizePlaceholderSq": "Në shqip, nëse ndryshon"
     },
     "labels": {
       "title": "Etiketat",

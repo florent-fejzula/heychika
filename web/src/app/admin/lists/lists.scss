@@ -5,7 +5,8 @@
 
 .row {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) auto auto auto;
+  // Code, English name, Albanian name, then the size kind or swatch, on/off and delete.
+  grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 8px;
   padding: 6px 0;
@@ -13,6 +14,13 @@
 
   &.off {
     opacity: 0.55;
+  }
+
+  &.head {
+    padding: 0;
+    border-top: 0;
+    color: var(--muted);
+    font-size: 0.75rem;
   }
 
   code {

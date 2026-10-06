@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { I18n, TranslatePipe } from '../../core/i18n';
+import { I18n, NamedPipe, TranslatePipe } from '../../core/i18n';
 import { formatMoney } from '../../core/money';
 import { OrderStatus, ShopApi, TrackedOrder } from '../shop-api';
 import { LastOrder, lastOrder } from './last-order';
@@ -31,7 +31,7 @@ const NEXT: Partial<Record<OrderStatus, string>> = {
 
 @Component({
   selector: 'app-order-page',
-  imports: [FormsModule, NgTemplateOutlet, RouterLink, TranslatePipe],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, TranslatePipe, NamedPipe],
   templateUrl: './order-page.html',
   styleUrl: './order-page.scss',
 })

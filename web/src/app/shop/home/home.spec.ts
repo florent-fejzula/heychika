@@ -1,15 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { I18n, Lang, LANG_COOKIE, provideI18n } from '../../core/i18n';
 import { ShopApi, ShopProduct, ShopVariant } from '../shop-api';
 import { ShopState } from '../shop-state';
 import { Home } from './home';
 
-const BLACK = { id: 1, name: 'Black', hex: '#111', sort_order: 10 };
+const BLACK = { id: 1, name: 'Black', name_sq: 'E zezë', hex: '#111', sort_order: 10 };
 const RED = { id: 2, name: 'Red', hex: '#c00', sort_order: 20 };
 const S = { id: 1, label: 'S', sort_order: 20 };
 const M = { id: 2, label: 'M', sort_order: 30 };
 
-function v(id: number, color: typeof BLACK, size: typeof S, available: number, price = 30, was: number | null = null): ShopVariant {
+function v(id: number, color: ShopVariant['color'], size: typeof S, available: number, price = 30, was: number | null = null): ShopVariant {
   return { id, price_eur: price, compare_at_price_eur: was, color, size, available };
 }
 
@@ -32,15 +33,16 @@ const products = [
   design(4, 'Star dress', DRESSES, [v(5, BLACK, M, 3)], true),
 ];
 
-async function setup(query: { category?: string; size?: string; colour?: string } = {}, list: ShopProduct[] = products) {
+async function setup(query: { category?: string; size?: string; colour?: string } = {}, list: ShopProduct[] = products, lang?: Lang) {
   document.cookie = 'hc_country=; Max-Age=0; Path=/';
   TestBed.configureTestingModule({
-    providers: [provideRouter([]), { provide: ShopApi, useValue: { imageUrl: (p: string) => p } }],
+    providers: [provideRouter([]), { provide: ShopApi, useValue: { imageUrl: (p: string) => p } }, lang ? provideI18n() : []],
   });
+  if (lang) await TestBed.inject(I18n).use(lang);
   TestBed.inject(ShopState).context.set({
     settings: { store_name: 'Hey Chika', contact_phone: null, contact_email: null, instagram_url: null, tiktok_url: null, facebook_url: null, mkd_per_eur: 61.5, all_per_eur: 98, mkd_rounding: 50, all_rounding: 100 },
     zones: [],
-    categories: [{ id: 1, name: 'Dresses', slug: 'dresses' }, { id: 2, name: 'Tops', slug: 'tops' }, { id: 3, name: 'Jeans', slug: 'jeans' }],
+    categories: [{ id: 1, name: 'Dresses', name_sq: 'Fustane', slug: 'dresses' }, { id: 2, name: 'Tops', slug: 'tops' }, { id: 3, name: 'Jeans', slug: 'jeans' }],
   });
   const fixture = TestBed.createComponent(Home);
   fixture.componentRef.setInput('products', { ok: true, value: list });
@@ -105,5 +107,22 @@ describe('Home', () => {
     const { el } = await setup({ category: 'dresses', size: 'M', colour: 'red' });
     expect(el.textContent).toContain('Nothing in stock matches');
     expect(el.querySelector('.message a')?.getAttribute('href')).toBe('/?category=dresses');
+  });
+
+  it('shows the Albanian names the owners gave, the English ones where they gave none, and keeps the links the same', async () => {
+    const { fixture, el } = await setup({}, products, 'sq');
+    const chips = () => [...el.querySelectorAll('.categories a')].map((a) => a.textContent);
+    expect(chips()).toEqual(['Të gjitha', 'Fustane', 'Tops']);
+    expect(el.querySelector('.categories a:nth-child(2)')?.getAttribute('href')).toBe('/?category=dresses');
+    const colours = [...el.querySelectorAll('.filters select:last-of-type option')].map((o) => [o.textContent, o.getAttribute('value')]);
+    expect(colours).toContainEqual(['E zezë', 'black']);
+    expect(colours).toContainEqual(['Red', 'red']);
+
+    // Switching back changes them on the spot.
+    await TestBed.inject(I18n).use('en');
+    await settle(fixture);
+    expect(chips()).toEqual(['All', 'Dresses', 'Tops']);
+
+    document.cookie = `${LANG_COOKIE}=; Path=/; Max-Age=0`;
   });
 });

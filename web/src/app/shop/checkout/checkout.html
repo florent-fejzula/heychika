@@ -99,7 +99,7 @@
                   </span>
                   <span class="what">
                     <span>{{ row.item.product.name }}</span>
-                    <span class="muted">{{ row.item.color.name }} · {{ row.item.size }}</span>
+                    <span class="muted">{{ row.item.color.name | named: row.item.color.name_sq }} · {{ row.item.size | named: row.item.size_sq }}</span>
                   </span>
                   <span class="amount">{{ shop.price(row.item.priceEur) }}@if (row.qty > 1) { <span class="muted"> × {{ row.qty }}</span> }</span>
                 </li>

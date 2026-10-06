@@ -80,7 +80,7 @@
         <li>
           <span>
             {{ line.name }}
-            <span class="muted">{{ line.color }} · {{ line.size }}@if (line.qty > 1) { · × {{ line.qty }}}</span>
+            <span class="muted">{{ line.color | named: line.color_sq }} · {{ line.size | named: line.size_sq }}@if (line.qty > 1) { · × {{ line.qty }}}</span>
           </span>
           <span class="amount">{{ money(line.price * line.qty) }}</span>
         </li>

@@ -130,6 +130,14 @@ export class I18n {
     return this.transloco.translate(key, params, lang);
   }
 
+  /**
+   * A name the owners typed (a category, colour or size): its Albanian name when
+   * the screen is in Albanian and they filled one in, else the main one.
+   */
+  named(name: string, sq: string | null | undefined): string {
+    return this.active() === 'sq' && sq?.trim() ? sq.trim() : name;
+  }
+
   /** For dates and times. Numbers and money stay in one format whatever the language. */
   locale(): string {
     return this.active() === 'sq' ? 'sq' : 'en-GB';
@@ -156,6 +164,11 @@ export function t(key: string, params?: Params): string {
   return current ? current.t(key, params) : key;
 }
 
+/** I18n.named, for code outside components. */
+export function named(name: string, sq: string | null | undefined): string {
+  return current ? current.named(name, sq) : name;
+}
+
 /** The date locale for code outside components. */
 export function dateLocale(): string {
   return current ? current.locale() : 'en-GB';
@@ -171,6 +184,16 @@ export class TranslatePipe implements PipeTransform {
 
   transform(key: string, params?: Params): string {
     return this.i18n.t(key, params);
+  }
+}
+
+/** {{ colour.name | named: colour.name_sq }}: see I18n.named. Impure for the same reason as `t`. */
+@Pipe({ name: 'named', pure: false })
+export class NamedPipe implements PipeTransform {
+  private readonly i18n = inject(I18n);
+
+  transform(name: string, sq: string | null | undefined): string {
+    return this.i18n.named(name, sq);
   }
 }
 

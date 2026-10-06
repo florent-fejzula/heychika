@@ -29,7 +29,7 @@
               </a>
               <div class="what">
                 <a class="name" [routerLink]="['/p', row.item.product.slug]">{{ row.item.product.name }}</a>
-                <span class="muted">{{ row.item.color.name }} · {{ row.item.size }}</span>
+                <span class="muted">{{ row.item.color.name | named: row.item.color.name_sq }} · {{ row.item.size | named: row.item.size_sq }}</span>
                 <span class="each">{{ shop.price(row.item.priceEur) }}</span>
               </div>
               <div class="qty">

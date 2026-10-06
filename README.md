@@ -37,7 +37,7 @@ on the About and returns pages, a domain, and the checklist under [Going live](#
 - **Customers:** everyone who ordered, with what they paid for, parcels that came back, their orders,
   and a note about them
 - Full database schema for every phase, with the stock engine, purchasing, costing and checkout
-  working and tested (154 database tests, 309 app tests)
+  working and tested (154 database tests, 310 app tests)
 - Admin login (owners only), phone-first layout, a live "Today" dashboard, Settings (exchange
   rates, delivery fees, shop details)
 - **Add stock, one form** (Products → *Add product*, Stock → *Add stock*, or *Add item* on a buying trip):
@@ -76,8 +76,10 @@ on the About and returns pages, a domain, and the checklist under [Going live](#
   at once, and the choice is remembered (a `lang` cookie, so the server renders pages in it too). The
   first visit follows the browser’s language. The words are in `web/src/i18n/en.json` and `sq.json`,
   one key per sentence ([Transloco](https://jsverse.gitbook.io/transloco)); `npm run check:i18n`
-  checks both files have every key the code uses. What the owners type themselves (product names,
-  colours, delivery times, the About and Returns text) shows as they wrote it.
+  checks both files have every key the code uses. Categories, colours and sizes have an Albanian name
+  beside the English one (Lists screen; empty means the shop shows the English). Links and filters
+  keep using the English name. Other text the owners type (product names, delivery times, the About
+  and Returns text) shows as they wrote it.
 - **“A new version is available”:** after a release, a page left open (a phone resumes tabs for days)
   offers a Refresh. The server reports its build at `/app-version`; the app asks when it comes back to
   the screen and every half hour.

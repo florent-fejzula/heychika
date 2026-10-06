@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { TranslatePipe } from '../../core/i18n';
+import { I18n, NamedPipe, TranslatePipe } from '../../core/i18n';
 import { Loaded } from '../resolvers';
 import { ShopApi, ShopProduct, slugify } from '../shop-api';
 import { ShopState } from '../shop-state';
@@ -13,7 +13,7 @@ interface Card {
   /** True when sizes or colours are priced differently, so the card says "from". */
   priceVaries: boolean;
   wasEur: number | null;
-  colours: { name: string; hex: string | null }[];
+  colours: { name: string; name_sq?: string | null; hex: string | null }[];
   soldOut: boolean;
   featured: boolean;
   colourQuery: string | null;
@@ -21,13 +21,14 @@ interface Card {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, NamedPipe],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
 export class Home {
   private readonly api = inject(ShopApi);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
   protected readonly shop = inject(ShopState);
 
   // From the resolver and the query string (?category=dresses&size=M&colour=black).
@@ -57,12 +58,12 @@ export class Home {
   protected readonly sizes = computed(() => uniqueBy(
     this.inCategory().flatMap((p) => p.variants.map((v) => v.size)),
     (s) => s.label,
-  ).sort((a, b) => a.sort_order - b.sort_order).map((s) => s.label));
+  ).sort((a, b) => a.sort_order - b.sort_order));
 
   protected readonly colours = computed(() => uniqueBy(
     this.inCategory().flatMap((p) => p.variants.map((v) => v.color)),
     (c) => c.id,
-  ).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ name: c.name, slug: slugify(c.name) })));
+  ).sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ name: c.name, name_sq: c.name_sq, slug: slugify(c.name) })));
 
   protected readonly filtering = computed(() => !!(this.category() || this.size() || this.colour()));
 
@@ -84,9 +85,10 @@ export class Home {
       .sort((a, b) => Number(a.soldOut) - Number(b.soldOut) || Number(b.featured) - Number(a.featured));
   });
 
-  protected readonly categoryName = computed(
-    () => this.categories().find((c) => c.slug === this.category())?.name ?? null,
-  );
+  protected readonly categoryName = computed(() => {
+    const c = this.categories().find((c) => c.slug === this.category());
+    return c ? this.i18n.named(c.name, c.name_sq) : null;
+  });
 
   protected filter(key: 'size' | 'colour', value: string): void {
     this.router.navigate(['/'], { queryParams: { [key]: value || null }, queryParamsHandling: 'merge' });
@@ -105,7 +107,7 @@ export class Home {
       priceEur: cheapest.price_eur,
       priceVaries: new Set(priced.map((v) => v.price_eur)).size > 1,
       wasEur: cheapest.compare_at_price_eur && cheapest.compare_at_price_eur > cheapest.price_eur ? cheapest.compare_at_price_eur : null,
-      colours: uniqueBy(p.variants.map((v) => v.color), (c) => c.id).map((c) => ({ name: c.name, hex: c.hex })),
+      colours: uniqueBy(p.variants.map((v) => v.color), (c) => c.id).map((c) => ({ name: c.name, name_sq: c.name_sq, hex: c.hex })),
       soldOut: !p.variants.some((v) => v.available > 0),
       featured: p.featured,
       colourQuery: colour,

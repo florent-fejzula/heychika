@@ -43,19 +43,19 @@ export class Lists {
 
   protected async addCategory(event: Event): Promise<void> {
     const { form, data } = read(event);
-    const ok = await this.insert('categories', { name: str(data, 'name'), size_type: str(data, 'type'), sort_order: nextOrder(this.categories()) }, str(data, 'code'));
+    const ok = await this.insert('categories', { name: str(data, 'name'), name_sq: opt(data, 'name_sq'), size_type: str(data, 'type'), sort_order: nextOrder(this.categories()) }, str(data, 'code'));
     if (ok) form.reset();
   }
 
   protected async addColour(event: Event): Promise<void> {
     const { form, data } = read(event);
-    const ok = await this.insert('colors', { name: str(data, 'name'), hex: str(data, 'hex'), sort_order: nextOrder(this.colours()) }, str(data, 'code'));
+    const ok = await this.insert('colors', { name: str(data, 'name'), name_sq: opt(data, 'name_sq'), hex: str(data, 'hex'), sort_order: nextOrder(this.colours()) }, str(data, 'code'));
     if (ok) form.reset();
   }
 
   protected async addSize(event: Event): Promise<void> {
     const { form, data } = read(event);
-    const ok = await this.insert('sizes', { label: str(data, 'name'), size_type: str(data, 'type'), sort_order: nextOrder(this.sizes()) }, str(data, 'code'));
+    const ok = await this.insert('sizes', { label: str(data, 'name'), label_sq: opt(data, 'name_sq'), size_type: str(data, 'type'), sort_order: nextOrder(this.sizes()) }, str(data, 'code'));
     if (ok) form.reset();
   }
 
@@ -63,6 +63,12 @@ export class Lists {
     const text = value.trim();
     if (!text) return this.reload();
     await this.update(kind, id, kind === 'sizes' ? { label: text } : { name: text });
+  }
+
+  /** The Albanian name the shop shows. Cleared, the shop shows the English one. */
+  protected async renameSq(kind: Kind, id: number, value: string): Promise<void> {
+    const text = value.trim() || null;
+    await this.update(kind, id, kind === 'sizes' ? { label_sq: text } : { name_sq: text });
   }
 
   protected async setHex(id: number, hex: string): Promise<void> {
@@ -130,6 +136,12 @@ function read(event: Event): { form: HTMLFormElement; data: FormData } {
 
 function str(data: FormData, key: string): string {
   return String(data.get(key) ?? '');
+}
+
+// Left out of the insert when empty (undefined isn't sent), so adding works the
+// same on a database without the Albanian names.
+function opt(data: FormData, key: string): string | undefined {
+  return str(data, key).trim() || undefined;
 }
 
 // New entries go to the end, with room left between them for reordering later.
