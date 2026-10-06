@@ -37,7 +37,7 @@ on the About and returns pages, a domain, and the checklist under [Going live](#
 - **Customers:** everyone who ordered, with what they paid for, parcels that came back, their orders,
   and a note about them
 - Full database schema for every phase, with the stock engine, purchasing, costing and checkout
-  working and tested (154 database tests, 297 app tests)
+  working and tested (154 database tests, 309 app tests)
 - Admin login (owners only), phone-first layout, a live "Today" dashboard, Settings (exchange
   rates, delivery fees, shop details)
 - **Add stock, one form** (Products → *Add product*, Stock → *Add stock*, or *Add item* on a buying trip):
@@ -72,6 +72,15 @@ on the About and returns pages, a domain, and the checklist under [Going live](#
 - **A brake on fake orders:** past 50 shop orders waiting to be confirmed (changeable in Settings), the shop
   pauses and asks customers to message instead, so nobody can tie up the stock with made-up orders. Today
   says when it's paused. Orders typed in from a DM are never stopped.
+- **English and Albanian:** the flag at the top right of the shop and the admin switches every screen
+  at once, and the choice is remembered (a `lang` cookie, so the server renders pages in it too). The
+  first visit follows the browser’s language. The words are in `web/src/i18n/en.json` and `sq.json`,
+  one key per sentence ([Transloco](https://jsverse.gitbook.io/transloco)); `npm run check:i18n`
+  checks both files have every key the code uses. What the owners type themselves (product names,
+  colours, delivery times, the About and Returns text) shows as they wrote it.
+- **“A new version is available”:** after a release, a page left open (a phone resumes tabs for days)
+  offers a Refresh. The server reports its build at `/app-version`; the app asks when it comes back to
+  the screen and every half hour.
 - **Nightly encrypted backups** of the database and every photo (see [Backups](#backups))
 
 ### Trying the shop with demo products
@@ -162,6 +171,7 @@ Open http://localhost:4200 for the shop and http://localhost:4200/admin for the 
 cd supabase/tests && npm install && npm test   # database: runs every migration in a throwaway Postgres
 cd web && npm test                             # app screens and logic
 cd web && npm run check:barcodes               # printed barcodes scan back to the exact SKU
+cd web && npm run check:i18n                   # every translation key exists in English and Albanian
 ```
 
 The database tests use [PGlite](https://pglite.dev) (Postgres in WebAssembly) with a small

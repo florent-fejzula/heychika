@@ -1,19 +1,24 @@
 import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Inventory, MOVEMENT_LABEL, Movement, StockRow } from '../../core/inventory';
+import { I18n, TranslatePipe } from '../../core/i18n';
+import { Inventory, Movement, StockRow } from '../../core/inventory';
 import { formatMoney, parseCount } from '../../core/money';
 
-const NEEDS_REASON = 'Say why, so the history makes sense later.';
+const NEEDS_REASON = 'admin.stock.needsReason';
 
 // Everything that can be done to one size's stock, plus how its stock got to where it is.
 @Component({
   selector: 'app-stock-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './stock-detail.html',
   styleUrl: './stock-detail.scss',
 })
 export class StockDetail {
   private readonly inventory = inject(Inventory);
+  private readonly i18n = inject(I18n);
+
+  /** Suggestions for the reason fields. */
+  protected readonly reasons = ['check', 'lost', 'found', 'storage', 'miscounted'];
 
   readonly row = input.required<StockRow>();
   readonly changed = output<void>();
@@ -60,23 +65,23 @@ export class StockDetail {
 
   protected async recount(): Promise<void> {
     const target = parseCount(this.count());
-    if (target === null) return this.fail('Enter how many are on the shelf, as a whole number.');
+    if (target === null) return this.fail('admin.stock.enterCount');
     const delta = target - this.shelf;
-    if (delta === 0) return this.fail(`The system already says ${target}. Nothing to change.`);
+    if (delta === 0) return this.fail('admin.stock.alreadySays', { count: target });
     const reason = this.reason(this.countReason());
     if (!reason) return this.fail(NEEDS_REASON);
 
-    await this.run(`Count corrected to ${target}.`, () => this.inventory.adjust(this.row().id, delta, reason), () => this.countReason.set(''));
+    await this.run(this.i18n.t('admin.stock.corrected', { count: target }), () => this.inventory.adjust(this.row().id, delta, reason), () => this.countReason.set(''));
   }
 
   protected async markDamaged(): Promise<void> {
     const qty = parseCount(this.damagedQty());
-    if (!qty) return this.fail('Enter how many are damaged.');
-    if (qty > this.shelf) return this.fail(`Only ${this.shelf} on the shelf.`);
+    if (!qty) return this.fail('admin.stock.enterDamaged');
+    if (qty > this.shelf) return this.fail('admin.stock.onlyOnShelf', { count: this.shelf });
     const reason = this.reason(this.damagedReason());
     if (!reason) return this.fail(NEEDS_REASON);
 
-    await this.run(`${qty} marked damaged. They no longer count as for sale.`, () => this.inventory.markDamaged(this.row().id, qty, reason), () => {
+    await this.run(this.i18n.t('admin.stock.markedDamaged', { count: qty }), () => this.inventory.markDamaged(this.row().id, qty, reason), () => {
       this.damagedReason.set('');
       this.damagedQty.set('1');
     });
@@ -84,22 +89,18 @@ export class StockDetail {
 
   protected async writeOff(): Promise<void> {
     const qty = parseCount(this.writeOffQty());
-    if (!qty) return this.fail('Enter how many to write off.');
-    if (qty > this.damaged) return this.fail(`Only ${this.damaged} damaged.`);
+    if (!qty) return this.fail('admin.stock.enterWriteOff');
+    if (qty > this.damaged) return this.fail('admin.stock.onlyDamaged', { count: this.damaged });
     const reason = this.reason(this.writeOffReason());
     if (!reason) return this.fail(NEEDS_REASON);
 
-    await this.run(`${qty} written off.`, () => this.inventory.writeOff(this.row().id, qty, reason), () => this.writeOffReason.set(''));
+    await this.run(this.i18n.t('admin.stock.writtenOff', { count: qty }), () => this.inventory.writeOff(this.row().id, qty, reason), () => this.writeOffReason.set(''));
   }
 
   protected async saveMin(): Promise<void> {
     const min = parseCount(this.minStock());
-    if (min === null) return this.fail('Enter a whole number. 0 turns the warning off.');
-    await this.run(min === 0 ? 'Low-stock warning turned off.' : `You’ll be warned at ${min} or fewer.`, () => this.inventory.setMinStock(this.row().id, min));
-  }
-
-  protected label(m: Movement): string {
-    return MOVEMENT_LABEL[m.type];
+    if (min === null) return this.fail('admin.stock.enterMin');
+    await this.run(this.i18n.t(min === 0 ? 'admin.stock.warningOff' : 'admin.stock.warnedAt', { count: min }), () => this.inventory.setMinStock(this.row().id, min));
   }
 
   /** The non-zero changes of one movement, like “shelf −2 · on the road +2”. */
@@ -107,12 +108,12 @@ export class StockDetail {
     const parts: [string, number][] = [
       ['shelf', m.delta_physical],
       ['reserved', m.delta_reserved],
-      ['on the road', m.delta_in_transit],
+      ['road', m.delta_in_transit],
       ['damaged', m.delta_damaged],
     ];
     return parts
       .filter(([, n]) => n !== 0)
-      .map(([name, n]) => `${name} ${n > 0 ? '+' : '−'}${Math.abs(n)}`)
+      .map(([name, n]) => `${this.i18n.t('admin.stock.effect.' + name)} ${n > 0 ? '+' : '−'}${Math.abs(n)}`)
       .join(' · ');
   }
 
@@ -121,7 +122,7 @@ export class StockDetail {
   }
 
   protected when(iso: string): string {
-    return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return this.i18n.dateTime(iso, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
   protected money(n: number): string {
@@ -133,8 +134,8 @@ export class StockDetail {
     return t ? t : null;
   }
 
-  private fail(text: string): void {
-    this.message.set({ kind: 'error', text });
+  private fail(key: string, params?: Record<string, unknown>): void {
+    this.message.set({ kind: 'error', text: this.i18n.t(key, params) });
   }
 
   private async run(done: string, action: () => Promise<void>, after?: () => void): Promise<void> {

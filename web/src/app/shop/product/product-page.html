@@ -1,25 +1,25 @@
 @if (failed()) {
   <section class="message">
-    <h1>This page couldn’t load just now</h1>
-    <p class="muted">Please refresh in a moment.</p>
-    <a class="btn" routerLink="/">Back to the shop</a>
+    <h1>{{ 'shop.product.failed' | t }}</h1>
+    <p class="muted">{{ 'shop.refreshSoon' | t }}</p>
+    <a class="btn" routerLink="/">{{ 'shop.backToShop' | t }}</a>
   </section>
 } @else if (!p()) {
   <section class="message">
-    <h1>This piece isn’t available any more</h1>
-    <p class="muted">It may have sold out or been taken down. There’s more in the shop.</p>
-    <a class="btn btn-primary" routerLink="/">See what’s in the shop</a>
+    <h1>{{ 'shop.product.goneTitle' | t }}</h1>
+    <p class="muted">{{ 'shop.product.goneText' | t }}</p>
+    <a class="btn btn-primary" routerLink="/">{{ 'shop.product.seeShop' | t }}</a>
   </section>
 } @else {
   @let product = p()!;
   <article class="product">
     <div class="media">
       @if (photos().length) {
-        <div class="gallery" #gallery (scroll)="onScroll(gallery)" tabindex="0" aria-label="Photos">
+        <div class="gallery" #gallery (scroll)="onScroll(gallery)" tabindex="0" [attr.aria-label]="'shop.product.photos' | t">
           @for (photo of photos(); track photo.full; let i = $index) {
             <img
               [src]="photo.full"
-              [alt]="product.name + (photos().length > 1 ? ', photo ' + (i + 1) + ' of ' + photos().length : '')"
+              [alt]="photos().length > 1 ? ('shop.product.photoOf' | t: { name: product.name, n: i + 1, total: photos().length }) : product.name"
               [attr.loading]="i === 0 ? 'eager' : 'lazy'"
             />
           }
@@ -31,7 +31,7 @@
                 type="button"
                 class="dot"
                 [class.on]="photoIndex() === i"
-                [attr.aria-label]="'Photo ' + (i + 1)"
+                [attr.aria-label]="'shop.product.photo' | t: { n: i + 1 }"
                 [attr.aria-current]="photoIndex() === i ? 'true' : null"
                 (click)="showPhoto(i)"
               >
@@ -51,7 +51,7 @@
 
       @if (shown(); as price) {
         <p class="price">
-          @if (price.from) { <span class="muted">from</span> }
+          @if (price.from) { <span class="muted">{{ 'shop.from' | t }}</span> }
           <strong>{{ shop.price(price.eur) }}</strong>
           @if (price.was && price.was > price.eur) {
             <s class="muted">{{ shop.price(price.was) }}</s>
@@ -61,26 +61,26 @@
 
       @if (colours().length > 1) {
         <fieldset class="choose">
-          <legend>Colour: <strong>{{ colourName() }}</strong></legend>
+          <legend>{{ 'shop.product.colourIs' | t }} <strong>{{ colourName() }}</strong></legend>
           <div class="colours">
             @for (c of colours(); track c.id) {
-              <label class="colour" [class.faded]="!c.inStock" [title]="c.name + (c.inStock ? '' : ' (sold out)')">
+              <label class="colour" [class.faded]="!c.inStock" [title]="c.inStock ? c.name : ('shop.product.soldOutTitle' | t: { name: c.name })">
                 <input type="radio" name="colour" [checked]="colourId() === c.id" (change)="chooseColour(c.id)" />
                 <span
                   class="dab"
                   [style.background]="c.hex ?? 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'"
                 ></span>
-                <span class="sr-only">{{ c.name }}{{ c.inStock ? '' : ', sold out' }}</span>
+                <span class="sr-only">{{ c.name }}{{ c.inStock ? '' : ('shop.product.soldOutSr' | t) }}</span>
               </label>
             }
           </div>
         </fieldset>
       } @else if (colourName()) {
-        <p class="one-colour">Colour: <strong>{{ colourName() }}</strong></p>
+        <p class="one-colour">{{ 'shop.product.colourIs' | t }} <strong>{{ colourName() }}</strong></p>
       }
 
       <fieldset class="choose">
-        <legend>Size@if (sizes().length === 1) {: <strong>{{ sizes()[0].label }}</strong>}</legend>
+        <legend>{{ 'shop.size' | t }}@if (sizes().length === 1) {: <strong>{{ sizes()[0].label }}</strong>}</legend>
         @if (sizes().length > 1) {
           <div class="sizes">
             @for (s of sizes(); track s.id) {
@@ -94,8 +94,8 @@
                   (change)="chooseSize(s.id)"
                 />
                 <span>{{ s.label }}</span>
-                @if (state === 'sold_out') { <span class="sr-only">, sold out</span> }
-                @if (state === 'none') { <span class="sr-only">, not made in this colour</span> }
+                @if (state === 'sold_out') { <span class="sr-only">{{ 'shop.product.soldOutSr' | t }}</span> }
+                @if (state === 'none') { <span class="sr-only">{{ 'shop.product.notMadeSr' | t }}</span> }
               </label>
             }
           </div>
@@ -104,53 +104,53 @@
 
       <div class="buy">
         @if (fewLeft(); as n) {
-          <p class="few">Only {{ n }} left</p>
+          <p class="few">{{ 'shop.product.fewLeft' | t: { count: n } }}</p>
         }
 
         @if (sizeId() !== null && variant() && variant()!.available === 0) {
-          <button class="btn btn-block" type="button" disabled>Sold out</button>
+          <button class="btn btn-block" type="button" disabled>{{ 'shop.soldOut' | t }}</button>
         } @else if (sizeId() === null) {
-          <button class="btn btn-primary btn-block" type="button" disabled>Choose a size</button>
+          <button class="btn btn-primary btn-block" type="button" disabled>{{ 'shop.product.chooseSize' | t }}</button>
         } @else if (canAdd() === 0) {
           <button class="btn btn-block" type="button" disabled>
-            {{ inBag() >= MAX_PER_ITEM ? 'The most you can order is ' + MAX_PER_ITEM : 'All we have is in your bag' }}
+            {{ inBag() >= MAX_PER_ITEM ? ('shop.product.maxPerItem' | t: { max: MAX_PER_ITEM }) : ('shop.product.allInBag' | t) }}
           </button>
         } @else {
-          <button class="btn btn-primary btn-block" type="button" (click)="add()">Add to bag</button>
+          <button class="btn btn-primary btn-block" type="button" (click)="add()">{{ 'shop.product.addToBag' | t }}</button>
         }
 
         @if (justAdded()) {
           <p class="added" role="status">
-            Added to your bag.
-            <a routerLink="/bag">View bag</a>
-            <a routerLink="/checkout">Checkout</a>
+            {{ 'shop.product.added' | t }}
+            <a routerLink="/bag">{{ 'shop.product.viewBag' | t }}</a>
+            <a routerLink="/checkout">{{ 'shop.product.checkout' | t }}</a>
           </p>
         }
       </div>
 
       <button class="btn btn-small share" type="button" (click)="share()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v6h14v-6" /></svg>
-        {{ shared() === 'copied' ? 'Link copied' : 'Share' }}
+        {{ (shared() === 'copied' ? 'shop.product.linkCopied' : 'shop.product.share') | t }}
       </button>
 
       @if (product.description) {
         <div class="text">
-          <h2>Details</h2>
+          <h2>{{ 'shop.product.details' | t }}</h2>
           <p>{{ product.description }}</p>
         </div>
       }
       @if (product.material) {
-        <p class="text"><span class="muted">Material:</span> {{ product.material }}</p>
+        <p class="text"><span class="muted">{{ 'shop.product.material' | t }}</span> {{ product.material }}</p>
       }
 
       @if (delivery(); as d) {
         <div class="delivery">
           <p>
-            Delivery to {{ d.country }}:
-            <strong>{{ d.free ? 'free' : d.fee }}</strong>@if (d.days) {, {{ d.days }}}.
-            @if (d.freeOver && !d.free) { Free over {{ d.freeOver }}. }
+            {{ 'shop.product.deliveryTo' | t: { country: ('common.countryIn.' + d.country | t) } }}
+            <strong>{{ d.free ? ('shop.product.free' | t) : d.fee }}</strong>@if (d.days) {, {{ d.days }}}.
+            @if (d.freeOver && !d.free) { {{ 'shop.product.freeOver' | t: { amount: d.freeOver } }} }
           </p>
-          <p>Pay in cash when it arrives. No card needed. <a routerLink="/delivery">Delivery &amp; returns</a></p>
+          <p>{{ 'shop.product.payCash' | t }} <a routerLink="/delivery">{{ 'shop.product.deliveryReturns' | t }}</a></p>
         </div>
       }
     </div>

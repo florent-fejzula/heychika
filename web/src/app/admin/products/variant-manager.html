@@ -1,15 +1,15 @@
 <section class="card stack">
   <div class="page-head">
-    <h2>Colours &amp; sizes</h2>
+    <h2>{{ 'admin.variants.title' | t }}</h2>
     @if (variants().length) {
-      <a class="btn btn-small" routerLink="/admin/labels" [queryParams]="{ product: productId() }">Print labels</a>
+      <a class="btn btn-small" routerLink="/admin/labels" [queryParams]="{ product: productId() }">{{ 'admin.variants.printLabels' | t }}</a>
     }
   </div>
 
   <!-- Add -->
   <div class="stack add">
     <div class="group">
-      <span class="label">Colours</span>
+      <span class="label">{{ 'admin.common.colours' | t }}</span>
       <div class="chips">
         @for (c of offeredColours(); track c.id) {
           <label class="chip">
@@ -22,7 +22,7 @@
     </div>
 
     <div class="group">
-      <span class="label">Sizes</span>
+      <span class="label">{{ 'admin.common.sizes' | t }}</span>
       <div class="chips">
         @for (s of offeredSizes(); track s.id) {
           <label class="chip">
@@ -33,21 +33,21 @@
       </div>
       <label class="check">
         <input type="checkbox" [checked]="showAllSizes()" (change)="showAllSizes.set(!showAllSizes())" />
-        Show all kinds of sizes
+        {{ 'admin.variants.allKinds' | t }}
       </label>
     </div>
 
     <div class="add-row">
       <label class="field">
-        <span>Price (€)</span>
+        <span>{{ 'admin.variants.price' | t }}</span>
         <input type="text" inputmode="decimal" placeholder="29.90" autocomplete="off"
                [value]="newPrice()" (input)="newPrice.set($any($event.target).value)" />
       </label>
       <button class="btn btn-primary" type="button" [disabled]="busy() || !toAdd().length" (click)="add()">
         @if (toAdd().length) {
-          Add {{ toAdd().length }} {{ toAdd().length === 1 ? 'size' : 'sizes' }}
+          {{ 'admin.variants.addN' | t: { count: toAdd().length } }}
         } @else {
-          Tick colours and sizes
+          {{ 'admin.variants.tick' | t }}
         }
       </button>
     </div>
@@ -59,17 +59,17 @@
 
   <!-- Existing -->
   @if (!loaded()) {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   } @else if (!variants().length) {
-    <p class="muted">No sizes yet. Tick a colour and the sizes it comes in, then add them.</p>
+    <p class="muted">{{ 'admin.variants.none' | t }}</p>
   } @else {
     <div class="all">
       <label class="field">
-        <span>Same price for every size</span>
+        <span>{{ 'admin.variants.samePrice' | t }}</span>
         <input type="text" inputmode="decimal" placeholder="€" autocomplete="off"
                [value]="allPrice()" (input)="allPrice.set($any($event.target).value)" />
       </label>
-      <button class="btn" type="button" [disabled]="busy()" (click)="setAll()">Apply</button>
+      <button class="btn" type="button" [disabled]="busy()" (click)="setAll()">{{ 'admin.variants.apply' | t }}</button>
     </div>
 
     @for (g of groups(); track g.colour.code) {
@@ -82,25 +82,25 @@
               <code>{{ v.sku }}</code>
             </div>
             <div class="price">
-              <input type="text" inputmode="decimal" aria-label="Price in euros for {{ v.sku }}" autocomplete="off"
+              <input type="text" inputmode="decimal" [attr.aria-label]="'admin.variants.priceFor' | t: { sku: v.sku }" autocomplete="off"
                      [value]="v.price_eur" (change)="savePrice(v, $any($event.target).value)" />
               @if (margin(v); as pct) {
-                <small class="muted">cost {{ money(v.cost_eur) }} · {{ pct }}% margin</small>
+                <small class="muted">{{ 'admin.variants.costMargin' | t: { cost: money(v.cost_eur), pct } }}</small>
               }
             </div>
             <div class="stock">
               <strong>{{ units(v) }}</strong>
-              <small class="muted">in stock</small>
+              <small class="muted">{{ 'admin.variants.inStock' | t }}</small>
             </div>
             <div class="actions">
               <label class="check">
                 <input type="checkbox" [checked]="v.active" (change)="setActive(v, $any($event.target).checked)" />
-                Active
+                {{ 'admin.productStatus.active' | t }}
               </label>
               @if (v.locked) {
-                <span class="badge badge-muted" title="Has stock or sales history, so it can’t be removed">In use</span>
+                <span class="badge badge-muted" [title]="'admin.variants.inUseTitle' | t">{{ 'admin.variants.inUse' | t }}</span>
               } @else {
-                <button class="btn btn-small btn-danger" type="button" [disabled]="busy()" (click)="remove(v)">Remove</button>
+                <button class="btn btn-small btn-danger" type="button" [disabled]="busy()" (click)="remove(v)">{{ 'common.remove' | t }}</button>
               }
             </div>
           </div>

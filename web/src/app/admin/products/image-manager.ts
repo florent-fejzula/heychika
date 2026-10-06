@@ -1,5 +1,6 @@
 import { Component, effect, inject, input, signal, untracked } from '@angular/core';
 import { Catalogue, ImageRow } from '../../core/catalogue';
+import { I18n, TranslatePipe } from '../../core/i18n';
 
 export interface ColourOption {
   id: number;
@@ -8,11 +9,13 @@ export interface ColourOption {
 
 @Component({
   selector: 'app-image-manager',
+  imports: [TranslatePipe],
   templateUrl: './image-manager.html',
   styleUrl: './image-manager.scss',
 })
 export class ImageManager {
   private readonly catalogue = inject(Catalogue);
+  private readonly i18n = inject(I18n);
 
   readonly productId = input.required<number>();
   /** Colours this design comes in, so a photo can be tagged with the colour it shows. */
@@ -44,7 +47,11 @@ export class ImageManager {
     const failures: string[] = [];
 
     for (const [index, file] of files.entries()) {
-      this.progress.set(files.length > 1 ? `Uploading photo ${index + 1} of ${files.length}…` : 'Uploading…');
+      this.progress.set(
+        files.length > 1
+          ? this.i18n.t('admin.images.uploadingN', { n: index + 1, total: files.length })
+          : this.i18n.t('admin.images.uploading'),
+      );
       try {
         await this.catalogue.uploadImage(this.productId(), file, order++);
       } catch (e) {
@@ -84,7 +91,7 @@ export class ImageManager {
   }
 
   protected async remove(image: ImageRow): Promise<void> {
-    if (!confirm('Delete this photo?')) return;
+    if (!confirm(this.i18n.t('admin.images.confirmDelete'))) return;
     await this.act(() => this.catalogue.deleteImage(image));
   }
 

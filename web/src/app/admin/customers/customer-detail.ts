@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { COUNTRY_NAME, formatMoney } from '../../core/money';
 import { CustomerDetail as Detail, Orders, STATUS_LABEL, phoneDigits } from '../../core/orders';
 import { spent } from './customer-list';
@@ -8,12 +9,13 @@ type Field = 'first_name' | 'last_name' | 'phone' | 'city' | 'address' | 'postal
 
 @Component({
   selector: 'app-customer-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './customer-detail.html',
   styleUrl: './customer-detail.scss',
 })
 export class CustomerDetail {
   private readonly orders = inject(Orders);
+  private readonly i18n = inject(I18n);
 
   readonly id = input.required<string>();
 
@@ -65,11 +67,11 @@ export class CustomerDetail {
   protected async save(): Promise<void> {
     const f = this.form();
     if (!f.first_name.trim() || !f.city.trim() || !f.address.trim()) {
-      this.error.set('Name, town and address are needed.');
+      this.error.set(this.i18n.t('admin.customers.needed'));
       return;
     }
     if (phoneDigits(f.phone).length < 8) {
-      this.error.set('That phone number looks too short.');
+      this.error.set(this.i18n.t('admin.customers.phoneShort'));
       return;
     }
     this.busy.set(true);
@@ -95,7 +97,7 @@ export class CustomerDetail {
   }
 
   protected date(iso: string): string {
-    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    return this.i18n.date(iso, { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   private async load(id: number, showLoading = true): Promise<void> {

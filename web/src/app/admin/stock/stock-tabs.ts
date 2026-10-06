@@ -1,14 +1,15 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslatePipe } from '../../core/i18n';
 
 // Stock and buying trips are two views of the same thing: what you have, and how it got here.
 @Component({
   selector: 'app-stock-tabs',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe],
   template: `
-    <nav class="tabs" aria-label="Stock sections">
-      <a routerLink="/admin/stock" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">On the shelf</a>
-      <a routerLink="/admin/stock/purchases" routerLinkActive="active" ariaCurrentWhenActive="page">Buying trips</a>
+    <nav class="tabs" [attr.aria-label]="'admin.stock.sections' | t">
+      <a routerLink="/admin/stock" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">{{ 'admin.dashboard.onShelf' | t }}</a>
+      <a routerLink="/admin/stock/purchases" routerLinkActive="active" ariaCurrentWhenActive="page">{{ 'admin.trips.title' | t }}</a>
     </nav>
   `,
   styles: `

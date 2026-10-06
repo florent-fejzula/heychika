@@ -1,34 +1,34 @@
 <div class="stack">
   @if (isNew()) {
-    <a class="back" routerLink="/admin/orders">← Orders</a>
-    <h1>New order</h1>
+    <a class="back" routerLink="/admin/orders">← {{ 'admin.shell.orders' | t }}</a>
+    <h1>{{ 'admin.orders.new' | t }}</h1>
   } @else {
-    <a class="back" [routerLink]="['/admin/orders', id()]">← {{ existing()?.order_number ?? 'Order' }}</a>
-    <h1>Change items</h1>
+    <a class="back" [routerLink]="['/admin/orders', id()]">← {{ existing()?.order_number ?? ('admin.order.order' | t) }}</a>
+    <h1>{{ 'admin.order.changeItems' | t }}</h1>
   }
 
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
       <p class="notice notice-error">{{ loadError() }}</p>
     }
     @case ('locked') {
-      <p class="notice">This order has already been sent or closed, so its items can’t change. If something came back, record a return on the order.</p>
+      <p class="notice">{{ 'admin.editor.locked' | t }}</p>
     }
     @case ('ready') {
       <!-- -------------------------------------------------------- customer -->
       @if (isNew()) {
         <section class="card stack">
-          <h2>Customer</h2>
+          <h2>{{ 'admin.order.customer' | t }}</h2>
           <label class="field">
-            <span>Phone</span>
+            <span>{{ 'shop.checkout.phone' | t }}</span>
             <input type="tel" inputmode="tel" [value]="customer().phone" (input)="setCustomer('phone', $any($event.target).value)"
-                   placeholder="Start typing: a repeat customer pops up" />
+                   [placeholder]="'admin.editor.phoneHint' | t" />
           </label>
           @if (matches().length && !customerId()) {
-            <ul class="matches" aria-label="Customers with this number">
+            <ul class="matches" [attr.aria-label]="'admin.editor.matches' | t">
               @for (c of matches(); track c.id) {
                 <li>
                   <button type="button" class="match" (click)="pick(c)">
@@ -40,27 +40,27 @@
             </ul>
           }
           @if (customerId()) {
-            <p class="notice notice-ok small">Repeat customer. Her details are filled in; change anything that’s new.</p>
+            <p class="notice notice-ok small">{{ 'admin.editor.repeat' | t }}</p>
           }
 
-          <div class="chips" role="radiogroup" aria-label="Country">
+          <div class="chips" role="radiogroup" [attr.aria-label]="'admin.editor.country' | t">
             @for (c of countries; track c.code) {
-              <label class="chip"><input type="radio" name="country" [checked]="country() === c.code" (change)="country.set(c.code)" /> {{ c.name }} · {{ c.currency }}</label>
+              <label class="chip"><input type="radio" name="country" [checked]="country() === c.code" (change)="country.set(c.code)" /> {{ c.name | t }} · {{ c.currency }}</label>
             }
           </div>
           <div class="grid-2">
-            <label class="field"><span>First name</span><input [value]="customer().first_name" (input)="setCustomer('first_name', $any($event.target).value)" /></label>
-            <label class="field"><span>Last name</span><input [value]="customer().last_name" (input)="setCustomer('last_name', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.firstName' | t }}</span><input [value]="customer().first_name" (input)="setCustomer('first_name', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.lastName' | t }}</span><input [value]="customer().last_name" (input)="setCustomer('last_name', $any($event.target).value)" /></label>
           </div>
-          <label class="field"><span>Town or city</span><input [value]="customer().city" (input)="setCustomer('city', $any($event.target).value)" /></label>
-          <label class="field"><span>Street and number</span><input [value]="customer().address" (input)="setCustomer('address', $any($event.target).value)" /></label>
-          <label class="field postal"><span>Postcode <span class="muted">(optional)</span></span><input [value]="customer().postal_code" (input)="setCustomer('postal_code', $any($event.target).value)" /></label>
+          <label class="field"><span>{{ 'shop.checkout.city' | t }}</span><input [value]="customer().city" (input)="setCustomer('city', $any($event.target).value)" /></label>
+          <label class="field"><span>{{ 'shop.checkout.street' | t }}</span><input [value]="customer().address" (input)="setCustomer('address', $any($event.target).value)" /></label>
+          <label class="field postal"><span>{{ 'shop.checkout.postcode' | t }} <span class="muted">{{ 'shop.checkout.optional' | t }}</span></span><input [value]="customer().postal_code" (input)="setCustomer('postal_code', $any($event.target).value)" /></label>
         </section>
       }
 
       <!-- -------------------------------------------------------- items -->
       <section class="card stack">
-        <h2>Items</h2>
+        <h2>{{ 'shop.bag.items' | t }}</h2>
 
         @if (lines().length) {
           <ul class="lines">
@@ -69,16 +69,16 @@
                 <div class="row">
                   <span class="what">
                     <strong>{{ l.item.product.name }}</strong>
-                    <span>{{ l.item.color.name }} · {{ l.item.size.label }} <span class="muted">· {{ left(l.item) }} more left</span></span>
+                    <span>{{ l.item.color.name }} · {{ l.item.size.label }} <span class="muted">· {{ 'admin.editor.moreLeft' | t: { count: left(l.item) } }}</span></span>
                   </span>
-                  <span class="stepper" role="group" [attr.aria-label]="'How many: ' + l.item.product.name">
-                    <button type="button" (click)="setQty(l, l.qty - 1)" [attr.aria-label]="l.qty === 1 ? 'Remove' : 'One fewer'">−</button>
+                  <span class="stepper" role="group" [attr.aria-label]="'shop.bag.howMany' | t: { name: l.item.product.name }">
+                    <button type="button" (click)="setQty(l, l.qty - 1)" [attr.aria-label]="(l.qty === 1 ? 'common.remove' : 'shop.bag.oneFewer') | t">−</button>
                     <span>{{ l.qty }}</span>
-                    <button type="button" (click)="setQty(l, l.qty + 1)" [disabled]="left(l.item) <= 0" aria-label="One more">+</button>
+                    <button type="button" (click)="setQty(l, l.qty + 1)" [disabled]="left(l.item) <= 0" [attr.aria-label]="'shop.bag.oneMore' | t">+</button>
                   </span>
                 </div>
                 <label class="field price">
-                  <span>Price each ({{ currency() }})</span>
+                  <span>{{ 'admin.editor.priceEach' | t: { currency: currency() } }}</span>
                   <input inputmode="decimal" [value]="l.priceText" (input)="setPrice(l, $any($event.target).value)"
                          [placeholder]="(l.kept ?? usual(l.item)) + ''" />
                 </label>
@@ -86,21 +86,21 @@
             }
           </ul>
         } @else {
-          <p class="muted">Search for a design, or scan its sticker.</p>
+          <p class="muted">{{ 'admin.editor.searchOrScan' | t }}</p>
         }
 
         <label class="field">
-          <span class="sr-only">Find a design</span>
-          <input type="search" placeholder="Find a design by name or SKU" [value]="search()" (input)="search.set($any($event.target).value); openDesign.set(null)" />
+          <span class="sr-only">{{ 'admin.editor.findDesign' | t }}</span>
+          <input type="search" [placeholder]="'admin.editor.findPlaceholder' | t" [value]="search()" (input)="search.set($any($event.target).value); openDesign.set(null)" />
         </label>
         @if (search().trim() && !designs().length) {
-          <p class="muted small">Nothing matches.</p>
+          <p class="muted small">{{ 'admin.stock.noMatch' | t }}</p>
         }
         <ul class="designs">
           @for (d of designs(); track d.id) {
             <li>
               <button type="button" class="design" [attr.aria-expanded]="openDesign() === d.id" (click)="openDesign.set(openDesign() === d.id ? null : d.id)">
-                {{ d.name }} <span class="muted">{{ d.items.length }} {{ d.items.length === 1 ? 'size' : 'sizes' }}</span>
+                {{ d.name }} <span class="muted">{{ 'admin.editor.sizes' | t: { count: d.items.length } }}</span>
               </button>
               @if (openDesign() === d.id || designs().length === 1) {
                 <div class="sizes">
@@ -108,7 +108,7 @@
                     <button type="button" class="size" (click)="add(i)" [disabled]="left(i) <= 0">
                       <span class="swatch" [style.background]="i.color.hex ?? '#ccc'"></span>
                       {{ i.color.name }} · <strong>{{ i.size.label }}</strong>
-                      <span class="muted">{{ left(i) > 0 ? left(i) + ' left' : 'none left' }}</span>
+                      <span class="muted">{{ left(i) > 0 ? ('admin.dashboard.left' | t: { count: left(i) }) : ('admin.editor.noneLeft' | t) }}</span>
                     </button>
                   }
                 </div>
@@ -118,12 +118,12 @@
         </ul>
 
         @if (showScanner()) {
-          <app-scanner label="Scan an item, or type its SKU" (scanned)="onScan($event)" />
+          <app-scanner label="admin.scan.scanItem" (scanned)="onScan($event)" />
           @if (scanNote(); as note) {
             <p class="muted small" role="status">{{ note }}</p>
           }
         } @else {
-          <div><button class="btn btn-small" type="button" (click)="showScanner.set(true)">Add by scanning</button></div>
+          <div><button class="btn btn-small" type="button" (click)="showScanner.set(true)">{{ 'admin.editor.addByScanning' | t }}</button></div>
         }
       </section>
 
@@ -131,32 +131,32 @@
       <section class="card stack">
         <div class="grid-2">
           <label class="field">
-            <span>Delivery ({{ currency() }})</span>
+            <span>{{ 'admin.editor.delivery' | t: { currency: currency() } }}</span>
             <input inputmode="decimal" [value]="feeText()" (input)="feeText.set($any($event.target).value)" [placeholder]="usualFee() + ''" />
-            <small>Usually {{ money(usualFee()) }}. 0 for free.</small>
+            <small>{{ 'admin.editor.usualFee' | t: { fee: money(usualFee()) } }}</small>
           </label>
           @if (isNew()) {
             <label class="field">
-              <span>Note <span class="muted">(optional)</span></span>
-              <input [value]="notes()" (input)="notes.set($any($event.target).value)" placeholder="e.g. wants it by Friday" />
+              <span>{{ 'admin.editor.note' | t }} <span class="muted">{{ 'shop.checkout.optional' | t }}</span></span>
+              <input [value]="notes()" (input)="notes.set($any($event.target).value)" [placeholder]="'admin.editor.noteExample' | t" />
             </label>
           }
         </div>
 
         <dl class="totals">
-          <div><dt>{{ count() }} {{ count() === 1 ? 'item' : 'items' }}</dt><dd>{{ money(itemsTotal()) }}</dd></div>
-          <div><dt>Delivery</dt><dd>{{ fee() === null ? '?' : fee() === 0 ? 'Free' : money(fee()!) }}</dd></div>
-          <div class="total"><dt>Courier collects</dt><dd>{{ money(total()) }}</dd></div>
+          <div><dt>{{ 'admin.trips.items' | t: { count: count() } }}</dt><dd>{{ money(itemsTotal()) }}</dd></div>
+          <div><dt>{{ 'shop.checkout.delivery' | t }}</dt><dd>{{ fee() === null ? '?' : fee() === 0 ? ('shop.bag.free' | t) : money(fee()!) }}</dd></div>
+          <div class="total"><dt>{{ 'admin.order.courierCollects' | t }}</dt><dd>{{ money(total()) }}</dd></div>
         </dl>
 
         @if (error(); as message) {
           <p class="notice notice-error" role="alert">{{ message }}</p>
         }
         <button class="btn btn-primary btn-block" type="button" (click)="save()" [disabled]="busy()">
-          {{ busy() ? 'Saving…' : isNew() ? 'Create order' : 'Save changes' }}
+          {{ (busy() ? 'common.saving' : isNew() ? 'admin.editor.create' : 'admin.common.saveChanges') | t }}
         </button>
         @if (isNew()) {
-          <p class="muted small">It starts as confirmed and the items are held for her straight away.</p>
+          <p class="muted small">{{ 'admin.editor.startsConfirmed' | t }}</p>
         }
       </section>
     }

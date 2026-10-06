@@ -1,69 +1,73 @@
 <div class="narrow">
   @if (justPlaced(); as placed) {
     <header class="thanks">
-      <p class="eyebrow">Order placed</p>
-      <h1>Thank you, {{ placed.name }}!</h1>
+      <p class="eyebrow">{{ 'shop.order.placed' | t }}</p>
+      <h1>{{ 'shop.order.thanks' | t: { name: placed.name } }}</h1>
       <p>
-        Your order number is <strong class="number">{{ placed.number }}</strong>.
-        We’ll call you on <strong>{{ placed.phone }}</strong> to confirm it@if (order(); as o) {, then send it to {{ o.city }}}.
+        {{ 'shop.order.numberIs' | t }} <strong class="number">{{ placed.number }}</strong>.
+        @if (order(); as o) {
+          {{ 'shop.order.willCallThenSend' | t: { phone: placed.phone, city: o.city } }}
+        } @else {
+          {{ 'shop.order.willCall' | t: { phone: placed.phone } }}
+        }
       </p>
       @if (order(); as o) {
-        <p class="pay">You pay <strong>{{ money(o.total) }}</strong> in cash when it arrives.</p>
+        <p class="pay">{{ 'shop.order.youPay' | t: { total: money(o.total) } }}</p>
       }
     </header>
 
     @if (order(); as o) {
       <ng-container [ngTemplateOutlet]="summary" [ngTemplateOutletContext]="{ $implicit: o }" />
     } @else if (state() === 'loading') {
-      <p class="muted">Loading your order…</p>
+      <p class="muted">{{ 'shop.order.loading' | t }}</p>
     }
 
     <p class="muted small">
-      Keep the order number. You can check on it any time under “Track an order” at the bottom of the shop.
+      {{ 'shop.order.keepNumber' | t }}
     </p>
-    <a class="btn" routerLink="/">Keep shopping</a>
+    <a class="btn" routerLink="/">{{ 'shop.order.keepShopping' | t }}</a>
   } @else if (state() === 'shown' && order(); as o) {
     <header>
-      <h1>Order {{ o.order_number }}</h1>
-      <p class="muted">Placed {{ date(o.created_at) }} · to {{ o.city }}, {{ countryName() }}</p>
+      <h1>{{ 'shop.order.orderN' | t: { number: o.order_number } }}</h1>
+      <p class="muted">{{ 'shop.order.placedOn' | t: { date: date(o.created_at), city: o.city, country: countryName() } }}</p>
     </header>
 
     @if (steps(); as list) {
       <ol class="steps">
         @for (s of list; track s.label) {
-          <li [class.done]="s.done">{{ s.label }}</li>
+          <li [class.done]="s.done">{{ s.label | t }}</li>
         }
       </ol>
     }
     @if (sentence(); as text) {
-      <p class="status">{{ text }}</p>
+      <p class="status">{{ text | t }}</p>
     }
 
     <ng-container [ngTemplateOutlet]="summary" [ngTemplateOutletContext]="{ $implicit: o }" />
-    <a class="btn" routerLink="/">Back to the shop</a>
+    <a class="btn" routerLink="/">{{ 'shop.backToShop' | t }}</a>
   } @else {
-    <h1>Track an order</h1>
-    <p class="muted">Enter the order number and the phone number you ordered with.</p>
+    <h1>{{ 'shop.shell.track' | t }}</h1>
+    <p class="muted">{{ 'shop.order.trackHint' | t }}</p>
 
     <form class="card form" (ngSubmit)="look()">
       <label class="field">
-        <span>Order number</span>
+        <span>{{ 'shop.order.number' | t }}</span>
         <input name="number" [(ngModel)]="numberText" placeholder="HC-2026-0001" autocapitalize="characters" required />
       </label>
       <label class="field">
-        <span>Phone</span>
+        <span>{{ 'shop.checkout.phone' | t }}</span>
         <input name="phone" [(ngModel)]="phoneText" type="tel" inputmode="tel" autocomplete="tel" required />
       </label>
       @switch (state()) {
         @case ('not_found') {
-          <p class="notice notice-error" role="alert">No order matches that number and phone. Check both and try again.</p>
+          <p class="notice notice-error" role="alert">{{ 'shop.order.notFound' | t }}</p>
         }
         @case ('error') {
-          <p class="notice notice-error" role="alert">Couldn’t reach the shop. Check your connection and try again.</p>
+          <p class="notice notice-error" role="alert">{{ 'shop.checkout.problem.offline' | t }}</p>
         }
       }
       <button class="btn btn-primary" type="submit" [disabled]="state() === 'loading'">
-        {{ state() === 'loading' ? 'Looking…' : 'Find my order' }}
+        {{ (state() === 'loading' ? 'shop.order.looking' : 'shop.order.find') | t }}
       </button>
     </form>
   }
@@ -83,8 +87,8 @@
       }
     </ul>
     <dl>
-      <div><dt>Delivery</dt><dd>{{ o.delivery_fee === 0 ? 'Free' : money(o.delivery_fee) }}</dd></div>
-      <div class="total"><dt>To pay on delivery</dt><dd>{{ money(o.total) }}</dd></div>
+      <div><dt>{{ 'shop.checkout.delivery' | t }}</dt><dd>{{ o.delivery_fee === 0 ? ('shop.bag.free' | t) : money(o.delivery_fee) }}</dd></div>
+      <div class="total"><dt>{{ 'shop.checkout.toPay' | t }}</dt><dd>{{ money(o.total) }}</dd></div>
     </dl>
   </section>
 </ng-template>

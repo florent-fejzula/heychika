@@ -1,72 +1,71 @@
 <div class="stack">
-  <h1>Today</h1>
+  <h1>{{ 'admin.shell.today' | t }}</h1>
 
   @if (error()) {
-    <p class="notice notice-error">Couldn’t load the numbers. Check your connection and refresh.</p>
+    <p class="notice notice-error">{{ 'admin.dashboard.failed' | t }}</p>
   } @else if (summary(); as s) {
     @if (waitingLimit() !== null && s.toConfirm >= waitingLimit()!) {
       <p class="notice notice-error" role="alert">
-        The shop has paused new orders: {{ s.toConfirm }} are waiting to be confirmed. Confirm or cancel some and it opens
-        again. If they look fake, cancel them; the limit is in Settings.
+        {{ 'admin.dashboard.paused' | t: { count: s.toConfirm } }}
       </p>
     }
     @if (s.toConfirm > 0) {
       <a class="card waiting" routerLink="/admin/orders" [queryParams]="{ stage: 'confirm' }">
-        <strong>{{ s.toConfirm }} new {{ s.toConfirm === 1 ? 'order' : 'orders' }}</strong>
-        <span>to confirm →</span>
+        <strong>{{ 'admin.dashboard.newOrders' | t: { count: s.toConfirm } }}</strong>
+        <span>{{ 'admin.dashboard.toConfirm' | t }} →</span>
       </a>
     }
     @if (s.toSend > 0) {
       <a class="card waiting" routerLink="/admin/orders" [queryParams]="{ stage: 'send' }">
-        <strong>{{ s.toSend }} {{ s.toSend === 1 ? 'order' : 'orders' }}</strong>
-        <span>to pack and send →</span>
+        <strong>{{ 'admin.dashboard.orders' | t: { count: s.toSend } }}</strong>
+        <span>{{ 'admin.dashboard.toSend' | t }} →</span>
       </a>
     }
 
     <a class="card month link" routerLink="/admin/reports">
-      <span class="label">This month</span>
+      <span class="label">{{ 'admin.dashboard.thisMonth' | t }}</span>
       @if (month(); as m) {
-        <strong>{{ m.sales }} sales · {{ m.profit }} profit</strong>
-        <span class="muted">{{ m.orders }} paid {{ m.orders === 1 ? 'order' : 'orders' }} · Reports →</span>
+        <strong>{{ 'admin.dashboard.salesProfit' | t: { sales: m.sales, profit: m.profit } }}</strong>
+        <span class="muted">{{ 'admin.dashboard.paidOrders' | t: { count: m.orders } }} · {{ 'admin.dashboard.reports' | t }} →</span>
       } @else {
-        <span class="muted">Reports →</span>
+        <span class="muted">{{ 'admin.dashboard.reports' | t }} →</span>
       }
     </a>
 
-    <section class="tiles" aria-label="Summary">
+    <section class="tiles" [attr.aria-label]="'admin.dashboard.summary' | t">
       <div class="card tile">
-        <span class="label">Designs</span>
+        <span class="label">{{ 'admin.dashboard.designs' | t }}</span>
         <strong>{{ s.designs }}</strong>
       </div>
       <div class="card tile">
-        <span class="label">On the shelf</span>
+        <span class="label">{{ 'admin.dashboard.onShelf' | t }}</span>
         <strong>{{ s.unitsOnShelf }}</strong>
-        <span class="muted">units</span>
+        <span class="muted">{{ 'admin.dashboard.units' | t }}</span>
       </div>
       <div class="card tile">
-        <span class="label">Stock value</span>
+        <span class="label">{{ 'admin.dashboard.stockValue' | t }}</span>
         <strong>{{ s.stockValue }}</strong>
-        <span class="muted">at cost</span>
+        <span class="muted">{{ 'admin.dashboard.atCost' | t }}</span>
       </div>
       <a class="card tile link" routerLink="/admin/orders" [queryParams]="{ stage: 'cash' }">
-        <span class="label">Waiting for cash</span>
+        <span class="label">{{ 'admin.dashboard.waitingCash' | t }}</span>
         <strong>{{ s.awaitingCashValue }}</strong>
-        <span class="muted">{{ s.awaitingCash }} {{ s.awaitingCash === 1 ? 'order' : 'orders' }} sent or delivered, not paid</span>
+        <span class="muted">{{ 'admin.dashboard.sentNotPaid' | t: { count: s.awaitingCash } }}</span>
       </a>
     </section>
 
     @if (s.unitsOnTheRoad > 0) {
-      <p class="muted">{{ s.unitsOnTheRoad }} {{ s.unitsOnTheRoad === 1 ? 'item is' : 'items are' }} on the road to customers.</p>
+      <p class="muted">{{ 'admin.dashboard.onTheRoad' | t: { count: s.unitsOnTheRoad } }}</p>
     }
 
     @if (s.lowStock.length) {
       <section class="card stack">
-        <h2>Running low</h2>
+        <h2>{{ 'admin.dashboard.runningLow' | t }}</h2>
         <ul class="low">
           @for (item of s.lowStock; track item.sku) {
             <li>
               <code>{{ item.sku }}</code>
-              <span [class.out]="item.available === 0">{{ item.available === 0 ? 'Sold out' : item.available + ' left' }}</span>
+              <span [class.out]="item.available === 0">{{ item.available === 0 ? ('shop.soldOut' | t) : ('admin.dashboard.left' | t: { count: item.available }) }}</span>
             </li>
           }
         </ul>
@@ -75,18 +74,17 @@
 
     @if (s.designs === 0) {
       <section class="card stack empty">
-        <h2>Nothing in the shop yet</h2>
+        <h2>{{ 'admin.dashboard.emptyTitle' | t }}</h2>
         <p class="muted">
-          Add a product: its photos, colours, sizes, how many you have and the price. It’s for sale straight away.
-          Check the exchange rates and delivery fees in settings too.
+          {{ 'admin.dashboard.emptyText' | t }}
         </p>
         <div class="toolbar">
-          <a class="btn btn-primary" routerLink="/admin/stock/add">Add a product</a>
-          <a class="btn" routerLink="/admin/settings">Open settings</a>
+          <a class="btn btn-primary" routerLink="/admin/stock/add">{{ 'admin.dashboard.addProduct' | t }}</a>
+          <a class="btn" routerLink="/admin/settings">{{ 'admin.dashboard.openSettings' | t }}</a>
         </div>
       </section>
     }
   } @else {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   }
 </div>

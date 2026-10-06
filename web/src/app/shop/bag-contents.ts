@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Bag, MAX_PER_ITEM } from './bag';
+import { t } from '../core/i18n';
 import { BagTotals, bagTotals } from '../core/money';
 import { BagItem, ShopApi } from './shop-api';
 import { ShopState } from './shop-state';
@@ -88,17 +89,15 @@ export class BagContents {
         gone++;
         this.bag.remove(line.variantId);
       } else if (item.available === 0) {
-        notes.push(`${describe(item)} has just sold out, so it’s been taken out of your bag.`);
+        notes.push(t('shop.bag.soldOutNote', { item: describe(item) }));
         this.bag.remove(line.variantId);
       } else if (line.qty > item.available) {
-        notes.push(`Only ${item.available} left of ${describe(item)}. Your bag has been changed to ${item.available}.`);
+        notes.push(t('shop.bag.fewerNote', { item: describe(item), count: item.available }));
         this.bag.set(line.variantId, item.available);
       }
     }
     if (gone) {
-      notes.unshift(gone === 1
-        ? 'Something in your bag is no longer for sale, so it’s been taken out.'
-        : `${gone} things in your bag are no longer for sale, so they’ve been taken out.`);
+      notes.unshift(t('shop.bag.goneNote', { count: gone }));
     }
     return notes;
   }

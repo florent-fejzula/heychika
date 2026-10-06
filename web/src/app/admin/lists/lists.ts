@@ -2,32 +2,34 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Catalogue, Category, Colour, Size, SizeType } from '../../core/catalogue';
 import { explain } from '../../core/errors';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { Supabase } from '../../core/supabase';
 
 type Kind = 'categories' | 'colors' | 'sizes';
 
-const SIZE_TYPE_LABEL: Record<SizeType, string> = { letter: 'Letters (S, M, L)', numeric: 'Numbers (36, 38)', one_size: 'One size' };
+const SIZE_TYPES: SizeType[] = ['letter', 'numeric', 'one_size'];
 
 // Codes become part of every SKU, so they follow the same rules the database enforces
-// (and the database refuses to change one once something uses it).
-const CODE_RULE: Record<Kind, { pattern: RegExp; hint: string }> = {
-  categories: { pattern: /^[A-Z]{2,3}$/, hint: '2–3 letters, like DR' },
-  colors: { pattern: /^[A-Z]{3}$/, hint: '3 letters, like BLK' },
-  sizes: { pattern: /^[A-Z0-9]{1,5}$/, hint: 'up to 5 letters or digits, like M or 38' },
+// (and the database refuses to change one once something uses it). The rule in
+// words is admin.lists.hint.<kind> in src/i18n.
+const CODE_RULE: Record<Kind, RegExp> = {
+  categories: /^[A-Z]{2,3}$/,
+  colors: /^[A-Z]{3}$/,
+  sizes: /^[A-Z0-9]{1,5}$/,
 };
 
 @Component({
   selector: 'app-lists',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './lists.html',
   styleUrl: './lists.scss',
 })
 export class Lists {
   private readonly sb = inject(Supabase).client;
   private readonly catalogue = inject(Catalogue);
+  private readonly i18n = inject(I18n);
 
-  protected readonly sizeTypes = Object.entries(SIZE_TYPE_LABEL) as [SizeType, string][];
-  protected readonly rule = CODE_RULE;
+  protected readonly sizeTypes = SIZE_TYPES;
 
   protected readonly categories = signal<Category[]>([]);
   protected readonly colours = signal<Colour[]>([]);
@@ -72,38 +74,34 @@ export class Lists {
   }
 
   protected async remove(kind: Kind, id: number, label: string): Promise<void> {
-    if (!confirm(`Delete “${label}”? If anything uses it, it will be kept and you can hide it instead.`)) return;
+    if (!confirm(this.i18n.t('admin.lists.confirmDelete', { name: label }))) return;
     this.message.set(null);
     const { error } = await this.sb.from(kind).delete().eq('id', id);
     if (error) {
-      this.message.set({ kind: 'error', text: explain(error, 'Couldn’t delete that.') });
+      this.message.set({ kind: 'error', text: explain(error, 'errors.delete') });
       return;
     }
     await this.reload();
-  }
-
-  protected typeLabel(t: SizeType): string {
-    return SIZE_TYPE_LABEL[t];
   }
 
   private async insert(kind: Kind, row: Record<string, unknown>, code: string): Promise<boolean> {
     const clean = code.trim().toUpperCase();
     const name = String(row['name'] ?? row['label'] ?? '');
     if (!name.trim()) {
-      this.message.set({ kind: 'error', text: 'Give it a name.' });
+      this.message.set({ kind: 'error', text: this.i18n.t('admin.lists.nameIt') });
       return false;
     }
-    if (!CODE_RULE[kind].pattern.test(clean)) {
-      this.message.set({ kind: 'error', text: `The code needs to be ${CODE_RULE[kind].hint}.` });
+    if (!CODE_RULE[kind].test(clean)) {
+      this.message.set({ kind: 'error', text: this.i18n.t('admin.lists.badCode.' + kind) });
       return false;
     }
     this.message.set(null);
     const { error } = await this.sb.from(kind).insert({ ...row, [kind === 'sizes' ? 'label' : 'name']: name.trim(), code: clean });
     if (error) {
-      this.message.set({ kind: 'error', text: error.code === '23505' ? `The code ${clean} is already taken.` : explain(error, 'Couldn’t add that.') });
+      this.message.set({ kind: 'error', text: error.code === '23505' ? this.i18n.t('admin.lists.codeTaken', { code: clean }) : explain(error, 'errors.add') });
       return false;
     }
-    this.message.set({ kind: 'ok', text: `Added ${name.trim()}.` });
+    this.message.set({ kind: 'ok', text: this.i18n.t('admin.lists.added', { name: name.trim() }) });
     await this.reload();
     return true;
   }
@@ -111,7 +109,7 @@ export class Lists {
   private async update(kind: Kind, id: number, patch: Record<string, unknown>): Promise<void> {
     this.message.set(null);
     const { error } = await this.sb.from(kind).update(patch).eq('id', id);
-    if (error) this.message.set({ kind: 'error', text: explain(error, 'Couldn’t save that.') });
+    if (error) this.message.set({ kind: 'error', text: explain(error, 'errors.saveThat') });
     await this.reload();
   }
 

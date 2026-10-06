@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../core/i18n';
 import { formatMoney } from '../../core/money';
 import { Reports, periodFor, salesReport } from '../../core/reports';
 import { Supabase } from '../../core/supabase';
@@ -28,7 +29,7 @@ interface Summary {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

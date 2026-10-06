@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { explain } from './errors';
+import { t } from './i18n';
 import { Country, Currency, DeliveryZone, FxSettings } from './money';
 import { Supabase, allRows } from './supabase';
 
@@ -9,23 +10,24 @@ export type OrderStatus =
 export type PaymentStatus = 'unpaid' | 'paid' | 'partially_refunded' | 'refunded';
 export type ReturnCondition = 'saleable' | 'damaged';
 
+/** The name of each status on screen, as a translation key: {{ STATUS_LABEL[o.status] | t }}. */
 export const STATUS_LABEL: Record<OrderStatus, string> = {
-  new: 'New',
-  confirmed: 'Confirmed',
-  dispatched: 'Sent',
-  delivered: 'Delivered',
-  completed: 'Done',
-  cancelled: 'Cancelled',
-  delivery_failed: 'Not delivered',
-  returned: 'Returned',
-  partially_returned: 'Part returned',
+  new: 'admin.orderStatus.new',
+  confirmed: 'admin.orderStatus.confirmed',
+  dispatched: 'admin.orderStatus.dispatched',
+  delivered: 'admin.orderStatus.delivered',
+  completed: 'admin.orderStatus.completed',
+  cancelled: 'admin.orderStatus.cancelled',
+  delivery_failed: 'admin.orderStatus.delivery_failed',
+  returned: 'admin.orderStatus.returned',
+  partially_returned: 'admin.orderStatus.partially_returned',
 };
 
 export const PAYMENT_LABEL: Record<PaymentStatus, string> = {
-  unpaid: 'Not paid',
-  paid: 'Paid',
-  partially_refunded: 'Part refunded',
-  refunded: 'Refunded',
+  unpaid: 'admin.payment.unpaid',
+  paid: 'admin.payment.paid',
+  partially_refunded: 'admin.payment.partially_refunded',
+  refunded: 'admin.payment.refunded',
 };
 
 /**
@@ -36,12 +38,12 @@ export const PAYMENT_LABEL: Record<PaymentStatus, string> = {
 export type Stage = 'confirm' | 'send' | 'road' | 'cash' | 'done' | 'closed';
 
 export const STAGES: { stage: Stage; label: string }[] = [
-  { stage: 'confirm', label: 'To confirm' },
-  { stage: 'send', label: 'To send' },
-  { stage: 'road', label: 'On the road' },
-  { stage: 'cash', label: 'Cash due' },
-  { stage: 'done', label: 'Done' },
-  { stage: 'closed', label: 'Cancelled & returned' },
+  { stage: 'confirm', label: 'admin.orders.stage.confirm' },
+  { stage: 'send', label: 'admin.orders.stage.send' },
+  { stage: 'road', label: 'admin.orders.stage.road' },
+  { stage: 'cash', label: 'admin.orders.stage.cash' },
+  { stage: 'done', label: 'admin.orders.stage.done' },
+  { stage: 'closed', label: 'admin.orders.stage.closed' },
 ];
 
 export function stageOf(o: { status: OrderStatus; payment_status: PaymentStatus }): Stage {
@@ -194,31 +196,22 @@ export interface LineInput {
   price?: number | null;
 }
 
+// What invalid_order's detail can name; each has errors.order.field.<name> in src/i18n.
+const INVALID_ORDER = ['first_name', 'phone', 'city', 'address', 'reason', 'empty', 'qty', 'price', 'delivery_fee', 'amount', 'refused', 'nothing_delivered'];
+
 // Error codes from the order functions (supabase/migrations/20261005000001_order_flow.sql).
 const ORDER_ERRORS: [RegExp, (detail: string, hint: string) => string][] = [
-  [/invalid_status/, () => 'This order has moved on since the page was opened. Refresh to see where it is now.'],
-  [/insufficient_stock/, (_, hint) => `Not enough in stock: only ${hint || 0} available.`],
-  [/not_available/, () => 'One of those items isn’t for sale any more.'],
+  [/invalid_status/, () => t('errors.order.movedOn')],
+  [/insufficient_stock/, (_, hint) => t('errors.order.notEnough', { count: hint || 0 })],
+  [/not_available/, () => t('errors.order.notAvailable')],
   [/invalid_return/, (detail) =>
-    detail === 'reason' ? 'Say why it came back.'
-      : detail === 'refund' ? 'The refund can’t be negative.'
-        : /nothing was paid/.test(detail) ? 'Nothing was paid on this order, so there’s nothing to refund.'
-          : /more than was paid/.test(detail) ? 'That’s more than the customer paid.'
-            : 'Check the items and quantities coming back.'],
-  [/invalid_order/, (detail) => ({
-    first_name: 'A name is needed.',
-    phone: 'That phone number doesn’t look right.',
-    city: 'The town or city is needed.',
-    address: 'The address is needed.',
-    reason: 'Give a reason.',
-    empty: 'Add at least one item.',
-    qty: 'Quantities must be between 1 and 99.',
-    price: 'A price can’t be negative.',
-    delivery_fee: 'The delivery fee can’t be negative.',
-    amount: 'Enter the amount the courier collected.',
-    refused: 'Check the numbers handed back.',
-    nothing_delivered: 'If the customer handed everything back, use “Not delivered” instead.',
-  } as Record<string, string>)[detail] ?? 'Check the details and try again.'],
+    t(detail === 'reason' ? 'errors.return.reason'
+      : detail === 'refund' ? 'errors.return.refund'
+        : /nothing was paid/.test(detail) ? 'errors.return.nothingPaid'
+          : /more than was paid/.test(detail) ? 'errors.return.moreThanPaid'
+            : 'errors.return.check')],
+  [/invalid_order/, (detail) =>
+    t(INVALID_ORDER.includes(detail) ? `errors.order.field.${detail}` : 'errors.checkDetails')],
 ];
 
 interface DbError {
@@ -255,7 +248,7 @@ export class Orders {
         .order('id', { ascending: false })
         .range(from, to)
         .overrideTypes<OrderSummary[], { merge: false }>(),
-    ).catch((e) => fail(e, 'Couldn’t load the orders.'));
+    ).catch((e) => fail(e, 'errors.loadOrders'));
     return data.map((o) => ({ ...o, total_in_currency: num(o.total_in_currency) }));
   }
 
@@ -272,7 +265,7 @@ export class Orders {
       .eq('id', id)
       .maybeSingle()
       .overrideTypes<OrderDetail, { merge: false }>();
-    if (error) fail(error, 'Couldn’t load this order.');
+    if (error) fail(error, 'errors.loadOrder');
     if (!data) return null;
     return {
       ...data,
@@ -311,7 +304,7 @@ export class Orders {
         .order('id')
         .range(from, to)
         .overrideTypes<Row[], { merge: false }>(),
-    ).catch((e) => fail(e, 'Couldn’t load the products.'));
+    ).catch((e) => fail(e, 'errors.loadProducts'));
     return data
       .filter((v) => v.product.status !== 'archived')
       .map(({ stock, active: _a, ...v }) => {
@@ -330,7 +323,7 @@ export class Orders {
       this.sb.from('settings').select('mkd_per_eur, all_per_eur, mkd_rounding, all_rounding').single<FxSettings>(),
       this.sb.from('delivery_zones').select('country, currency, fee_eur, free_over_eur, est_days').overrideTypes<DeliveryZone[], { merge: false }>(),
     ]);
-    if (settings.error || zones.error) fail(settings.error ?? zones.error, 'Couldn’t load the prices.');
+    if (settings.error || zones.error) fail(settings.error ?? zones.error, 'errors.loadPrices');
     const s = settings.data;
     return {
       fx: { mkd_per_eur: num(s.mkd_per_eur), all_per_eur: num(s.all_per_eur), mkd_rounding: num(s.mkd_rounding), all_rounding: num(s.all_rounding) },
@@ -341,7 +334,7 @@ export class Orders {
   /** Orders waiting to be confirmed, for the badge on the dashboard. */
   async countNew(): Promise<number> {
     const { count, error } = await this.sb.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'new');
-    if (error) fail(error, 'Couldn’t count the orders.');
+    if (error) fail(error, 'errors.countOrders');
     return count ?? 0;
   }
 
@@ -356,7 +349,7 @@ export class Orders {
         .order('id', { ascending: false })
         .range(from, to)
         .overrideTypes<CustomerSummary[], { merge: false }>(),
-    ).catch((e) => fail(e, 'Couldn’t load the customers.'));
+    ).catch((e) => fail(e, 'errors.loadCustomers'));
     return data.map((c) => ({ ...c, orders: c.orders.map((o) => ({ ...o, total_eur: num(o.total_eur) })) }));
   }
 
@@ -366,7 +359,7 @@ export class Orders {
       .select('*, orders(id, order_number, channel, status, payment_status, country, currency, total_in_currency, total_eur, delivery_name, delivery_phone, delivery_city, created_at, lines:order_lines(qty))')
       .eq('id', id)
       .maybeSingle<CustomerDetail>();
-    if (error) fail(error, 'Couldn’t load this customer.');
+    if (error) fail(error, 'errors.loadCustomer');
     if (!data) return null;
     return {
       ...data,
@@ -388,44 +381,44 @@ export class Orders {
       .order('created_at', { ascending: false })
       .limit(8)
       .overrideTypes<Customer[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t search the customers.');
+    if (error) fail(error, 'errors.searchCustomers');
     return data;
   }
 
   async updateCustomer(id: number, patch: Partial<Pick<Customer, 'first_name' | 'last_name' | 'phone' | 'email' | 'city' | 'address' | 'postal_code' | 'notes'>>): Promise<void> {
     const { error } = await this.sb.from('customers').update(patch).eq('id', id);
-    if (error) fail(error, 'Couldn’t save the customer.');
+    if (error) fail(error, 'errors.saveCustomer');
   }
 
   // ---------------------------------------------------------------- the journey
 
   confirm(id: number): Promise<void> {
-    return this.call('confirm_order', { p_order_id: id }, 'Couldn’t confirm the order.');
+    return this.call('confirm_order', { p_order_id: id }, 'errors.confirmOrder');
   }
 
   cancel(id: number, reason: string): Promise<void> {
-    return this.call('cancel_order', { p_order_id: id, p_reason: reason }, 'Couldn’t cancel the order.');
+    return this.call('cancel_order', { p_order_id: id, p_reason: reason }, 'errors.cancelOrder');
   }
 
   dispatch(id: number, courier: string, tracking: string): Promise<void> {
-    return this.call('dispatch_order', { p_order_id: id, p_courier: courier || null, p_tracking: tracking || null }, 'Couldn’t mark it sent.');
+    return this.call('dispatch_order', { p_order_id: id, p_courier: courier || null, p_tracking: tracking || null }, 'errors.markSent');
   }
 
   /** `refused`: items handed back at the door. `amount`: cash collected, if it's known now. */
   markDelivered(id: number, refused: { order_line_id: number; qty: number }[], amount: number | null): Promise<void> {
-    return this.call('mark_delivered', { p_order_id: id, p_refused: refused, p_amount_collected: amount }, 'Couldn’t mark it delivered.');
+    return this.call('mark_delivered', { p_order_id: id, p_refused: refused, p_amount_collected: amount }, 'errors.markDelivered');
   }
 
   recordPayment(id: number, amount: number): Promise<void> {
-    return this.call('record_payment', { p_order_id: id, p_amount: amount }, 'Couldn’t record the payment.');
+    return this.call('record_payment', { p_order_id: id, p_amount: amount }, 'errors.recordPayment');
   }
 
   markFailed(id: number, note: string): Promise<void> {
-    return this.call('mark_delivery_failed', { p_order_id: id, p_note: note || null }, 'Couldn’t save that.');
+    return this.call('mark_delivery_failed', { p_order_id: id, p_note: note || null }, 'errors.saveThat');
   }
 
   retry(id: number, note: string): Promise<void> {
-    return this.call('retry_delivery', { p_order_id: id, p_note: note || null }, 'Couldn’t save that.');
+    return this.call('retry_delivery', { p_order_id: id, p_note: note || null }, 'errors.saveThat');
   }
 
   async recordReturn(
@@ -439,24 +432,24 @@ export class Orders {
     const { data, error } = await this.sb.rpc('record_return', {
       p_order_id: id, p_lines: lines, p_reason: reason, p_refund: refund, p_refund_method: method || null, p_notes: notes || null,
     });
-    if (error) fail(error, 'Couldn’t record the return.');
+    if (error) fail(error, 'errors.recordReturn');
     return data as string;
   }
 
   updateDetails(id: number, details: Record<string, string>): Promise<void> {
-    return this.call('update_order_details', { p_order_id: id, p_details: details }, 'Couldn’t save the details.');
+    return this.call('update_order_details', { p_order_id: id, p_details: details }, 'errors.saveDetails');
   }
 
   /** `fee`: delivery fee in the order's currency; null keeps the current one. */
   editItems(id: number, lines: LineInput[], fee: number | null): Promise<void> {
-    return this.call('edit_order_items', { p_order_id: id, p_lines: lines, p_delivery_fee: fee }, 'Couldn’t change the items.');
+    return this.call('edit_order_items', { p_order_id: id, p_lines: lines, p_delivery_fee: fee }, 'errors.changeItems');
   }
 
   async createManual(country: Country, customer: CustomerInput, lines: LineInput[], fee: number | null, notes: string): Promise<{ id: number; order_number: string }> {
     const { data, error } = await this.sb.rpc('create_manual_order', {
       p_country: country, p_customer: customer, p_lines: lines, p_delivery_fee: fee, p_notes: notes || null,
     });
-    if (error) fail(error, 'Couldn’t create the order.');
+    if (error) fail(error, 'errors.createOrder');
     return data as { id: number; order_number: string };
   }
 

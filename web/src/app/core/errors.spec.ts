@@ -1,4 +1,9 @@
+import { TestBed } from '@angular/core/testing';
 import { explain } from './errors';
+import { I18n } from './i18n';
+
+// The words come from the English translations (src/test-providers.ts).
+beforeEach(() => TestBed.inject(I18n));
 
 describe('explain', () => {
   it('translates the database’s own error codes', () => {
@@ -18,6 +23,6 @@ describe('explain', () => {
 
   it('never shows raw technical text to the user', () => {
     expect(explain({ message: 'syntax error at or near "select"' })).toBe('Something went wrong. Try again.');
-    expect(explain(undefined, 'Couldn’t save.')).toBe('Couldn’t save.');
+    expect(explain(undefined, 'errors.save')).toBe('Couldn’t save.');
   });
 });

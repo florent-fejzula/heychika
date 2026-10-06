@@ -1,18 +1,18 @@
 @if (failed()) {
   <section class="message">
-    <h1>The shop couldn’t load just now</h1>
-    <p class="muted">Please refresh in a moment.</p>
+    <h1>{{ 'shop.home.failed' | t }}</h1>
+    <p class="muted">{{ 'shop.refreshSoon' | t }}</p>
   </section>
 } @else if (!cards().length && !filtering()) {
   <section class="message">
-    <h1>New pieces are on their way</h1>
-    <p class="muted">The shop is being stocked. Follow us to see them first.</p>
+    <h1>{{ 'shop.home.emptyTitle' | t }}</h1>
+    <p class="muted">{{ 'shop.home.emptyText' | t }}</p>
   </section>
 } @else {
-  <h1 class="sr-only">{{ categoryName() ?? 'Shop' }}</h1>
+  <h1 class="sr-only">{{ categoryName() ?? ('shop.home.shop' | t) }}</h1>
 
-  <nav class="categories" aria-label="Categories">
-    <a routerLink="/" [queryParams]="{}" [class.on]="!category()" [attr.aria-current]="!category() ? 'page' : null">All</a>
+  <nav class="categories" [attr.aria-label]="'shop.home.categories' | t">
+    <a routerLink="/" [queryParams]="{}" [class.on]="!category()" [attr.aria-current]="!category() ? 'page' : null">{{ 'shop.home.all' | t }}</a>
     @for (c of categories(); track c.id) {
       <a
         routerLink="/"
@@ -27,20 +27,20 @@
     <div class="filters">
       @if (sizes().length > 1) {
         <label class="filter">
-          <span class="sr-only">Size</span>
+          <span class="sr-only">{{ 'shop.size' | t }}</span>
           <select [value]="size() ?? ''" (change)="filter('size', $any($event.target).value)">
-            <option value="" [attr.selected]="!size() ? '' : null">Any size</option>
+            <option value="" [attr.selected]="!size() ? '' : null">{{ 'shop.home.anySize' | t }}</option>
             @for (s of sizes(); track s) {
-              <option [value]="s" [attr.selected]="size() === s ? '' : null">Size {{ s }}</option>
+              <option [value]="s" [attr.selected]="size() === s ? '' : null">{{ 'shop.home.sizeN' | t: { size: s } }}</option>
             }
           </select>
         </label>
       }
       @if (colours().length > 1) {
         <label class="filter">
-          <span class="sr-only">Colour</span>
+          <span class="sr-only">{{ 'shop.colour' | t }}</span>
           <select [value]="colour() ?? ''" (change)="filter('colour', $any($event.target).value)">
-            <option value="" [attr.selected]="!colour() ? '' : null">Any colour</option>
+            <option value="" [attr.selected]="!colour() ? '' : null">{{ 'shop.home.anyColour' | t }}</option>
             @for (c of colours(); track c.slug) {
               <option [value]="c.slug" [attr.selected]="colour() === c.slug ? '' : null">{{ c.name }}</option>
             }
@@ -52,8 +52,8 @@
 
   @if (!cards().length) {
     <section class="message">
-      <p>Nothing in stock matches that just now.</p>
-      <a class="btn" routerLink="/" [queryParams]="category() ? { category: category() } : {}">Clear size and colour</a>
+      <p>{{ 'shop.home.noMatch' | t }}</p>
+      <a class="btn" routerLink="/" [queryParams]="category() ? { category: category() } : {}">{{ 'shop.home.clearFilters' | t }}</a>
     </section>
   } @else {
     <ul class="grid">
@@ -67,19 +67,19 @@
                 <span class="no-photo brand" aria-hidden="true">{{ c.name.charAt(0) }}</span>
               }
               @if (c.soldOut) {
-                <span class="flag">Sold out</span>
+                <span class="flag">{{ 'shop.soldOut' | t }}</span>
               } @else if (c.wasEur) {
-                <span class="flag flag-sale">Sale</span>
+                <span class="flag flag-sale">{{ 'shop.home.sale' | t }}</span>
               }
             </div>
             <span class="name">{{ c.name }}</span>
             <span class="price">
-              @if (c.priceVaries) { <span class="muted">from</span> }
+              @if (c.priceVaries) { <span class="muted">{{ 'shop.from' | t }}</span> }
               <strong>{{ shop.price(c.priceEur) }}</strong>
               @if (c.wasEur) { <s class="muted">{{ shop.price(c.wasEur) }}</s> }
             </span>
             @if (c.colours.length > 1) {
-              <span class="swatches" [attr.aria-label]="c.colours.length + ' colours'">
+              <span class="swatches" [attr.aria-label]="'shop.home.colours' | t: { count: c.colours.length }">
                 @for (col of c.colours.slice(0, 6); track col.name) {
                   <span class="swatch" [style.background]="col.hex ?? 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'" [title]="col.name"></span>
                 }

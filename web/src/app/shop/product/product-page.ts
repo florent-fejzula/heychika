@@ -2,7 +2,7 @@ import { Component, ElementRef, PLATFORM_ID, computed, effect, inject, input, li
 import { isPlatformBrowser } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { COUNTRY_NAME } from '../../core/money';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { Bag, MAX_PER_ITEM } from '../bag';
 import { Loaded } from '../resolvers';
 import { ShopApi, ShopProduct, ShopVariant, slugify } from '../shop-api';
@@ -13,7 +13,7 @@ const FEW_LEFT = 3;
 
 @Component({
   selector: 'app-product-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './product-page.html',
   styleUrl: './product-page.scss',
 })
@@ -22,6 +22,7 @@ export class ProductPage {
   private readonly bag = inject(Bag);
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
+  private readonly i18n = inject(I18n);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   protected readonly shop = inject(ShopState);
 
@@ -129,7 +130,7 @@ export class ProductPage {
     const zone = this.shop.zone();
     if (!zone) return null;
     return {
-      country: COUNTRY_NAME[zone.country],
+      country: zone.country,
       fee: this.shop.price(zone.fee_eur),
       free: zone.fee_eur === 0,
       freeOver: zone.free_over_eur !== null ? this.shop.price(zone.free_over_eur) : null,
@@ -144,10 +145,10 @@ export class ProductPage {
       const p = this.p();
       const store = this.shop.storeName();
       if (!p) {
-        this.title.setTitle(`${this.failed() ? 'Shop' : 'Not available'} · ${store}`);
+        this.title.setTitle(`${this.i18n.t(this.failed() ? 'shop.home.shop' : 'shop.product.notAvailable')} · ${store}`);
         return;
       }
-      const description = (p.description ?? '').trim().slice(0, 200) || `${p.name}, from ${store}. Cash on delivery.`;
+      const description = (p.description ?? '').trim().slice(0, 200) || this.i18n.t('shop.product.metaDescription', { name: p.name, store });
       const image = p.images[0] ? this.api.imageUrl(p.images[0].storage_path) : null;
       this.title.setTitle(`${p.name} · ${store}`);
       this.meta.updateTag({ name: 'description', content: description });

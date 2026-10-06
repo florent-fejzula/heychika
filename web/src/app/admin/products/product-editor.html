@@ -1,43 +1,43 @@
 <div class="stack">
-  <a class="back" routerLink="/admin/products">← Products</a>
+  <a class="back" routerLink="/admin/products">← {{ 'admin.shell.products' | t }}</a>
 
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
       <p class="notice notice-error">{{ loadError() }}</p>
     }
     @case ('missing') {
       <section class="card stack">
-        <h1>Design not found</h1>
-        <p class="muted">It may have been deleted.</p>
-        <a class="btn" routerLink="/admin/products">Back to products</a>
+        <h1>{{ 'admin.design.notFound' | t }}</h1>
+        <p class="muted">{{ 'admin.design.maybeDeleted' | t }}</p>
+        <a class="btn" routerLink="/admin/products">{{ 'admin.design.backToProducts' | t }}</a>
       </section>
     }
     @case ('ready') {
       <div class="page-head">
-        <h1>{{ product()?.name ?? 'New design' }}</h1>
+        <h1>{{ product()?.name ?? ('admin.design.new' | t) }}</h1>
         @if (product(); as p) {
           <span class="head-side">
             <span class="muted code">{{ p.category.code }}-{{ p.model_code }}</span>
-            <a class="btn btn-small" routerLink="/admin/stock/add" [queryParams]="{ design: p.id }">Add stock</a>
+            <a class="btn btn-small" routerLink="/admin/stock/add" [queryParams]="{ design: p.id }">{{ 'admin.design.addStock' | t }}</a>
           </span>
         }
       </div>
 
       @if (added(); as n) {
         <section class="card stack done" role="status">
-          <h2>Added {{ n }} {{ n === '1' ? 'item' : 'items' }} to stock</h2>
+          <h2>{{ 'admin.design.addedN' | t: { count: +n } }}</h2>
           @if (photos()) {
-            <p class="notice notice-error">{{ photos() }} {{ photos() === '1' ? 'photo' : 'photos' }} didn’t upload. Add them again under Photos below.</p>
+            <p class="notice notice-error">{{ 'admin.design.photosFailed' | t: { count: +photos()! } }}</p>
           }
-          <p class="muted">It’s on the shelf with its cost{{ product()?.show_online ? ', and for sale in the shop' : '' }}.</p>
+          <p class="muted">{{ (product()?.show_online ? 'admin.design.onShelfOnline' : 'admin.design.onShelf') | t }}</p>
           <div class="toolbar">
             @if (unlinkedCount() && !showLinker()) {
-              <button class="btn btn-primary" type="button" (click)="showLinker.set(true)">Scan the tags</button>
+              <button class="btn btn-primary" type="button" (click)="showLinker.set(true)">{{ 'admin.barcodes.scanTags' | t }}</button>
             }
-            <a class="btn" routerLink="/admin/stock/add">Add another product</a>
+            <a class="btn" routerLink="/admin/stock/add">{{ 'admin.design.addAnother' | t }}</a>
           </div>
         </section>
       }
@@ -45,64 +45,64 @@
       <form class="card stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
         @if (isNew()) {
           <label class="field">
-            <span>Category</span>
+            <span>{{ 'admin.common.category' | t }}</span>
             <select formControlName="category_id">
-              <option [ngValue]="0" disabled>Choose…</option>
+              <option [ngValue]="0" disabled>{{ 'admin.common.choose' | t }}</option>
               @for (c of categories(); track c.id) {
                 @if (c.active) {
                   <option [ngValue]="c.id">{{ c.name }}</option>
                 }
               }
             </select>
-            <small>The category can’t be changed later. Its code becomes part of every SKU.</small>
+            <small>{{ 'admin.design.categoryFixed' | t }}</small>
           </label>
         } @else {
           <p class="muted fixed">{{ product()?.category?.name }}</p>
         }
 
         <label class="field">
-          <span>Name</span>
-          <input type="text" formControlName="name" placeholder="Black satin wrap dress" autocomplete="off" />
+          <span>{{ 'admin.common.name' | t }}</span>
+          <input type="text" formControlName="name" [placeholder]="'admin.design.namePlaceholder' | t" autocomplete="off" />
         </label>
 
         <label class="field">
-          <span>Description</span>
-          <textarea rows="3" formControlName="description" placeholder="Fit, feel, how to wear it"></textarea>
+          <span>{{ 'admin.design.description' | t }}</span>
+          <textarea rows="3" formControlName="description" [placeholder]="'admin.design.descriptionPlaceholder' | t"></textarea>
         </label>
 
         <div class="grid-2">
           <label class="field">
-            <span>Material</span>
-            <input type="text" formControlName="material" placeholder="Satin" />
+            <span>{{ 'admin.design.material' | t }}</span>
+            <input type="text" formControlName="material" [placeholder]="'admin.design.materialPlaceholder' | t" />
           </label>
           <label class="field">
-            <span>Brand</span>
+            <span>{{ 'admin.design.brand' | t }}</span>
             <input type="text" formControlName="brand" />
           </label>
         </div>
 
         <div class="grid-2">
           <label class="field">
-            <span>Status</span>
+            <span>{{ 'admin.products.status' | t }}</span>
             <select formControlName="status">
-              <option value="draft">Draft (not for sale yet)</option>
-              <option value="active">Active</option>
-              <option value="archived">Archived (retired)</option>
+              <option value="draft">{{ 'admin.design.statusDraft' | t }}</option>
+              <option value="active">{{ 'admin.productStatus.active' | t }}</option>
+              <option value="archived">{{ 'admin.design.statusArchived' | t }}</option>
             </select>
           </label>
           <div class="field">
-            <span>Shop</span>
-            <label class="check"><input type="checkbox" formControlName="show_online" /> Show in online shop</label>
-            <label class="check"><input type="checkbox" formControlName="featured" /> Feature on the homepage</label>
+            <span>{{ 'admin.design.shop' | t }}</span>
+            <label class="check"><input type="checkbox" formControlName="show_online" /> {{ 'admin.design.showOnline' | t }}</label>
+            <label class="check"><input type="checkbox" formControlName="featured" /> {{ 'admin.design.feature' | t }}</label>
           </div>
         </div>
-        <small class="muted">Customers see a design only when it is Active <em>and</em> shown in the shop.</small>
+        <small class="muted">{{ 'admin.design.visibleWhen' | t }}</small>
 
         @if (shopLink(); as link) {
           <div class="toolbar live">
-            <a class="btn btn-small" [href]="link" target="_blank" rel="noopener">View in shop</a>
+            <a class="btn btn-small" [href]="link" target="_blank" rel="noopener">{{ 'admin.design.viewInShop' | t }}</a>
             <button class="btn btn-small" type="button" (click)="copyShopLink()">
-              {{ linkCopied() ? 'Link copied' : 'Copy link to send in a DM' }}
+              {{ (linkCopied() ? 'shop.product.linkCopied' : 'admin.design.copyLink') | t }}
             </button>
           </div>
         }
@@ -113,7 +113,7 @@
 
         <div class="actions">
           <button class="btn btn-primary" type="submit" [disabled]="saving() || (!isNew() && form.pristine)">
-            {{ saving() ? 'Saving…' : isNew() ? 'Create design' : 'Save changes' }}
+            {{ (saving() ? 'common.saving' : isNew() ? 'admin.design.create' : 'admin.common.saveChanges') | t }}
           </button>
         </div>
       </form>
@@ -131,33 +131,33 @@
 
         @if (linkable().length) {
           <section class="card stack">
-            <h2>Barcodes on the tags</h2>
+            <h2>{{ 'admin.barcodes.title' | t }}</h2>
             @if (showLinker()) {
               <app-barcode-linker [sizes]="linkable()" (changed)="reloadVariants()" />
-              <p class="muted small">No barcode on its tag? <a routerLink="/admin/labels" [queryParams]="{ product: p.id }">Print a label</a> instead.</p>
+              <p class="muted small">{{ 'admin.barcodes.noBarcode' | t }} <a routerLink="/admin/labels" [queryParams]="{ product: p.id }">{{ 'admin.barcodes.printLabel' | t }}</a></p>
             } @else {
               <p class="muted">
                 @if (unlinkedCount()) {
-                  Scan one tag of each size once, and scanning any of its tags finds it from then on.
-                  {{ linkable().length - unlinkedCount() }} of {{ linkable().length }} sizes done.
+                  {{ 'admin.barcodes.explain' | t }}
+                  {{ 'admin.barcodes.done' | t: { done: linkable().length - unlinkedCount(), count: linkable().length } }}
                 } @else {
-                  Every size is linked to the barcode on its tag.
+                  {{ 'admin.barcodes.allLinked' | t }}
                 }
               </p>
-              <div><button class="btn" type="button" (click)="showLinker.set(true)">Scan the tags</button></div>
+              <div><button class="btn" type="button" (click)="showLinker.set(true)">{{ 'admin.barcodes.scanTags' | t }}</button></div>
             }
           </section>
         }
 
         @if (variants() !== null && variants()!.length === 0) {
           <section class="card stack">
-            <h2>Delete this design</h2>
-            <p class="muted">Only possible while it has no sizes. Its photos are deleted with it.</p>
-            <div><button class="btn btn-danger" type="button" (click)="remove()">Delete design</button></div>
+            <h2>{{ 'admin.design.deleteTitle' | t }}</h2>
+            <p class="muted">{{ 'admin.design.deleteText' | t }}</p>
+            <div><button class="btn btn-danger" type="button" (click)="remove()">{{ 'admin.design.delete' | t }}</button></div>
           </section>
         }
       } @else {
-        <p class="muted">After you create the design, you can add its colours, sizes and photos.</p>
+        <p class="muted">{{ 'admin.design.afterCreate' | t }}</p>
       }
     }
   }

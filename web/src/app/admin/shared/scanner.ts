@@ -1,4 +1,5 @@
 import { Component, DestroyRef, ElementRef, afterNextRender, inject, input, output, signal, viewChild } from '@angular/core';
+import { t, TranslatePipe } from '../../core/i18n';
 
 interface ScannerControls {
   stop(): void;
@@ -16,14 +17,15 @@ const REPEAT_MS = 1500;
  */
 @Component({
   selector: 'app-scanner',
+  imports: [TranslatePipe],
   template: `
     <form class="entry" (submit)="$event.preventDefault(); submit()">
       <label class="field grow">
-        <span>{{ label() }}</span>
+        <span>{{ label() | t }}</span>
         <input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" #entry
-               [placeholder]="placeholder()" [value]="code()" (input)="code.set($any($event.target).value)" />
+               [placeholder]="placeholder() | t" [value]="code()" (input)="code.set($any($event.target).value)" />
       </label>
-      <button class="btn" type="submit" [disabled]="!code().trim()">Add</button>
+      <button class="btn" type="submit" [disabled]="!code().trim()">{{ 'admin.scan.add' | t }}</button>
     </form>
 
     <div class="camera" [hidden]="!cameraOn()">
@@ -31,9 +33,9 @@ const REPEAT_MS = 1500;
       <div class="aim" aria-hidden="true"></div>
     </div>
     @if (cameraOn()) {
-      <button class="btn btn-small" type="button" (click)="stopCamera()">Stop camera</button>
+      <button class="btn btn-small" type="button" (click)="stopCamera()">{{ 'admin.scan.stopCamera' | t }}</button>
     } @else {
-      <button class="btn btn-small" type="button" (click)="startCamera()">Scan with the camera</button>
+      <button class="btn btn-small" type="button" (click)="startCamera()">{{ 'admin.scan.camera' | t }}</button>
     }
     @if (cameraError(); as message) {
       <p class="notice notice-error">{{ message }}</p>
@@ -88,8 +90,9 @@ const REPEAT_MS = 1500;
   `,
 })
 export class Scanner {
-  readonly label = input('Scan a sticker, or type a SKU');
-  readonly placeholder = input('DR-001-BLK-M');
+  /** Translation keys. */
+  readonly label = input('admin.scan.label');
+  readonly placeholder = input('admin.scan.skuExample');
   readonly scanned = output<string>();
 
   private readonly video = viewChild<ElementRef<HTMLVideoElement>>('video');
@@ -117,7 +120,7 @@ export class Scanner {
   protected async startCamera(): Promise<void> {
     this.cameraError.set(null);
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.cameraError.set('This browser can’t use the camera here. Camera scanning needs a secure (https) page.');
+      this.cameraError.set(t('admin.scan.noCamera'));
       return;
     }
     this.cameraOn.set(true);
@@ -146,8 +149,8 @@ export class Scanner {
       const denied = (e as DOMException)?.name === 'NotAllowedError';
       this.cameraError.set(
         denied
-          ? 'Camera access was blocked. Allow the camera for this site in the browser settings, then try again.'
-          : 'Couldn’t start the camera.',
+          ? t('admin.scan.cameraBlocked')
+          : t('admin.scan.cameraFailed'),
       );
     }
   }

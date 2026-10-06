@@ -1,18 +1,18 @@
 <article class="info">
-  <h1>About us</h1>
+  <h1>{{ 'shop.shell.about' | t }}</h1>
 
   @if (text(); as paras) {
     @for (p of paras; track $index) {
       <p>{{ p }}</p>
     }
   } @else {
-    <p class="muted">This page couldn’t load just now. Please refresh in a moment.</p>
+    <p class="muted">{{ 'shop.info.pageFailed' | t }}</p>
   }
 
   @if (contact(); as c) {
     @if (c.any) {
       <section>
-        <h2>Get in touch</h2>
+        <h2>{{ 'shop.info.getInTouch' | t }}</h2>
         <ul class="contact">
           @if (c.instagram) {
             <li><a [href]="c.instagram" target="_blank" rel="noopener">Instagram</a></li>
@@ -43,6 +43,6 @@
   }
 
   <p class="more">
-    <a routerLink="/delivery">Delivery &amp; returns</a> · <a routerLink="/order">Track an order</a>
+    <a routerLink="/delivery">{{ 'shop.product.deliveryReturns' | t }}</a> · <a routerLink="/order">{{ 'shop.shell.track' | t }}</a>
   </p>
 </article>

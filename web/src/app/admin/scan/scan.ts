@@ -1,6 +1,7 @@
 import { Component, DestroyRef, ElementRef, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Catalogue, ScanResult } from '../../core/catalogue';
+import { t, TranslatePipe } from '../../core/i18n';
 import { formatMoney } from '../../core/money';
 
 interface ScannerControls {
@@ -13,7 +14,7 @@ interface ScannerControls {
 //  - typing the SKU by hand.
 @Component({
   selector: 'app-scan',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './scan.html',
   styleUrl: './scan.scss',
 })
@@ -59,7 +60,7 @@ export class Scan {
   protected async startCamera(): Promise<void> {
     this.cameraError.set(null);
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.cameraError.set('This browser can’t use the camera here. Camera scanning needs a secure (https) page.');
+      this.cameraError.set(t('admin.scan.noCamera'));
       return;
     }
 
@@ -91,8 +92,8 @@ export class Scan {
       const denied = (e as DOMException)?.name === 'NotAllowedError';
       this.cameraError.set(
         denied
-          ? 'Camera access was blocked. Allow the camera for this site in the browser settings, then try again.'
-          : 'Couldn’t start the camera.',
+          ? t('admin.scan.cameraBlocked')
+          : t('admin.scan.cameraFailed'),
       );
     }
   }

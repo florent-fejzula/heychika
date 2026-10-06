@@ -1,28 +1,28 @@
 <div class="stack">
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
       <p class="notice notice-error">{{ loadError() }}</p>
     }
     @case ('missing') {
-      <p class="notice">There’s no such order.</p>
+      <p class="notice">{{ 'admin.order.missing' | t }}</p>
     }
     @case ('ready') {
       @let o = order()!;
       <a class="back" [routerLink]="['/admin/orders', o.id]">← {{ o.order_number }}</a>
-      <h1>Something came back</h1>
+      <h1>{{ 'admin.order.somethingBack' | t }}</h1>
 
       @if (!canReturn()) {
-        <p class="notice">Nothing on this order can come back: it hasn’t been sent, or everything is already back.</p>
+        <p class="notice">{{ 'admin.return.nothing' | t }}</p>
       } @else {
         @if (undelivered()) {
-          <p class="muted">The parcel never reached {{ o.delivery_name }}. Check each item as you unpack it.</p>
+          <p class="muted">{{ 'admin.return.neverReached' | t: { name: o.delivery_name } }}</p>
         }
 
         <section class="card stack">
-          <h2>What came back</h2>
+          <h2>{{ 'admin.return.what' | t }}</h2>
           <ul class="lines">
             @for (l of open(); track l.id) {
               @let b = backOf(l);
@@ -30,18 +30,18 @@
                 <div class="row">
                   <span class="what">
                     <strong>{{ l.product_name_snapshot }}</strong>
-                    <span>{{ l.color_snapshot }} · {{ l.size_snapshot }} <span class="muted">({{ l.qty - l.returned_qty }} sent)</span></span>
+                    <span>{{ l.color_snapshot }} · {{ l.size_snapshot }} <span class="muted">({{ 'admin.return.sent' | t: { count: l.qty - l.returned_qty } }})</span></span>
                   </span>
-                  <span class="stepper" role="group" [attr.aria-label]="'How many came back: ' + l.product_name_snapshot">
-                    <button type="button" (click)="setQty(l, b.qty - 1)" aria-label="One fewer">−</button>
+                  <span class="stepper" role="group" [attr.aria-label]="'admin.return.howMany' | t: { name: l.product_name_snapshot }">
+                    <button type="button" (click)="setQty(l, b.qty - 1)" [attr.aria-label]="'shop.bag.oneFewer' | t">−</button>
                     <span>{{ b.qty }}</span>
-                    <button type="button" (click)="setQty(l, b.qty + 1)" aria-label="One more">+</button>
+                    <button type="button" (click)="setQty(l, b.qty + 1)" [attr.aria-label]="'shop.bag.oneMore' | t">+</button>
                   </span>
                 </div>
                 @if (b.qty > 0) {
-                  <div class="chips" role="radiogroup" [attr.aria-label]="'Condition: ' + l.product_name_snapshot">
-                    <label class="chip"><input type="radio" [name]="'c' + l.id" [checked]="b.condition === 'saleable'" (change)="setCondition(l, 'saleable')" /> Fine, back on the shelf</label>
-                    <label class="chip"><input type="radio" [name]="'c' + l.id" [checked]="b.condition === 'damaged'" (change)="setCondition(l, 'damaged')" /> Damaged</label>
+                  <div class="chips" role="radiogroup" [attr.aria-label]="'admin.return.condition' | t: { name: l.product_name_snapshot }">
+                    <label class="chip"><input type="radio" [name]="'c' + l.id" [checked]="b.condition === 'saleable'" (change)="setCondition(l, 'saleable')" /> {{ 'admin.return.fine' | t }}</label>
+                    <label class="chip"><input type="radio" [name]="'c' + l.id" [checked]="b.condition === 'damaged'" (change)="setCondition(l, 'damaged')" /> {{ 'admin.stock.damaged' | t }}</label>
                   </div>
                 }
               </li>
@@ -50,39 +50,40 @@
         </section>
 
         <section class="card stack">
-          <h2>Why</h2>
+          <h2>{{ 'admin.return.why' | t }}</h2>
           <div class="chips">
-            @for (r of reasons; track r) {
+            @for (key of reasons; track key) {
+              @let r = key | t;
               <label class="chip"><input type="radio" name="reason" [checked]="reason() === r" (change)="reason.set(r)" /> {{ r }}</label>
             }
           </div>
           <label class="field">
-            <span>Reason</span>
+            <span>{{ 'admin.stock.reason' | t }}</span>
             <input [value]="reason()" (input)="reason.set($any($event.target).value)" />
           </label>
 
           @if (paid()) {
             <div class="grid-2">
               <label class="field">
-                <span>Money back ({{ o.currency }})</span>
+                <span>{{ 'admin.return.moneyBack' | t: { currency: o.currency } }}</span>
                 <input inputmode="decimal" [value]="refund()" (input)="refund.set($any($event.target).value)" />
-                <small>These items cost {{ money(value()) }}. 0 for no refund.</small>
+                <small>{{ 'admin.return.itemsCost' | t: { amount: money(value()) } }}</small>
               </label>
               <label class="field">
-                <span>Paid back by</span>
+                <span>{{ 'admin.return.paidBackBy' | t }}</span>
                 <select [value]="method()" (change)="method.set($any($event.target).value)">
-                  <option value="cash">Cash</option>
-                  <option value="bank transfer">Bank transfer</option>
-                  <option value="exchange">Exchanged for something else</option>
+                  <option value="cash">{{ 'admin.return.method.cash' | t }}</option>
+                  <option value="bank transfer">{{ 'admin.return.method.bank' | t }}</option>
+                  <option value="exchange">{{ 'admin.return.method.exchange' | t }}</option>
                 </select>
               </label>
             </div>
           } @else {
-            <p class="muted small">Nothing was paid on this order, so there’s nothing to refund.</p>
+            <p class="muted small">{{ 'errors.return.nothingPaid' | t }}</p>
           }
 
           <label class="field">
-            <span>Notes <span class="muted">(optional)</span></span>
+            <span>{{ 'admin.trip.notes' | t }} <span class="muted">{{ 'shop.checkout.optional' | t }}</span></span>
             <input [value]="notes()" (input)="notes.set($any($event.target).value)" />
           </label>
 
@@ -90,7 +91,7 @@
             <p class="notice notice-error" role="alert">{{ message }}</p>
           }
           <button class="btn btn-primary btn-block" type="button" (click)="save()" [disabled]="busy() || count() === 0">
-            {{ busy() ? 'Saving…' : 'Record ' + count() + (count() === 1 ? ' item' : ' items') + ' back' }}
+            {{ busy() ? ('common.saving' | t) : ('admin.return.record' | t: { count: count() }) }}
           </button>
         </section>
       }

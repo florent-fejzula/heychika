@@ -112,3 +112,18 @@
     color: var(--ink);
   }
 }
+
+// A narrow phone: the name, country, language flag and bag all have to fit on one line.
+@media (max-width: 420px) {
+  .top {
+    gap: 8px;
+  }
+
+  .wordmark {
+    font-size: 1.5rem;
+  }
+
+  .country select {
+    max-width: 33vw;
+  }
+}

@@ -2,8 +2,8 @@
 // what comes out of the printer, as long as the printer prints at 100% scale.
 
 export interface LabelLayout {
+  /** Also names it on screen: admin.labels.layout.<id> in src/i18n. */
   id: string;
-  name: string;
   /** Page size in mm. */
   pageWidth: number;
   pageHeight: number;
@@ -25,20 +25,17 @@ export interface LabelLayout {
 // a whole sheet is printed and stuck on.
 export const LAYOUTS: LabelLayout[] = [
   {
-    id: 'a4-24',
-    name: 'A4 sheet · 24 labels (3 × 8, 63.5 × 33.9 mm)',
+    id: 'a4-24', // A4 sheet · 24 labels (3 × 8, 63.5 × 33.9 mm)
     pageWidth: 210, pageHeight: 297, width: 63.5, height: 33.9, columns: 3, rows: 8,
     gapX: 2.5, gapY: 0, marginTop: 13, marginLeft: 7.2,
   },
   {
-    id: 'a4-44',
-    name: 'A4 sheet · 44 small labels (4 × 11, 45.7 × 25.4 mm)',
+    id: 'a4-44', // A4 sheet · 44 small labels (4 × 11, 45.7 × 25.4 mm)
     pageWidth: 210, pageHeight: 297, width: 45.7, height: 25.4, columns: 4, rows: 11,
     gapX: 2.8, gapY: 0, marginTop: 8.8, marginLeft: 9.7,
   },
   {
-    id: 'roll-50x30',
-    name: 'Label printer roll · 50 × 30 mm, one per page',
+    id: 'roll-50x30', // Label printer roll · 50 × 30 mm, one per page
     pageWidth: 50, pageHeight: 30, width: 50, height: 30, columns: 1, rows: 1,
     gapX: 0, gapY: 0, marginTop: 0, marginLeft: 0,
   },

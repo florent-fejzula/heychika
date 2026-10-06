@@ -1,14 +1,15 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslatePipe } from '../../core/i18n';
 
 // Orders and the people who place them.
 @Component({
   selector: 'app-orders-tabs',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe],
   template: `
-    <nav class="tabs" aria-label="Orders sections">
-      <a routerLink="/admin/orders" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">Orders</a>
-      <a routerLink="/admin/customers" routerLinkActive="active" ariaCurrentWhenActive="page">Customers</a>
+    <nav class="tabs" [attr.aria-label]="'admin.orders.sections' | t">
+      <a routerLink="/admin/orders" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">{{ 'admin.shell.orders' | t }}</a>
+      <a routerLink="/admin/customers" routerLinkActive="active" ariaCurrentWhenActive="page">{{ 'admin.customers.title' | t }}</a>
     </nav>
   `,
   styles: `

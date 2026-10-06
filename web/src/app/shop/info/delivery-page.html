@@ -1,26 +1,26 @@
 <article class="info">
-  <h1>Delivery &amp; returns</h1>
+  <h1>{{ 'shop.product.deliveryReturns' | t }}</h1>
 
   <section>
-    <h2>Delivery</h2>
-    <p>Everything is sent from our shop in Prishtina.</p>
+    <h2>{{ 'shop.checkout.delivery' | t }}</h2>
+    <p>{{ 'shop.info.sentFrom' | t }}</p>
     @if (zones().length) {
       <table class="zones">
         <thead>
           <tr>
-            <th scope="col">To</th>
-            <th scope="col">Delivery</th>
-            <th scope="col">Takes</th>
+            <th scope="col">{{ 'shop.info.to' | t }}</th>
+            <th scope="col">{{ 'shop.checkout.delivery' | t }}</th>
+            <th scope="col">{{ 'shop.info.takes' | t }}</th>
           </tr>
         </thead>
         <tbody>
           @for (z of zones(); track z.country) {
             <tr>
-              <th scope="row">{{ z.country }}</th>
+              <th scope="row">{{ 'common.country.' + z.country | t }}</th>
               <td>
-                {{ z.fee }}
+                {{ z.fee ?? ('shop.bag.free' | t) }}
                 @if (z.freeOver) {
-                  <small>free over {{ z.freeOver }}</small>
+                  <small>{{ 'shop.info.freeOver' | t: { amount: z.freeOver } }}</small>
                 }
               </td>
               <td>{{ z.days || '–' }}</td>
@@ -32,25 +32,29 @@
   </section>
 
   <section>
-    <h2>Paying</h2>
+    <h2>{{ 'shop.info.paying' | t }}</h2>
     <p>
-      You pay the courier in cash when your parcel arrives@if (currencies()) {, {{ currencies() }}}. There’s nothing
-      to pay online and no card needed. We call to confirm your order before we send it.
+      @if (currencies()) {
+        {{ 'shop.info.payCourierIn' | t: { currencies: currencies() } }}
+      } @else {
+        {{ 'shop.info.payCourier' | t }}
+      }
+      {{ 'shop.info.nothingOnline' | t }}
     </p>
   </section>
 
   <section>
-    <h2>Returns</h2>
+    <h2>{{ 'shop.info.returns' | t }}</h2>
     @if (returns(); as paras) {
       @for (p of paras; track $index) {
         <p>{{ p }}</p>
       }
     } @else {
-      <p class="muted">This part couldn’t load just now. Please refresh in a moment.</p>
+      <p class="muted">{{ 'shop.info.partFailed' | t }}</p>
     }
   </section>
 
   <p class="more">
-    <a routerLink="/order">Track an order</a> · <a routerLink="/about">About us</a>
+    <a routerLink="/order">{{ 'shop.shell.track' | t }}</a> · <a routerLink="/about">{{ 'shop.shell.about' | t }}</a>
   </p>
 </article>

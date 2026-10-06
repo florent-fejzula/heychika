@@ -304,7 +304,8 @@ describe('PurchaseEditor', () => {
 
     it('says what was just added and offers the next one', async () => {
       const { fixture, el } = await setup('9', purchase(), [line(1, 5, 10)]);
-      fixture.componentRef.setInput('added', 'Wrap dress: 5 items');
+      fixture.componentRef.setInput('added', '5');
+      fixture.componentRef.setInput('name', 'Wrap dress');
       await settle(fixture);
       expect(el.querySelector('.done')!.textContent).toContain('Added Wrap dress: 5 items');
       expect(el.querySelector('.done a')!.textContent).toContain('Add another item');

@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { COUNTRY_NAME, formatMoney } from '../../core/money';
 import { OrderSummary, Orders, PAYMENT_LABEL, STAGES, STATUS_LABEL, Stage, phoneDigits, stageOf } from '../../core/orders';
 import { OrdersTabs } from './orders-tabs';
@@ -9,13 +10,14 @@ const WORK_ORDER: Stage[] = ['confirm', 'send', 'road', 'cash'];
 
 @Component({
   selector: 'app-order-list',
-  imports: [RouterLink, OrdersTabs],
+  imports: [RouterLink, OrdersTabs, TranslatePipe],
   templateUrl: './order-list.html',
   styleUrl: './order-list.scss',
 })
 export class OrderList {
   private readonly orders = inject(Orders);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
 
   /** ?stage=cash, so a tile on the Today page can link straight to a list. */
   readonly stageParam = input<string>(undefined, { alias: 'stage' });
@@ -80,8 +82,8 @@ export class OrderList {
   protected when(o: OrderSummary): string {
     const d = new Date(o.created_at);
     return d.toDateString() === new Date().toDateString()
-      ? d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-      : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      ? d.toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })
+      : this.i18n.date(d, { day: 'numeric', month: 'short' });
   }
 
   protected readonly stageOf = stageOf;

@@ -1,13 +1,13 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { COUNTRY_NAME } from '../../core/money';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { Bag } from '../bag';
 import { BagContents } from '../bag-contents';
 import { ShopState } from '../shop-state';
 
 @Component({
   selector: 'app-bag-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './bag-page.html',
   styleUrl: './bag-page.scss',
 })
@@ -15,8 +15,9 @@ export class BagPage {
   protected readonly bag = inject(Bag);
   protected readonly contents = inject(BagContents);
   protected readonly shop = inject(ShopState);
+  private readonly i18n = inject(I18n);
 
-  protected readonly countryName = computed(() => COUNTRY_NAME[this.shop.country()]);
+  protected readonly countryName = computed(() => this.i18n.t('common.countryIn.' + this.shop.country()));
 
   constructor() {
     this.contents.load();

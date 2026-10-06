@@ -2,40 +2,42 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { COUNTRY_NAME, formatMoney } from '../../core/money';
+import { I18n, TranslatePipe } from '../../core/i18n';
+import { formatMoney } from '../../core/money';
 import { OrderStatus, ShopApi, TrackedOrder } from '../shop-api';
 import { LastOrder, lastOrder } from './last-order';
 
-// What each status means to the customer. Steps are the normal journey; the
-// rest replace the steps with a sentence.
+// What each status means to the customer (translation keys). Steps are the
+// normal journey; the rest replace the steps with a sentence.
 const STEPS: { label: string; reached: OrderStatus[] }[] = [
-  { label: 'Received', reached: ['new', 'confirmed', 'dispatched', 'delivered', 'completed'] },
-  { label: 'Confirmed', reached: ['confirmed', 'dispatched', 'delivered', 'completed'] },
-  { label: 'On its way', reached: ['dispatched', 'delivered', 'completed'] },
-  { label: 'Delivered', reached: ['delivered', 'completed'] },
+  { label: 'shop.order.step.received', reached: ['new', 'confirmed', 'dispatched', 'delivered', 'completed'] },
+  { label: 'shop.order.step.confirmed', reached: ['confirmed', 'dispatched', 'delivered', 'completed'] },
+  { label: 'shop.order.step.onItsWay', reached: ['dispatched', 'delivered', 'completed'] },
+  { label: 'shop.order.step.delivered', reached: ['delivered', 'completed'] },
 ];
 
 const OFF_THE_PATH: Partial<Record<OrderStatus, string>> = {
-  cancelled: 'This order was cancelled.',
-  delivery_failed: 'The courier couldn’t deliver this order. We’ll be in touch.',
-  returned: 'This order was returned.',
-  partially_returned: 'Part of this order was returned.',
+  cancelled: 'shop.order.status.cancelled',
+  delivery_failed: 'shop.order.status.deliveryFailed',
+  returned: 'shop.order.status.returned',
+  partially_returned: 'shop.order.status.partiallyReturned',
 };
 
 const NEXT: Partial<Record<OrderStatus, string>> = {
-  new: 'We’ll call you to confirm, then send it.',
-  confirmed: 'Confirmed. We’re packing it.',
-  dispatched: 'It’s with the courier. They’ll call when they’re close.',
+  new: 'shop.order.status.new',
+  confirmed: 'shop.order.status.confirmed',
+  dispatched: 'shop.order.status.dispatched',
 };
 
 @Component({
   selector: 'app-order-page',
-  imports: [FormsModule, NgTemplateOutlet, RouterLink],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, TranslatePipe],
   templateUrl: './order-page.html',
   styleUrl: './order-page.scss',
 })
 export class OrderPage implements OnInit {
   private readonly api = inject(ShopApi);
+  private readonly i18n = inject(I18n);
 
   /** From /order/:number. */
   readonly number = input<string>();
@@ -57,7 +59,7 @@ export class OrderPage implements OnInit {
   });
   protected readonly countryName = computed(() => {
     const o = this.order();
-    return o ? COUNTRY_NAME[o.country] : '';
+    return o ? this.i18n.t('common.country.' + o.country) : '';
   });
 
   ngOnInit(): void {
@@ -80,7 +82,7 @@ export class OrderPage implements OnInit {
   }
 
   protected date(iso: string): string {
-    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+    return this.i18n.date(iso, { day: 'numeric', month: 'long' });
   }
 
   protected async look(): Promise<void> {

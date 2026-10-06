@@ -1,58 +1,58 @@
 <div class="stack">
-  <h1>Settings</h1>
+  <h1>{{ 'admin.shell.settings' | t }}</h1>
 
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
-      <p class="notice notice-error">Couldn’t load settings. Check your connection and refresh.</p>
+      <p class="notice notice-error">{{ 'admin.settings.failed' | t }}</p>
     }
     @case ('ready') {
       <form class="stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
         <!-- Exchange rates -->
         <section class="card stack">
           <div>
-            <h2>Exchange rates</h2>
-            <p class="muted hint">Prices are set in euros. Customers in North Macedonia and Albania see them converted and rounded up.</p>
+            <h2>{{ 'admin.settings.rates' | t }}</h2>
+            <p class="muted hint">{{ 'admin.settings.ratesHint' | t }}</p>
           </div>
 
           @if (fxAgeDays() >= staleFxDays) {
-            <p class="notice">Rates were last changed {{ fxAgeDays() }} days ago. The lek moves — worth checking it’s still right.</p>
+            <p class="notice">{{ 'admin.settings.ratesStale' | t: { count: fxAgeDays() } }}</p>
           }
 
           <div class="grid-2">
             <label class="field">
-              <span>MKD per €1</span>
+              <span>{{ 'admin.trip.perEuro' | t: { currency: 'MKD' } }}</span>
               <input type="number" inputmode="decimal" step="any" formControlName="mkd_per_eur" />
             </label>
             <label class="field">
-              <span>Round MKD up to</span>
+              <span>{{ 'admin.settings.roundUp' | t: { currency: 'MKD' } }}</span>
               <input type="number" inputmode="decimal" step="any" formControlName="mkd_rounding" />
             </label>
             <label class="field">
-              <span>ALL per €1</span>
+              <span>{{ 'admin.trip.perEuro' | t: { currency: 'ALL' } }}</span>
               <input type="number" inputmode="decimal" step="any" formControlName="all_per_eur" />
             </label>
             <label class="field">
-              <span>Round ALL up to</span>
+              <span>{{ 'admin.settings.roundUp' | t: { currency: 'ALL' } }}</span>
               <input type="number" inputmode="decimal" step="any" formControlName="all_rounding" />
             </label>
           </div>
 
           <div class="preview">
             <label class="field sample">
-              <span>A dress at</span>
+              <span>{{ 'admin.settings.dressAt' | t }}</span>
               <input type="number" inputmode="decimal" step="any" min="0"
                      [value]="samplePrice()" (input)="setSample($any($event.target).value)" />
             </label>
             <div class="shows" aria-live="polite">
               @if (preview(); as p) {
-                <span>Kosovo <strong>{{ p[0] }}</strong></span>
-                <span>N. Macedonia <strong>{{ p[1] }}</strong></span>
-                <span>Albania <strong>{{ p[2] }}</strong></span>
+                <span>{{ 'common.country.XK' | t }} <strong>{{ p[0] }}</strong></span>
+                <span>{{ 'common.country.MK_short' | t }} <strong>{{ p[1] }}</strong></span>
+                <span>{{ 'common.country.AL' | t }} <strong>{{ p[2] }}</strong></span>
               } @else {
-                <span class="muted">Fill in the rates to see a preview.</span>
+                <span class="muted">{{ 'admin.settings.fillRates' | t }}</span>
               }
             </div>
           </div>
@@ -61,8 +61,8 @@
         <!-- Delivery -->
         <section class="card stack" formArrayName="zones">
           <div>
-            <h2>Delivery</h2>
-            <p class="muted hint">Everything ships from Prishtina. Fees are in euros and convert like prices do.</p>
+            <h2>{{ 'shop.checkout.delivery' | t }}</h2>
+            <p class="muted hint">{{ 'admin.settings.deliveryHint' | t }}</p>
           </div>
 
           @for (zone of zones.controls; track zone.controls.country.value; let i = $index) {
@@ -70,21 +70,21 @@
               <legend>
                 <label class="toggle">
                   <input type="checkbox" formControlName="active" />
-                  {{ countryName[zone.controls.country.value] }}
+                  {{ countryName[zone.controls.country.value] | t }}
                 </label>
               </legend>
               <div class="grid-3">
                 <label class="field">
-                  <span>Fee (€)</span>
+                  <span>{{ 'admin.settings.fee' | t }}</span>
                   <input type="number" inputmode="decimal" step="any" min="0" formControlName="fee_eur" />
                 </label>
                 <label class="field">
-                  <span>Free over (€)</span>
+                  <span>{{ 'admin.settings.freeOver' | t }}</span>
                   <input type="number" inputmode="decimal" step="any" min="0" formControlName="free_over_eur" placeholder="—" />
                 </label>
                 <label class="field">
-                  <span>Takes</span>
-                  <input type="text" formControlName="est_days" placeholder="2–4 days" />
+                  <span>{{ 'shop.info.takes' | t }}</span>
+                  <input type="text" formControlName="est_days" [placeholder]="'admin.settings.daysExample' | t" />
                 </label>
               </div>
             </fieldset>
@@ -93,28 +93,28 @@
 
         <!-- Pricing -->
         <section class="card stack">
-          <h2>Pricing</h2>
+          <h2>{{ 'admin.settings.pricing' | t }}</h2>
           <label class="field narrow">
-            <span>Suggested markup (%)</span>
+            <span>{{ 'admin.settings.markup' | t }}</span>
             <input type="number" inputmode="decimal" step="any" min="0" formControlName="default_markup_pct" />
-            <small>Used to suggest a selling price from what an item cost. You can always change the price.</small>
+            <small>{{ 'admin.settings.markupHint' | t }}</small>
           </label>
         </section>
 
         <!-- Contact -->
         <section class="card stack">
-          <h2>Shop details</h2>
+          <h2>{{ 'admin.settings.shopDetails' | t }}</h2>
           <label class="field">
-            <span>Shop name</span>
+            <span>{{ 'admin.settings.shopName' | t }}</span>
             <input type="text" formControlName="store_name" />
           </label>
           <div class="grid-2">
             <label class="field">
-              <span>Phone</span>
+              <span>{{ 'shop.checkout.phone' | t }}</span>
               <input type="tel" formControlName="contact_phone" autocomplete="tel" />
             </label>
             <label class="field">
-              <span>Email</span>
+              <span>{{ 'admin.login.email' | t }}</span>
               <input type="email" formControlName="contact_email" />
             </label>
           </div>
@@ -135,41 +135,38 @@
         <!-- Shop pages -->
         <section class="card stack">
           <div>
-            <h2>Shop pages</h2>
+            <h2>{{ 'admin.settings.pages' | t }}</h2>
             <p class="muted hint">
-              The words on <a href="/about" target="_blank">About us</a> and on
-              <a href="/delivery" target="_blank">Delivery &amp; returns</a>, under the delivery fees above. Leave an empty
-              line to start a new paragraph.
+              {{ 'admin.settings.pagesHint' | t }}
+              <a href="/about" target="_blank">{{ 'shop.shell.about' | t }}</a> ·
+              <a href="/delivery" target="_blank">{{ 'shop.product.deliveryReturns' | t }}</a>
             </p>
           </div>
           <label class="field">
-            <span>About us</span>
+            <span>{{ 'shop.shell.about' | t }}</span>
             <textarea formControlName="about_text" rows="6"></textarea>
           </label>
           <label class="field">
-            <span>Returns</span>
+            <span>{{ 'shop.info.returns' | t }}</span>
             <textarea formControlName="returns_text" rows="6"></textarea>
-            <small>Say how long customers have, what condition items must be in, and who pays to send them back.</small>
+            <small>{{ 'admin.settings.returnsHint' | t }}</small>
           </label>
         </section>
 
         <!-- Orders -->
         <section class="card stack">
-          <h2>Orders</h2>
+          <h2>{{ 'admin.shell.orders' | t }}</h2>
           <label class="field narrow">
-            <span>Pause the shop at this many orders waiting to be confirmed</span>
+            <span>{{ 'admin.settings.pauseAt' | t }}</span>
             <input type="number" inputmode="numeric" step="1" min="1" formControlName="max_waiting_orders" />
-            <small>
-              Protects the stock from a flood of fake orders. When this many shop orders are waiting for a call, the
-              shop asks new customers to message you instead. Confirming or cancelling orders opens it again.
-            </small>
+            <small>{{ 'admin.settings.pauseHint' | t }}</small>
           </label>
         </section>
 
         <section class="card stack">
-          <h2>Categories, colours &amp; sizes</h2>
-          <p class="muted hint">The choices offered when adding a design. Add a new colour or category here.</p>
-          <div><a class="btn" routerLink="/admin/lists">Manage lists</a></div>
+          <h2>{{ 'admin.lists.title' | t }}</h2>
+          <p class="muted hint">{{ 'admin.settings.listsHint' | t }}</p>
+          <div><a class="btn" routerLink="/admin/lists">{{ 'admin.settings.manageLists' | t }}</a></div>
         </section>
 
         <div class="actions">
@@ -179,7 +176,7 @@
             </p>
           }
           <button class="btn btn-primary" type="submit" [disabled]="saving() || form.pristine">
-            {{ saving() ? 'Saving…' : 'Save changes' }}
+            {{ (saving() ? 'common.saving' : 'admin.common.saveChanges') | t }}
           </button>
         </div>
       </form>

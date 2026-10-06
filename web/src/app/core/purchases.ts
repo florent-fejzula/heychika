@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { AllocationMethod } from './costing';
 import { explain } from './errors';
+import { t } from './i18n';
 import { Supabase } from './supabase';
 
 export type PurchaseStatus = 'draft' | 'received';
@@ -72,12 +73,13 @@ export interface SavedItem {
   variant_ids: number[];
 }
 
+/** What the database says is wrong with an item (invalid_item's detail), as translation keys. */
 const ITEM_PROBLEM: Record<string, string> = {
-  name: 'Give it a name.',
-  category: 'Choose a category.',
-  price: 'Enter the selling price in euros.',
-  unit_price: 'Enter what you paid per item.',
-  lines: 'Enter how many you have in at least one colour and size.',
+  name: 'errors.item.name',
+  category: 'errors.item.category',
+  price: 'errors.item.price',
+  unit_price: 'errors.item.unitPrice',
+  lines: 'errors.item.lines',
 };
 
 function fail(error: unknown, fallback?: string): never {
@@ -97,7 +99,7 @@ export class Purchases {
       .order('purchase_date', { ascending: false })
       .order('id', { ascending: false })
       .overrideTypes<PurchaseSummary[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the buying trips.');
+    if (error) fail(error, 'errors.loadTrips');
     return data;
   }
 
@@ -107,25 +109,25 @@ export class Purchases {
       .select('*')
       .eq('id', id)
       .maybeSingle<PurchaseRow>();
-    if (error) fail(error, 'Couldn’t load this buying trip.');
+    if (error) fail(error, 'errors.loadTrip');
     return data;
   }
 
   async create(input: PurchaseInput): Promise<number> {
     const { data, error } = await this.sb.from('purchases').insert(input).select('id').single<{ id: number }>();
-    if (error) fail(error, 'Couldn’t create the buying trip.');
+    if (error) fail(error, 'errors.createTrip');
     return data.id;
   }
 
   async update(id: number, input: PurchaseInput): Promise<void> {
     const { error } = await this.sb.from('purchases').update(input).eq('id', id);
-    if (error) fail(error, 'Couldn’t save the buying trip.');
+    if (error) fail(error, 'errors.saveTrip');
   }
 
   /** Drafts only; the database refuses once a purchase has been received. */
   async remove(id: number): Promise<void> {
     const { error } = await this.sb.from('purchases').delete().eq('id', id);
-    if (error) fail(error, 'Couldn’t delete the buying trip.');
+    if (error) fail(error, 'errors.deleteTrip');
   }
 
   async lines(purchaseId: number): Promise<PurchaseLine[]> {
@@ -138,7 +140,7 @@ export class Purchases {
       .eq('purchase_id', purchaseId)
       .order('id')
       .overrideTypes<PurchaseLine[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the items.');
+    if (error) fail(error, 'errors.loadItems');
     return data.map((l) => ({ ...l, variant: { ...l.variant, stock: first(l.variant.stock) } }));
   }
 
@@ -148,13 +150,13 @@ export class Purchases {
     const { error } = await this.sb
       .from('purchase_lines')
       .upsert(rows.map((r) => ({ purchase_id: purchaseId, ...r })), { onConflict: 'purchase_id,variant_id' });
-    if (error) fail(error, 'Couldn’t save the items.');
+    if (error) fail(error, 'errors.saveItems');
   }
 
   async removeLines(purchaseId: number, variantIds: number[]): Promise<void> {
     if (!variantIds.length) return;
     const { error } = await this.sb.from('purchase_lines').delete().eq('purchase_id', purchaseId).in('variant_id', variantIds);
-    if (error) fail(error, 'Couldn’t remove those items.');
+    if (error) fail(error, 'errors.removeItems');
   }
 
   /**
@@ -165,9 +167,9 @@ export class Purchases {
   async saveItem(purchaseId: number | null, item: TripItem): Promise<SavedItem> {
     const { data, error } = await this.sb.rpc('save_trip_item', { p_purchase_id: purchaseId, p_item: item });
     if (error) {
-      if (/invalid_item/.test(error.message)) throw new Error(ITEM_PROBLEM[error.details ?? ''] ?? 'Check the details and try again.');
-      if (/purchase_received/.test(error.message)) throw new Error('This trip has already been received. Start a new one for these items.');
-      fail(error, 'Couldn’t save the item.');
+      if (/invalid_item/.test(error.message)) throw new Error(t(ITEM_PROBLEM[error.details ?? ''] ?? 'errors.checkDetails'));
+      if (/purchase_received/.test(error.message)) throw new Error(t('errors.tripReceived'));
+      fail(error, 'errors.saveItem');
     }
     return data as SavedItem;
   }
@@ -184,17 +186,17 @@ export class Purchases {
     const { error } = await this.sb.rpc('link_barcode', { p_variant_id: variantId, p_barcode: barcode });
     if (error) {
       if (/barcode_in_use/.test(error.message)) {
-        throw new Error(`That barcode is already on ${error.details}. One barcode can only belong to one size.`);
+        throw new Error(t('errors.barcodeInUse', { sku: error.details }));
       }
-      if (/invalid_barcode/.test(error.message)) throw new Error('That doesn’t look like a barcode. Try scanning it again.');
-      fail(error, 'Couldn’t link the barcode.');
+      if (/invalid_barcode/.test(error.message)) throw new Error(t('errors.invalidBarcode'));
+      fail(error, 'errors.linkBarcode');
     }
   }
 
   /** Puts the goods on the shelf and records what each item really cost. Cannot be undone. */
   async receive(id: number): Promise<void> {
     const { error } = await this.sb.rpc('receive_purchase', { p_purchase_id: id });
-    if (error) fail(error, 'Couldn’t receive the items.');
+    if (error) fail(error, 'errors.receiveItems');
   }
 
   /** What arrived, per size: used to print one sticker per item. */
@@ -204,7 +206,7 @@ export class Purchases {
       .select('variant_id, qty')
       .eq('purchase_id', purchaseId)
       .overrideTypes<{ variant_id: number; qty: number }[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the items.');
+    if (error) fail(error, 'errors.loadItems');
     return data;
   }
 }

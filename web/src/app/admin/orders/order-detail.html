@@ -1,27 +1,27 @@
 <div class="stack">
-  <a class="back" routerLink="/admin/orders">← Orders</a>
+  <a class="back" routerLink="/admin/orders">← {{ 'admin.shell.orders' | t }}</a>
 
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
       <p class="notice notice-error">{{ loadError() }}</p>
     }
     @case ('missing') {
-      <p class="notice">There’s no such order.</p>
+      <p class="notice">{{ 'admin.order.missing' | t }}</p>
     }
     @case ('ready') {
       @let o = order()!;
       <div class="page-head">
         <div>
           <h1>{{ o.order_number }}</h1>
-          <p class="muted sub">{{ when(o.created_at) }} · {{ o.channel === 'online' ? 'from the shop' : 'taken in a DM' }}</p>
+          <p class="muted sub">{{ when(o.created_at) }} · {{ (o.channel === 'online' ? 'admin.order.fromShop' : 'admin.order.fromDm') | t }}</p>
         </div>
         <div class="badges">
-          <span class="badge" [class.badge-muted]="o.status !== 'new' && o.status !== 'delivery_failed'">{{ label[o.status] }}</span>
+          <span class="badge" [class.badge-muted]="o.status !== 'new' && o.status !== 'delivery_failed'">{{ label[o.status] | t }}</span>
           @if (o.payment_status !== 'unpaid') {
-            <span class="badge badge-ok">{{ paymentLabel[o.payment_status] }}</span>
+            <span class="badge badge-ok">{{ paymentLabel[o.payment_status] | t }}</span>
           }
         </div>
       </div>
@@ -32,46 +32,46 @@
 
       <!-- ------------------------------------------------------------ next step -->
       @if (!['cancelled', 'returned'].includes(o.status) || canReturn()) {
-        <section class="card stack next" aria-label="Next step">
+        <section class="card stack next" [attr.aria-label]="'admin.order.nextStep' | t">
           @switch (o.status) {
             @case ('new') {
-              <p class="hint">Call {{ o.delivery_name }} to check the order, then confirm it.</p>
+              <p class="hint">{{ 'admin.order.callToConfirm' | t: { name: o.delivery_name } }}</p>
               <div class="toolbar">
-                <button class="btn btn-primary" type="button" (click)="confirm()" [disabled]="busy()">Confirm</button>
-                <a class="btn" [routerLink]="['/admin/orders', o.id, 'pack']">Pack & send</a>
+                <button class="btn btn-primary" type="button" (click)="confirm()" [disabled]="busy()">{{ 'admin.order.confirm' | t }}</button>
+                <a class="btn" [routerLink]="['/admin/orders', o.id, 'pack']">{{ 'admin.order.packSend' | t }}</a>
               </div>
             }
             @case ('confirmed') {
-              <p class="hint">Ready to pack.</p>
+              <p class="hint">{{ 'admin.order.readyToPack' | t }}</p>
               <div class="toolbar">
-                <a class="btn btn-primary" [routerLink]="['/admin/orders', o.id, 'pack']">Pack & send</a>
+                <a class="btn btn-primary" [routerLink]="['/admin/orders', o.id, 'pack']">{{ 'admin.order.packSend' | t }}</a>
               </div>
             }
             @case ('dispatched') {
-              <p class="hint">With the courier@if (o.courier_name) { ({{ o.courier_name }})}. What happened?</p>
+              <p class="hint">{{ 'admin.order.withCourier' | t }}@if (o.courier_name) { ({{ o.courier_name }})}. {{ 'admin.order.whatHappened' | t }}</p>
               <div class="toolbar">
-                <button class="btn btn-primary" type="button" (click)="open('delivered')">Delivered</button>
-                <button class="btn" type="button" (click)="open('failed')">Not delivered</button>
+                <button class="btn btn-primary" type="button" (click)="open('delivered')">{{ 'admin.orderStatus.delivered' | t }}</button>
+                <button class="btn" type="button" (click)="open('failed')">{{ 'admin.orderStatus.delivery_failed' | t }}</button>
               </div>
             }
             @case ('delivery_failed') {
-              <p class="hint">The courier couldn’t deliver it. The parcel counts as on the road until it’s back.</p>
+              <p class="hint">{{ 'admin.order.couldntDeliver' | t }}</p>
               <div class="toolbar">
-                <button class="btn" type="button" (click)="retry()" [disabled]="busy()">Courier is trying again</button>
-                <button class="btn" type="button" (click)="open('delivered')">Delivered after all</button>
-                <a class="btn" [routerLink]="['/admin/orders', o.id, 'return']">Parcel came back</a>
+                <button class="btn" type="button" (click)="retry()" [disabled]="busy()">{{ 'admin.order.tryingAgain' | t }}</button>
+                <button class="btn" type="button" (click)="open('delivered')">{{ 'admin.order.deliveredAfterAll' | t }}</button>
+                <a class="btn" [routerLink]="['/admin/orders', o.id, 'return']">{{ 'admin.order.parcelBack' | t }}</a>
               </div>
             }
             @default {
               @if (cashDue()) {
-                <p class="hint">Delivered. Waiting for the cash: {{ money(expectedCash()) }}.</p>
+                <p class="hint">{{ 'admin.order.waitingCash' | t: { amount: money(expectedCash()) } }}</p>
               }
               <div class="toolbar">
                 @if (cashDue()) {
-                  <button class="btn btn-primary" type="button" (click)="open('cash')">Cash received</button>
+                  <button class="btn btn-primary" type="button" (click)="open('cash')">{{ 'admin.order.cashReceived' | t }}</button>
                 }
                 @if (canReturn()) {
-                  <a class="btn" [routerLink]="['/admin/orders', o.id, 'return']">Something came back</a>
+                  <a class="btn" [routerLink]="['/admin/orders', o.id, 'return']">{{ 'admin.order.somethingBack' | t }}</a>
                 }
               </div>
             }
@@ -80,33 +80,33 @@
           <!-- Delivered: anything handed back at the door, and the cash -->
           @if (panel() === 'delivered') {
             <div class="panel stack">
-              <p class="muted small">Did the customer hand anything back to the courier?</p>
+              <p class="muted small">{{ 'admin.order.handBack' | t }}</p>
               <ul class="refuse">
                 @for (l of o.lines; track l.id) {
                   @let max = l.qty - l.returned_qty - l.refused_qty;
                   @if (max > 0) {
                     <li>
                       <span>{{ l.product_name_snapshot }} <span class="muted">{{ l.color_snapshot }} · {{ l.size_snapshot }}</span></span>
-                      <span class="stepper" role="group" [attr.aria-label]="'Handed back: ' + l.product_name_snapshot">
-                        <button type="button" (click)="setRefused(l, refusedOf(l) - 1)" aria-label="One fewer">−</button>
+                      <span class="stepper" role="group" [attr.aria-label]="'admin.order.handedBackX' | t: { name: l.product_name_snapshot }">
+                        <button type="button" (click)="setRefused(l, refusedOf(l) - 1)" [attr.aria-label]="'shop.bag.oneFewer' | t">−</button>
                         <span>{{ refusedOf(l) }}</span>
-                        <button type="button" (click)="setRefused(l, refusedOf(l) + 1)" aria-label="One more">+</button>
+                        <button type="button" (click)="setRefused(l, refusedOf(l) + 1)" [attr.aria-label]="'shop.bag.oneMore' | t">+</button>
                       </span>
                     </li>
                   }
                 }
               </ul>
-              <label class="check"><input type="checkbox" [checked]="cashNow()" (change)="cashNow.set($any($event.target).checked)" /> The cash is in</label>
+              <label class="check"><input type="checkbox" [checked]="cashNow()" (change)="cashNow.set($any($event.target).checked)" /> {{ 'admin.order.cashIsIn' | t }}</label>
               @if (cashNow()) {
                 <label class="field">
-                  <span>Amount collected ({{ o.currency }})</span>
+                  <span>{{ 'admin.order.amountCollected' | t: { currency: o.currency } }}</span>
                   <input inputmode="decimal" [value]="amount()" (input)="amount.set($any($event.target).value)" />
-                  <small>Expected {{ money(expectedCash()) }}</small>
+                  <small>{{ 'admin.order.expected' | t: { amount: money(expectedCash()) } }}</small>
                 </label>
               }
               <div class="toolbar">
-                <button class="btn btn-primary" type="button" (click)="delivered()" [disabled]="busy()">Save</button>
-                <button class="btn" type="button" (click)="panel.set(null)">Never mind</button>
+                <button class="btn btn-primary" type="button" (click)="delivered()" [disabled]="busy()">{{ 'common.save' | t }}</button>
+                <button class="btn" type="button" (click)="panel.set(null)">{{ 'admin.order.neverMind' | t }}</button>
               </div>
             </div>
           }
@@ -114,13 +114,13 @@
           @if (panel() === 'cash') {
             <div class="panel stack">
               <label class="field">
-                <span>Amount received ({{ o.currency }})</span>
+                <span>{{ 'admin.order.amountReceived' | t: { currency: o.currency } }}</span>
                 <input inputmode="decimal" [value]="amount()" (input)="amount.set($any($event.target).value)" />
-                <small>Expected {{ money(expectedCash()) }}</small>
+                <small>{{ 'admin.order.expected' | t: { amount: money(expectedCash()) } }}</small>
               </label>
               <div class="toolbar">
-                <button class="btn btn-primary" type="button" (click)="cash()" [disabled]="busy()">Save</button>
-                <button class="btn" type="button" (click)="panel.set(null)">Never mind</button>
+                <button class="btn btn-primary" type="button" (click)="cash()" [disabled]="busy()">{{ 'common.save' | t }}</button>
+                <button class="btn" type="button" (click)="panel.set(null)">{{ 'admin.order.neverMind' | t }}</button>
               </div>
             </div>
           }
@@ -128,12 +128,12 @@
           @if (panel() === 'failed') {
             <div class="panel stack">
               <label class="field">
-                <span>What happened? <span class="muted">(optional)</span></span>
-                <input [value]="note()" (input)="note.set($any($event.target).value)" placeholder="e.g. no answer, wrong address" />
+                <span>{{ 'admin.order.whatHappened' | t }} <span class="muted">{{ 'shop.checkout.optional' | t }}</span></span>
+                <input [value]="note()" (input)="note.set($any($event.target).value)" [placeholder]="'admin.order.failedExample' | t" />
               </label>
               <div class="toolbar">
-                <button class="btn btn-primary" type="button" (click)="failed()" [disabled]="busy()">Save</button>
-                <button class="btn" type="button" (click)="panel.set(null)">Never mind</button>
+                <button class="btn btn-primary" type="button" (click)="failed()" [disabled]="busy()">{{ 'common.save' | t }}</button>
+                <button class="btn" type="button" (click)="panel.set(null)">{{ 'admin.order.neverMind' | t }}</button>
               </div>
             </div>
           }
@@ -145,7 +145,7 @@
       }
 
       @if (o.status === 'cancelled') {
-        <p class="notice">Cancelled: {{ o.cancelled_reason }}</p>
+        <p class="notice">{{ 'admin.order.cancelledBecause' | t: { reason: o.cancelled_reason } }}</p>
       }
 
       <!-- ------------------------------------------------------------ customer -->
@@ -153,27 +153,27 @@
         <div class="who">
           <h2>{{ o.delivery_name }}</h2>
           @if (previousOrders() > 0) {
-            <span class="badge badge-ok">{{ previousOrders() }} earlier {{ previousOrders() === 1 ? 'order' : 'orders' }}</span>
+            <span class="badge badge-ok">{{ 'admin.order.earlier' | t: { count: previousOrders() } }}</span>
           }
           @if (o.customer) {
-            <a class="small-link" [routerLink]="['/admin/customers', o.customer.id]">Customer</a>
+            <a class="small-link" [routerLink]="['/admin/customers', o.customer.id]">{{ 'admin.order.customer' | t }}</a>
           }
         </div>
 
         @if (panel() === 'edit') {
           <div class="stack">
-            <label class="field"><span>Name</span><input [value]="edit()['delivery_name']" (input)="setEdit('delivery_name', $any($event.target).value)" /></label>
-            <label class="field"><span>Phone</span><input type="tel" [value]="edit()['delivery_phone']" (input)="setEdit('delivery_phone', $any($event.target).value)" /></label>
-            <label class="field"><span>Town or city</span><input [value]="edit()['delivery_city']" (input)="setEdit('delivery_city', $any($event.target).value)" /></label>
-            <label class="field"><span>Street and number</span><input [value]="edit()['delivery_address']" (input)="setEdit('delivery_address', $any($event.target).value)" /></label>
-            <label class="field"><span>Postcode</span><input [value]="edit()['delivery_postal_code']" (input)="setEdit('delivery_postal_code', $any($event.target).value)" /></label>
-            <label class="field"><span>Note for packing or the courier</span><input [value]="edit()['delivery_notes']" (input)="setEdit('delivery_notes', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'admin.common.name' | t }}</span><input [value]="edit()['delivery_name']" (input)="setEdit('delivery_name', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.phone' | t }}</span><input type="tel" [value]="edit()['delivery_phone']" (input)="setEdit('delivery_phone', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.city' | t }}</span><input [value]="edit()['delivery_city']" (input)="setEdit('delivery_city', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.street' | t }}</span><input [value]="edit()['delivery_address']" (input)="setEdit('delivery_address', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.postcode' | t }}</span><input [value]="edit()['delivery_postal_code']" (input)="setEdit('delivery_postal_code', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'admin.order.noteForPacking' | t }}</span><input [value]="edit()['delivery_notes']" (input)="setEdit('delivery_notes', $any($event.target).value)" /></label>
             @if (error(); as message) {
               <p class="notice notice-error" role="alert">{{ message }}</p>
             }
             <div class="toolbar">
-              <button class="btn btn-primary" type="button" (click)="saveDetails()" [disabled]="busy()">Save</button>
-              <button class="btn" type="button" (click)="panel.set(null)">Never mind</button>
+              <button class="btn btn-primary" type="button" (click)="saveDetails()" [disabled]="busy()">{{ 'common.save' | t }}</button>
+              <button class="btn" type="button" (click)="panel.set(null)">{{ 'admin.order.neverMind' | t }}</button>
             </div>
           </div>
         } @else {
@@ -181,7 +181,7 @@
             <div class="phone">
               <a class="number" [href]="'tel:+' + digits()">{{ o.delivery_phone }}</a>
               <div class="toolbar">
-                <a class="btn btn-small" [href]="'tel:+' + digits()">Call</a>
+                <a class="btn btn-small" [href]="'tel:+' + digits()">{{ 'admin.order.call' | t }}</a>
                 <a class="btn btn-small" [href]="'https://wa.me/' + digits()" target="_blank" rel="noopener">WhatsApp</a>
                 <a class="btn btn-small" [href]="'viber://chat?number=%2B' + digits()">Viber</a>
               </div>
@@ -191,20 +191,20 @@
           <address>
             {{ o.delivery_address }}<br />
             {{ o.delivery_postal_code ? o.delivery_postal_code + ' ' : '' }}{{ o.delivery_city }}<br />
-            {{ countryName[o.country] }}
+            {{ countryName[o.country] | t }}
           </address>
 
           @if (o.customer_notes) {
-            <p class="note"><span class="muted">Their note:</span> {{ o.customer_notes }}</p>
+            <p class="note"><span class="muted">{{ 'admin.order.theirNote' | t }}</span> {{ o.customer_notes }}</p>
           }
           @if (o.delivery_notes) {
-            <p class="note"><span class="muted">Your note:</span> {{ o.delivery_notes }}</p>
+            <p class="note"><span class="muted">{{ 'admin.order.yourNote' | t }}</span> {{ o.delivery_notes }}</p>
           }
 
           <div class="toolbar">
-            <button class="btn btn-small" type="button" (click)="copyAddress()">{{ copied() ? 'Copied' : 'Copy name, phone and address' }}</button>
+            <button class="btn btn-small" type="button" (click)="copyAddress()">{{ (copied() ? 'admin.order.copied' : 'admin.order.copyAddress') | t }}</button>
             @if (canEditDetails()) {
-              <button class="btn btn-small" type="button" (click)="open('edit')">Edit</button>
+              <button class="btn btn-small" type="button" (click)="open('edit')">{{ 'common.edit' | t }}</button>
             }
           </div>
         }
@@ -213,9 +213,9 @@
       <!-- ------------------------------------------------------------ items -->
       <section class="card stack">
         <div class="who">
-          <h2>{{ items() }} {{ items() === 1 ? 'item' : 'items' }}</h2>
+          <h2>{{ 'admin.order.items' | t: { count: items() } }}</h2>
           @if (canChangeItems()) {
-            <a class="small-link" [routerLink]="['/admin/orders', o.id, 'items']">Change items</a>
+            <a class="small-link" [routerLink]="['/admin/orders', o.id, 'items']">{{ 'admin.order.changeItems' | t }}</a>
           }
         </div>
         <ul class="lines">
@@ -225,48 +225,48 @@
                 <strong>{{ l.product_name_snapshot }}</strong>
                 <span>{{ l.color_snapshot }} · {{ l.size_snapshot }}@if (l.qty > 1) { · <strong>× {{ l.qty }}</strong>}</span>
                 <code>{{ l.sku_snapshot }}</code>
-                @if (l.refused_qty) { <span class="flag">{{ l.refused_qty }} handed back, on the way back</span> }
-                @if (l.returned_qty) { <span class="flag">{{ l.returned_qty }} returned</span> }
+                @if (l.refused_qty) { <span class="flag">{{ 'admin.order.handedBack' | t: { count: l.refused_qty } }}</span> }
+                @if (l.returned_qty) { <span class="flag">{{ 'admin.order.returnedN' | t: { count: l.returned_qty } }}</span> }
               </span>
               <span class="amount">
                 {{ money(localPrice(l) * l.qty) }}
-                @if (l.unit_price_eur < l.default_price_eur) { <span class="muted small">usually {{ eur(l.default_price_eur) }}</span> }
+                @if (l.unit_price_eur < l.default_price_eur) { <span class="muted small">{{ 'admin.order.usually' | t: { price: eur(l.default_price_eur) } }}</span> }
               </span>
             </li>
           }
         </ul>
         <dl class="totals">
-          <div><dt>Delivery</dt><dd>{{ o.delivery_fee_in_currency === 0 ? 'Free' : money(o.delivery_fee_in_currency) }}</dd></div>
-          <div class="total"><dt>Courier collects</dt><dd>{{ money(o.total_in_currency) }}</dd></div>
+          <div><dt>{{ 'shop.checkout.delivery' | t }}</dt><dd>{{ o.delivery_fee_in_currency === 0 ? ('shop.bag.free' | t) : money(o.delivery_fee_in_currency) }}</dd></div>
+          <div class="total"><dt>{{ 'admin.order.courierCollects' | t }}</dt><dd>{{ money(o.total_in_currency) }}</dd></div>
           @if (o.amount_collected !== null) {
-            <div class="muted"><dt>Collected</dt><dd>{{ money(o.amount_collected) }}</dd></div>
+            <div class="muted"><dt>{{ 'admin.order.collected' | t }}</dt><dd>{{ money(o.amount_collected) }}</dd></div>
           }
           @if (o.currency !== 'EUR') {
-            <div class="muted"><dt>In euros</dt><dd>{{ eur(o.total_eur) }} at {{ o.currency_per_eur }} {{ o.currency }}</dd></div>
+            <div class="muted"><dt>{{ 'admin.order.inEuros' | t }}</dt><dd>{{ 'admin.order.atRate' | t: { amount: eur(o.total_eur), rate: o.currency_per_eur, currency: o.currency } }}</dd></div>
           }
           @if (cogs(); as c) {
-            <div class="muted"><dt>Cost of the items · profit</dt><dd>{{ eur(c.cost) }} · {{ eur(c.profit) }}</dd></div>
+            <div class="muted"><dt>{{ 'admin.order.costProfit' | t }}</dt><dd>{{ eur(c.cost) }} · {{ eur(c.profit) }}</dd></div>
           }
         </dl>
         @if (o.courier_name || o.tracking_ref) {
-          <p class="muted small">Sent with {{ o.courier_name || 'a courier' }}@if (o.tracking_ref) {, tracking <code>{{ o.tracking_ref }}</code>}</p>
+          <p class="muted small">{{ 'admin.order.sentWith' | t: { courier: o.courier_name || ('admin.order.aCourier' | t) } }}@if (o.tracking_ref) {, {{ 'admin.order.tracking' | t }} <code>{{ o.tracking_ref }}</code>}</p>
         }
       </section>
 
       <!-- ------------------------------------------------------------ returns -->
       @if (o.returns.length) {
         <section class="card stack">
-          <h2>Came back</h2>
+          <h2>{{ 'admin.order.cameBack' | t }}</h2>
           @for (r of o.returns; track r.id) {
             <div class="return">
               <p><strong>{{ r.return_number }}</strong> <span class="muted">· {{ when(r.created_at) }} · {{ r.reason }}</span></p>
               <ul>
                 @for (rl of r.lines; track $index) {
-                  <li>{{ rl.qty }} × {{ lineName(rl.order_line_id) }} — {{ rl.condition === 'saleable' ? 'back on the shelf' : 'damaged' }}</li>
+                  <li>{{ rl.qty }} × {{ lineName(rl.order_line_id) }} — {{ (rl.condition === 'saleable' ? 'admin.order.backOnShelf' : 'admin.order.damaged') | t }}</li>
                 }
               </ul>
               @if (r.refund_amount_currency > 0) {
-                <p class="muted small">Refunded {{ money(r.refund_amount_currency) }}@if (r.refund_method) { by {{ r.refund_method }}}</p>
+                <p class="muted small">{{ 'admin.order.refunded' | t: { amount: money(r.refund_amount_currency) } }}@if (r.refund_method) { ({{ refundMethod(r.refund_method) }})}</p>
               }
             </div>
           }
@@ -275,11 +275,11 @@
 
       <!-- ------------------------------------------------------------ history -->
       <section class="card stack">
-        <h2>History</h2>
+        <h2>{{ 'admin.stock.history' | t }}</h2>
         <ol class="history">
           @for (h of o.history; track $index) {
             <li>
-              <span>{{ label[h.to_status] }}@if (h.to_payment_status !== 'unpaid') { · {{ paymentLabel[h.to_payment_status] }}}@if (h.note) { <span class="muted">— {{ h.note }}</span>}</span>
+              <span>{{ label[h.to_status] | t }}@if (h.to_payment_status !== 'unpaid') { · {{ paymentLabel[h.to_payment_status] | t }}}@if (h.note) { <span class="muted">— {{ h.note }}</span>}</span>
               <span class="muted">{{ when(h.created_at) }}</span>
             </li>
           }
@@ -289,25 +289,26 @@
       @if (['new', 'confirmed'].includes(o.status)) {
         <section class="card stack cancel">
           @if (panel() === 'cancel') {
-            <h2>Cancel this order</h2>
+            <h2>{{ 'admin.order.cancelTitle' | t }}</h2>
             <div class="chips">
-              @for (r of cancelReasons; track r) {
+              @for (key of cancelReasons; track key) {
+                @let r = key | t;
                 <label class="chip"><input type="radio" name="reason" [checked]="reason() === r" (change)="reason.set(r)" /> {{ r }}</label>
               }
             </div>
             <label class="field">
-              <span>Reason</span>
+              <span>{{ 'admin.stock.reason' | t }}</span>
               <input [value]="reason()" (input)="reason.set($any($event.target).value)" />
             </label>
             @if (error(); as message) {
               <p class="notice notice-error" role="alert">{{ message }}</p>
             }
             <div class="toolbar">
-              <button class="btn btn-danger" type="button" (click)="cancel()" [disabled]="busy()">Cancel the order</button>
-              <button class="btn" type="button" (click)="panel.set(null)">Keep it</button>
+              <button class="btn btn-danger" type="button" (click)="cancel()" [disabled]="busy()">{{ 'admin.order.cancelIt' | t }}</button>
+              <button class="btn" type="button" (click)="panel.set(null)">{{ 'admin.order.keepIt' | t }}</button>
             </div>
           } @else {
-            <div><button class="btn btn-small btn-danger" type="button" (click)="open('cancel')">Cancel order…</button></div>
+            <div><button class="btn btn-small btn-danger" type="button" (click)="open('cancel')">{{ 'admin.order.cancelOrder' | t }}</button></div>
           }
         </section>
       }

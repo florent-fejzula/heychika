@@ -1,5 +1,6 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslatePipe } from '../../core/i18n';
 import { Currency, formatMoney } from '../../core/money';
 import { PERIODS, Period, PeriodKey, periodFor } from '../../core/reports';
 
@@ -41,13 +42,13 @@ export function readPeriod(
 
 @Component({
   selector: 'app-reports-tabs',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe],
   template: `
-    <nav class="tabs" aria-label="Reports">
-      <a routerLink="/admin/reports" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">Sales</a>
-      <a routerLink="/admin/reports/owed" routerLinkActive="active" ariaCurrentWhenActive="page">Owed</a>
-      <a routerLink="/admin/reports/stock" routerLinkActive="active" ariaCurrentWhenActive="page">Stock</a>
-      <a routerLink="/admin/reports/buying" routerLinkActive="active" ariaCurrentWhenActive="page">Buying</a>
+    <nav class="tabs" [attr.aria-label]="'admin.dashboard.reports' | t">
+      <a routerLink="/admin/reports" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">{{ 'admin.reports.tab.sales' | t }}</a>
+      <a routerLink="/admin/reports/owed" routerLinkActive="active" ariaCurrentWhenActive="page">{{ 'admin.reports.tab.owed' | t }}</a>
+      <a routerLink="/admin/reports/stock" routerLinkActive="active" ariaCurrentWhenActive="page">{{ 'admin.reports.tab.stock' | t }}</a>
+      <a routerLink="/admin/reports/buying" routerLinkActive="active" ariaCurrentWhenActive="page">{{ 'admin.reports.tab.buying' | t }}</a>
     </nav>
   `,
   styles: `
@@ -83,27 +84,28 @@ export interface PeriodChange {
 
 @Component({
   selector: 'app-period-picker',
+  imports: [TranslatePipe],
   template: `
-    <div class="chips" role="radiogroup" aria-label="Period">
+    <div class="chips" role="radiogroup" [attr.aria-label]="'admin.reports.periodLabel' | t">
       @for (p of periods; track p.key) {
         <label class="chip">
           <input type="radio" name="report-period" [checked]="key() === p.key" (change)="changed.emit({ key: p.key })" />
-          {{ p.label }}
+          {{ p.label | t }}
         </label>
       }
       <label class="chip">
         <input type="radio" name="report-period" [checked]="key() === 'custom'" (change)="changed.emit({ key: 'custom', from: from(), to: to() })" />
-        Choose dates
+        {{ 'admin.reports.chooseDates' | t }}
       </label>
     </div>
     @if (key() === 'custom') {
       <div class="grid-2 dates">
         <label class="field">
-          <span>From</span>
+          <span>{{ 'admin.reports.from' | t }}</span>
           <input type="date" [value]="from() ?? ''" [attr.max]="to()" (change)="changed.emit({ key: 'custom', from: $any($event.target).value || null, to: to() })" />
         </label>
         <label class="field">
-          <span>To</span>
+          <span>{{ 'admin.reports.to' | t }}</span>
           <input type="date" [value]="to() ?? ''" [attr.min]="from()" (change)="changed.emit({ key: 'custom', from: from(), to: $any($event.target).value || null })" />
         </label>
       </div>
@@ -141,7 +143,7 @@ export interface TableRow {
 
 @Component({
   selector: 'app-report-table',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   template: `
     <table class="figures">
       <thead>
@@ -181,7 +183,7 @@ export interface TableRow {
       }
     </table>
     @if (hidden() > 0) {
-      <button class="btn btn-small" type="button" (click)="all.set(true)">Show all {{ rows().length }}</button>
+      <button class="btn btn-small" type="button" (click)="all.set(true)">{{ 'admin.reports.showAll' | t: { count: rows().length } }}</button>
     }
   `,
   styles: `

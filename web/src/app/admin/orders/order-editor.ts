@@ -1,5 +1,6 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { COUNTRY_CURRENCY, COUNTRY_NAME, Country, DeliveryZone, FxSettings, formatMoney, localPrice, parseAmount } from '../../core/money';
 import { Customer, OrderDetail, Orders, SellableItem } from '../../core/orders';
 import { Scanner } from '../shared/scanner';
@@ -33,13 +34,14 @@ interface CustomerForm {
  */
 @Component({
   selector: 'app-order-editor',
-  imports: [RouterLink, Scanner],
+  imports: [RouterLink, Scanner, TranslatePipe],
   templateUrl: './order-editor.html',
   styleUrl: './order-editor.scss',
 })
 export class OrderEditor {
   private readonly orders = inject(Orders);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
 
   /** Present when changing an existing order's items. */
   readonly id = input<string>();
@@ -187,11 +189,11 @@ export class OrderEditor {
     const c = code.trim().toUpperCase();
     const item = this.catalogue().find((i) => i.barcode.toUpperCase() === c || i.sku.toUpperCase() === c);
     if (!item) {
-      this.scanNote.set(`Nothing for sale matches ${code.trim()}.`);
+      this.scanNote.set(this.i18n.t('admin.editor.scanNone', { code: code.trim() }));
       return;
     }
     this.add(item);
-    this.scanNote.set(`Added ${item.product.name}, ${item.color.name} ${item.size.label}.`);
+    this.scanNote.set(this.i18n.t('admin.editor.scanAdded', { name: item.product.name, colour: item.color.name, size: item.size.label }));
   }
 
   protected setQty(line: Line, qty: number): void {
@@ -217,16 +219,16 @@ export class OrderEditor {
     this.error.set(null);
 
     if (!this.lines().length) {
-      this.error.set('Add at least one item.');
+      this.error.set(this.i18n.t('errors.order.field.empty'));
       return;
     }
     const bad = this.lines().find((l) => this.unitPrice(l) === null);
     if (bad) {
-      this.error.set(`The price for ${bad.item.product.name} isn’t a number.`);
+      this.error.set(this.i18n.t('admin.editor.badPrice', { name: bad.item.product.name }));
       return;
     }
     if (this.fee() === null) {
-      this.error.set('The delivery fee isn’t a number.');
+      this.error.set(this.i18n.t('admin.editor.badFee'));
       return;
     }
     const lines = this.lines().map((l) => ({
@@ -238,9 +240,9 @@ export class OrderEditor {
 
     if (this.isNew()) {
       const c = this.customer();
-      const missing = !c.first_name.trim() ? 'the name' : !c.phone.trim() ? 'a phone number' : !c.city.trim() ? 'the town' : !c.address.trim() ? 'the address' : null;
+      const missing = !c.first_name.trim() ? 'name' : !c.phone.trim() ? 'phone' : !c.city.trim() ? 'city' : !c.address.trim() ? 'address' : null;
       if (missing) {
-        this.error.set(`Fill in ${missing}.`);
+        this.error.set(this.i18n.t('admin.editor.fillIn.' + missing));
         return;
       }
     }

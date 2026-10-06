@@ -2,44 +2,44 @@
   @if (trip(); as t) {
     <a class="back" [routerLink]="['/admin/stock/purchases', t.id]">← {{ t.reference }}</a>
   } @else {
-    <a class="back" routerLink="/admin/stock">← Stock</a>
+    <a class="back" routerLink="/admin/stock">← {{ 'admin.shell.stock' | t }}</a>
   }
 
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
       <p class="notice notice-error">{{ loadError() }}</p>
     }
     @case ('missing') {
-      <p class="notice">There’s no such buying trip.</p>
+      <p class="notice">{{ 'admin.addItem.noTrip' | t }}</p>
     }
     @case ('received') {
       <section class="card stack">
-        <h1>This trip is already received</h1>
-        <p class="muted">Its items are on the shelf and it can’t take more. Add these straight to stock, or start a new trip.</p>
+        <h1>{{ 'admin.addItem.receivedTitle' | t }}</h1>
+        <p class="muted">{{ 'admin.addItem.receivedText' | t }}</p>
         <div class="toolbar">
-          <a class="btn btn-primary" routerLink="/admin/stock/add">Add straight to stock</a>
-          <a class="btn" routerLink="/admin/stock/purchases/new">New buying trip</a>
+          <a class="btn btn-primary" routerLink="/admin/stock/add">{{ 'admin.addItem.straightToStock' | t }}</a>
+          <a class="btn" routerLink="/admin/stock/purchases/new">{{ 'admin.trips.new' | t }}</a>
         </div>
       </section>
     }
     @case ('ready') {
       <div>
-        <h1>Add item</h1>
+        <h1>{{ 'admin.addItem.title' | t }}</h1>
         <p class="muted lead">
           @if (onTrip()) {
-            To this trip. They go on the shelf when you receive it.
+            {{ 'admin.addItem.leadTrip' | t }}
           } @else {
-            Straight into stock. Bought on a trip with travel or customs costs? Add it to the trip instead, so those costs count.
+            {{ 'admin.addItem.leadStock' | t }}
           }
         </p>
       </div>
 
-      <div class="chips" role="radiogroup" aria-label="What are you adding?">
-        <label class="chip"><input type="radio" name="mode" [checked]="mode() === 'new'" (change)="setMode('new')" /> Something new</label>
-        <label class="chip"><input type="radio" name="mode" [checked]="mode() === 'existing'" (change)="setMode('existing')" /> More of one I have</label>
+      <div class="chips" role="radiogroup" [attr.aria-label]="'admin.addItem.what' | t">
+        <label class="chip"><input type="radio" name="mode" [checked]="mode() === 'new'" (change)="setMode('new')" /> {{ 'admin.addItem.somethingNew' | t }}</label>
+        <label class="chip"><input type="radio" name="mode" [checked]="mode() === 'existing'" (change)="setMode('existing')" /> {{ 'admin.addItem.moreOfOne' | t }}</label>
       </div>
 
       <!-- ------------------------------------------------------ which design -->
@@ -49,12 +49,12 @@
             <div class="chosen">
               <strong>{{ d.name }}</strong>
               <span class="muted">{{ d.category.name }}</span>
-              <button class="btn btn-small" type="button" (click)="clearDesign()">Change</button>
+              <button class="btn btn-small" type="button" (click)="clearDesign()">{{ 'common.change' | t }}</button>
             </div>
           } @else {
             <label class="field">
-              <span>Which design?</span>
-              <input type="search" placeholder="Type its name" [value]="search()" (input)="search.set($any($event.target).value)" />
+              <span>{{ 'admin.addItem.whichDesign' | t }}</span>
+              <input type="search" [placeholder]="'admin.addItem.typeName' | t" [value]="search()" (input)="search.set($any($event.target).value)" />
             </label>
             @for (d of matches(); track d.id) {
               <button class="btn match" type="button" (click)="chooseDesign(d)">
@@ -62,7 +62,7 @@
               </button>
             }
             @if (search().trim() && !matches().length) {
-              <p class="muted">Nothing by that name. Add it as something new.</p>
+              <p class="muted">{{ 'admin.addItem.nothingByName' | t }}</p>
             }
           }
         </section>
@@ -71,25 +71,25 @@
           <div class="photos">
             @for (p of photos(); track p.url; let i = $index) {
               <div class="photo">
-                <img [src]="p.url" [alt]="'Photo ' + (i + 1)" />
-                <button type="button" [attr.aria-label]="'Remove photo ' + (i + 1)" (click)="removePhoto(p)">✕</button>
+                <img [src]="p.url" [alt]="'shop.product.photo' | t: { n: i + 1 }" />
+                <button type="button" [attr.aria-label]="'admin.addItem.removePhoto' | t: { n: i + 1 }" (click)="removePhoto(p)">✕</button>
               </div>
             }
             <label class="add-photo">
               <input type="file" accept="image/*" multiple (change)="addPhotos($any($event.target))" />
-              <span>+ Photos</span>
+              <span>+ {{ 'admin.images.title' | t }}</span>
             </label>
           </div>
-          <p class="muted small">Optional. You can add them later too. The first one is the cover.</p>
+          <p class="muted small">{{ 'admin.addItem.photosHint' | t }}</p>
 
           <label class="field">
-            <span>Name</span>
-            <input type="text" placeholder="Black satin wrap dress" autocomplete="off" [value]="name()" (input)="name.set($any($event.target).value)" />
+            <span>{{ 'admin.common.name' | t }}</span>
+            <input type="text" [placeholder]="'admin.design.namePlaceholder' | t" autocomplete="off" [value]="name()" (input)="name.set($any($event.target).value)" />
           </label>
 
           <div class="field">
-            <span>Category</span>
-            <div class="chips" role="radiogroup" aria-label="Category">
+            <span>{{ 'admin.common.category' | t }}</span>
+            <div class="chips" role="radiogroup" [attr.aria-label]="'admin.common.category' | t">
               @for (c of categories(); track c.id) {
                 <label class="chip small"><input type="radio" name="category" [checked]="categoryId() === c.id" (change)="chooseCategory(c.id)" /> {{ c.name }}</label>
               }
@@ -102,7 +102,7 @@
         <!-- -------------------------------------------- colours, sizes, numbers -->
         <section class="card stack">
           <div class="field">
-            <span>Colours</span>
+            <span>{{ 'admin.common.colours' | t }}</span>
             <div class="chips">
               @for (c of colourOptions(); track c.id) {
                 <label class="chip small">
@@ -115,9 +115,9 @@
           </div>
 
           <div class="field">
-            <span>Sizes</span>
+            <span>{{ 'admin.common.sizes' | t }}</span>
             @if (!category()) {
-              <p class="muted small">Choose the category first.</p>
+              <p class="muted small">{{ 'admin.addItem.categoryFirst' | t }}</p>
             } @else {
               <div class="chips">
                 @for (s of sizeOptions(); track s.id) {
@@ -129,12 +129,12 @@
 
           @if (gridColours().length && gridSizes().length) {
             <div class="field">
-              <span>How many of each</span>
+              <span>{{ 'admin.addItem.howMany' | t }}</span>
               <div class="grid-wrap">
                 <table class="grid">
                   <thead>
                     <tr>
-                      <th scope="col"><span class="sr-only">Colour</span></th>
+                      <th scope="col"><span class="sr-only">{{ 'shop.colour' | t }}</span></th>
                       @for (s of gridSizes(); track s.id) {
                         <th scope="col">{{ s.label }}</th>
                       }
@@ -147,7 +147,7 @@
                         @for (s of gridSizes(); track s.id) {
                           <td>
                             <input type="text" inputmode="numeric" autocomplete="off" placeholder="0"
-                                   [attr.aria-label]="c.name + ' ' + s.label + ', how many'"
+                                   [attr.aria-label]="'admin.addItem.howManyOf' | t: { colour: c.name, size: s.label }"
                                    [value]="qtyOf(c.id, s.id)" (input)="setQty(c.id, s.id, $any($event.target).value)" />
                           </td>
                         }
@@ -158,9 +158,9 @@
               </div>
               @if (gridColours().length * gridSizes().length > 1) {
                 <span class="fill">
-                  <input type="text" inputmode="numeric" autocomplete="off" placeholder="2" aria-label="Same number in every box"
+                  <input type="text" inputmode="numeric" autocomplete="off" placeholder="2" [attr.aria-label]="'admin.addItem.sameNumber' | t"
                          [value]="fill()" (input)="fill.set($any($event.target).value)" />
-                  <button class="btn btn-small" type="button" (click)="applyFill()">Same in every box</button>
+                  <button class="btn btn-small" type="button" (click)="applyFill()">{{ 'admin.addItem.sameInEvery' | t }}</button>
                 </span>
               }
             </div>
@@ -171,21 +171,21 @@
         <section class="card stack">
           <div class="grid-2">
             <label class="field">
-              <span>Paid per item ({{ currency() === 'EUR' ? '€' : currency() }})</span>
+              <span>{{ 'admin.addItem.paid' | t: { currency: currency() === 'EUR' ? '€' : currency() } }}</span>
               <input type="text" inputmode="decimal" autocomplete="off" placeholder="12.50" [value]="paid()" (input)="paid.set($any($event.target).value)" />
             </label>
             <label class="field">
-              <span>Selling price (€)</span>
+              <span>{{ 'admin.addItem.sellingPrice' | t }}</span>
               <input type="text" inputmode="decimal" autocomplete="off" placeholder="29" [value]="price()" (input)="setPrice($any($event.target).value)" />
             </label>
           </div>
 
           @if (estimate(); as e) {
             <p class="estimate">
-              Costs you about <strong>{{ money(e.landed) }}</strong> each{{ onTrip() && trip()!.extra_costs_eur > 0 ? ', trip costs included' : '' }}.
-              With your {{ markup() }}% markup: <strong>{{ money(e.suggested) }}</strong>.
+              {{ (onTrip() && trip()!.extra_costs_eur > 0 ? 'admin.addItem.costsWithTrip' : 'admin.addItem.costs') | t: { cost: money(e.landed) } }}
+              {{ 'admin.addItem.withMarkup' | t: { pct: markup() } }} <strong>{{ money(e.suggested) }}</strong>.
               @if (price() !== '' + e.suggested) {
-                <button class="btn btn-small" type="button" (click)="useSuggested()">Use {{ money(e.suggested) }}</button>
+                <button class="btn btn-small" type="button" (click)="useSuggested()">{{ 'admin.addItem.use' | t: { price: money(e.suggested) } }}</button>
               }
             </p>
           }
@@ -193,7 +193,7 @@
           @if (mode() === 'new') {
             <label class="check">
               <input type="checkbox" [checked]="showOnline()" (change)="showOnline.set($any($event.target).checked)" />
-              Show it in the online shop
+              {{ 'admin.addItem.showOnline' | t }}
             </label>
           }
         </section>
@@ -204,11 +204,11 @@
 
         <button class="btn btn-primary btn-block" type="button" [disabled]="saving()" (click)="save()">
           @if (saving()) {
-            {{ progress() ?? 'Saving…' }}
-          } @else if (onTrip()) {
-            Add {{ total() || '' }} {{ total() === 1 ? 'item' : 'items' }} to the trip
+            {{ progress() ?? ('common.saving' | t) }}
+          } @else if (!total()) {
+            {{ (onTrip() ? 'admin.addItem.addToTrip' : 'admin.addItem.addToStock') | t }}
           } @else {
-            Add {{ total() || '' }} {{ total() === 1 ? 'item' : 'items' }} to stock
+            {{ (onTrip() ? 'admin.addItem.addNToTrip' : 'admin.addItem.addNToStock') | t: { count: total() } }}
           }
         </button>
       }

@@ -1,12 +1,12 @@
 <div class="stack">
-  <h1>Reports</h1>
+  <h1>{{ 'admin.dashboard.reports' | t }}</h1>
   <app-reports-tabs />
 
   <app-period-picker [key]="key()" [from]="period().from" [to]="period().to" (changed)="choosePeriod($event)" />
 
   <div class="bar">
-    <p class="muted" aria-live="polite">{{ label() }}{{ loading() ? ' · loading…' : '' }}</p>
-    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report() || loading()">Download for Excel</button>
+    <p class="muted" aria-live="polite">{{ label() }}{{ loading() ? ' · ' + ('admin.reports.loading' | t) : '' }}</p>
+    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report() || loading()">{{ 'admin.reports.download' | t }}</button>
   </div>
 
   @if (error(); as message) {
@@ -15,74 +15,72 @@
     <div class="stack" [class.stale]="loading()">
       @if (!r.orders) {
         <section class="card stack empty">
-          <h2>No sales in this period</h2>
-          <p class="muted">An order counts here once its cash is recorded. Orders sent but not yet paid are under <strong>Owed</strong>.</p>
+          <h2>{{ 'admin.reports.sales.noneTitle' | t }}</h2>
+          <p class="muted">{{ 'admin.reports.sales.noneText' | t }}</p>
         </section>
       } @else {
-        <section class="tiles" aria-label="Summary">
+        <section class="tiles" [attr.aria-label]="'admin.dashboard.summary' | t">
           <div class="card tile">
-            <span class="label">Sales</span>
+            <span class="label">{{ 'admin.reports.tab.sales' | t }}</span>
             <strong>{{ euros(r.sales) }}</strong>
-            <span class="muted">{{ r.orders }} {{ r.orders === 1 ? 'order' : 'orders' }} · {{ r.items }} {{ r.items === 1 ? 'item' : 'items' }}</span>
+            <span class="muted">{{ 'admin.dashboard.orders' | t: { count: r.orders } }} · {{ 'admin.order.items' | t: { count: r.items } }}</span>
           </div>
           <div class="card tile">
-            <span class="label">Profit</span>
+            <span class="label">{{ 'admin.reports.sales.profit' | t }}</span>
             <strong [class.loss]="r.profit < 0">{{ euros(r.profit) }}</strong>
-            <span class="muted">{{ percent(r.margin) }} margin · items cost {{ euros(r.cost, true) }}</span>
+            <span class="muted">{{ 'admin.reports.sales.marginCost' | t: { pct: percent(r.margin), cost: euros(r.cost, true) } }}</span>
           </div>
           <div class="card tile">
-            <span class="label">Cash in</span>
+            <span class="label">{{ 'admin.reports.sales.cashIn' | t }}</span>
             <strong>{{ euros(r.cashEur) }}</strong>
-            <span class="muted">{{ inCurrencies(r.cash) }}@if (r.refundsEur > 0) {, after {{ euros(r.refundsEur) }} refunded}</span>
+            <span class="muted">{{ inCurrencies(r.cash) }}@if (r.refundsEur > 0) {, {{ 'admin.reports.sales.afterRefunds' | t: { amount: euros(r.refundsEur) } }}}</span>
           </div>
           <div class="card tile">
-            <span class="label">Delivery fees</span>
+            <span class="label">{{ 'admin.reports.sales.deliveryFees' | t }}</span>
             <strong>{{ euros(r.deliveryEur) }}</strong>
-            <span class="muted">included in cash in, not in sales</span>
+            <span class="muted">{{ 'admin.reports.sales.feesNote' | t }}</span>
           </div>
         </section>
 
         <p class="muted small">
-          Orders count on the day their cash was recorded, less anything that came back since. Each item is at the
-          price the customer paid, in euros, and what it cost when it was sent.
+          {{ 'admin.reports.sales.howCounted' | t }}
         </p>
 
         @if (r.uncosted > 0) {
           <p class="notice">
-            {{ r.uncosted }} {{ r.uncosted === 1 ? 'item' : 'items' }} sold had no cost recorded (counted into stock rather
-            than received from a buying trip), so the profit looks higher than it really is.
+            {{ 'admin.reports.sales.uncosted' | t: { count: r.uncosted } }}
           </p>
         }
 
         <section class="card stack">
-          <h2>By design</h2>
-          <app-report-table [head]="head('Design')" [rows]="rows(r.byDesign)" [foot]="foot(r)" />
+          <h2>{{ 'admin.reports.byDesign' | t }}</h2>
+          <app-report-table [head]="head('admin.reports.col.design')" [rows]="rows(r.byDesign)" [foot]="foot(r)" />
         </section>
 
         <section class="card stack">
-          <h2>By category</h2>
-          <app-report-table [head]="head('Category')" [rows]="rows(r.byCategory)" [foot]="foot(r)" />
+          <h2>{{ 'admin.reports.byCategory' | t }}</h2>
+          <app-report-table [head]="head('admin.common.category')" [rows]="rows(r.byCategory)" [foot]="foot(r)" />
         </section>
 
         <section class="card stack">
-          <h2>By country</h2>
-          <app-report-table [head]="head('Country')" [rows]="rows(r.byCountry)" [foot]="foot(r)" />
+          <h2>{{ 'admin.reports.byCountry' | t }}</h2>
+          <app-report-table [head]="head('admin.editor.country')" [rows]="rows(r.byCountry)" [foot]="foot(r)" />
         </section>
 
         <section class="card stack">
-          <h2>Shop or DM</h2>
-          <app-report-table [head]="head('Ordered')" [rows]="rows(r.byChannel)" [foot]="foot(r)" />
+          <h2>{{ 'admin.reports.shopOrDm' | t }}</h2>
+          <app-report-table [head]="head('admin.reports.col.ordered')" [rows]="rows(r.byChannel)" [foot]="foot(r)" />
         </section>
 
         @if (r.byMonth.length > 1) {
           <section class="card stack">
-            <h2>By month</h2>
-            <app-report-table [head]="head('Month')" [rows]="rows(r.byMonth)" [foot]="foot(r)" [limit]="24" />
+            <h2>{{ 'admin.reports.byMonth' | t }}</h2>
+            <app-report-table [head]="head('admin.reports.col.month')" [rows]="rows(r.byMonth)" [foot]="foot(r)" [limit]="24" />
           </section>
         }
       }
     </div>
   } @else {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   }
 </div>

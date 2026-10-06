@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { COUNTRY_NAME, Country, Currency, formatMoney, localPrice } from '../../core/money';
 import { Supabase } from '../../core/supabase';
 
@@ -38,13 +39,14 @@ const URL_PATTERN = /^https:\/\/\S+$/;
 
 @Component({
   selector: 'app-settings',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
 export class Settings {
   private readonly supabase = inject(Supabase).client;
   private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly i18n = inject(I18n);
 
   protected readonly countryName = COUNTRY_NAME;
   protected readonly state = signal<'loading' | 'ready' | 'error'>('loading');
@@ -102,7 +104,7 @@ export class Settings {
   protected async save(): Promise<void> {
     if (this.form.invalid || this.saving()) {
       this.form.markAllAsTouched();
-      this.message.set({ kind: 'error', text: 'Some fields need fixing — they’re marked in red.' });
+      this.message.set({ kind: 'error', text: this.i18n.t('admin.settings.fixFields') });
       return;
     }
     this.saving.set(true);
@@ -136,12 +138,12 @@ export class Settings {
 
     this.saving.set(false);
     if (s.error || z.error) {
-      this.message.set({ kind: 'error', text: 'Couldn’t save. Nothing was changed — try again.' });
+      this.message.set({ kind: 'error', text: this.i18n.t('admin.settings.saveFailed') });
       return;
     }
     this.fxAgeDays.set(daysSince(s.data.fx_updated_at));
     this.form.markAsPristine();
-    this.message.set({ kind: 'ok', text: 'Saved.' });
+    this.message.set({ kind: 'ok', text: this.i18n.t('admin.common.saved') });
   }
 
   private async load(): Promise<void> {

@@ -3,11 +3,12 @@
     <a class="brand wordmark" routerLink="/admin">Hey Chika</a>
     <div class="who">
       <span class="muted">{{ staff()?.name }}</span>
-      <button class="btn" type="button" (click)="signOut()">Sign out</button>
+      <app-lang-picker />
+      <button class="btn" type="button" (click)="signOut()">{{ 'admin.shell.signOut' | t }}</button>
     </div>
   </header>
 
-  <nav class="nav no-print" aria-label="Admin">
+  <nav class="nav no-print" [attr.aria-label]="'admin.shell.nav' | t">
     @for (item of nav; track item.path) {
       <a
         [routerLink]="item.path"
@@ -17,7 +18,7 @@
         ariaCurrentWhenActive="page"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icon" /></svg>
-        <span>{{ item.label }}</span>
+        <span>{{ item.label | t }}</span>
       </a>
     }
   </nav>

@@ -1,22 +1,24 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { COUNTRY_NAME, formatMoney, parseAmount } from '../../core/money';
 import { OrderDetail as Order, OrderLine, Orders, PAYMENT_LABEL, STATUS_LABEL, phoneDigits } from '../../core/orders';
 import { soldQty, unitSaleEur } from '../../core/reports';
 
 type Panel = 'cancel' | 'delivered' | 'failed' | 'cash' | 'edit' | null;
 
-/** Quick reasons, so cancelling from a phone is two taps. */
-export const CANCEL_REASONS = ['Customer changed her mind', 'Couldn’t reach the customer', 'Out of stock', 'Duplicate order'];
+/** Quick reasons, so cancelling from a phone is two taps. Translation keys; the order keeps the words. */
+export const CANCEL_REASONS = ['admin.order.reason.changedMind', 'admin.order.reason.unreachable', 'admin.order.reason.outOfStock', 'admin.order.reason.duplicate'];
 
 @Component({
   selector: 'app-order-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss',
 })
 export class OrderDetail {
   private readonly orders = inject(Orders);
+  private readonly i18n = inject(I18n);
 
   /** From the route. */
   readonly id = input.required<string>();
@@ -101,12 +103,18 @@ export class OrderDetail {
   }
 
   protected when(iso: string): string {
-    return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return this.i18n.dateTime(iso, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
+  /** How money went back. The common ways are stored as fixed words (see order-return), shown translated. */
+  protected refundMethod(method: string): string {
+    const key = ({ cash: 'cash', 'bank transfer': 'bank', exchange: 'exchange' } as Record<string, string>)[method];
+    return key ? this.i18n.t('admin.return.method.' + key) : method;
   }
 
   protected lineName(lineId: number): string {
     const l = this.order()?.lines.find((x) => x.id === lineId);
-    return l ? `${l.product_name_snapshot} · ${l.color_snapshot} ${l.size_snapshot}` : 'Item';
+    return l ? `${l.product_name_snapshot} · ${l.color_snapshot} ${l.size_snapshot}` : this.i18n.t('admin.order.item');
   }
 
   // ---------------------------------------------------------------- panels
@@ -150,16 +158,16 @@ export class OrderDetail {
   // ---------------------------------------------------------------- actions
 
   protected confirm(): Promise<void> {
-    return this.act(() => this.orders.confirm(this.order()!.id), 'Confirmed.');
+    return this.act(() => this.orders.confirm(this.order()!.id), 'admin.order.done.confirmed');
   }
 
   protected cancel(): Promise<void> {
     const reason = this.reason().trim();
     if (!reason) {
-      this.error.set('Choose or type a reason.');
+      this.error.set(this.i18n.t('admin.order.chooseReason'));
       return Promise.resolve();
     }
-    return this.act(() => this.orders.cancel(this.order()!.id, reason), 'Cancelled. The items are back on sale.');
+    return this.act(() => this.orders.cancel(this.order()!.id, reason), 'admin.order.done.cancelled');
   }
 
   protected delivered(): Promise<void> {
@@ -170,31 +178,31 @@ export class OrderDetail {
     if (this.cashNow()) {
       amount = parseAmount(this.amount());
       if (amount === null) {
-        this.error.set('Enter the amount the courier collected, like 1550 or 27.50.');
+        this.error.set(this.i18n.t('admin.order.enterCollected'));
         return Promise.resolve();
       }
     }
     return this.act(
       () => this.orders.markDelivered(this.order()!.id, refused, amount),
-      amount !== null ? 'Delivered and paid.' : 'Delivered. Record the cash when it arrives.',
+      amount !== null ? 'admin.order.done.deliveredPaid' : 'admin.order.done.delivered',
     );
   }
 
   protected cash(): Promise<void> {
     const amount = parseAmount(this.amount());
     if (amount === null) {
-      this.error.set('Enter the amount received, like 1550 or 27.50.');
+      this.error.set(this.i18n.t('admin.order.enterReceived'));
       return Promise.resolve();
     }
-    return this.act(() => this.orders.recordPayment(this.order()!.id, amount), 'Cash recorded.');
+    return this.act(() => this.orders.recordPayment(this.order()!.id, amount), 'admin.order.done.cash');
   }
 
   protected failed(): Promise<void> {
-    return this.act(() => this.orders.markFailed(this.order()!.id, this.note().trim()), 'Marked not delivered. The parcel still counts as on the road.');
+    return this.act(() => this.orders.markFailed(this.order()!.id, this.note().trim()), 'admin.order.done.failed');
   }
 
   protected retry(): Promise<void> {
-    return this.act(() => this.orders.retry(this.order()!.id, ''), 'Back with the courier.');
+    return this.act(() => this.orders.retry(this.order()!.id, ''), 'admin.order.done.retry');
   }
 
   protected saveDetails(): Promise<void> {
@@ -208,7 +216,7 @@ export class OrderDetail {
       this.panel.set(null);
       return Promise.resolve();
     }
-    return this.act(() => this.orders.updateDetails(o.id, changed), 'Saved.');
+    return this.act(() => this.orders.updateDetails(o.id, changed), 'admin.common.saved');
   }
 
   protected async copyAddress(): Promise<void> {
@@ -219,7 +227,7 @@ export class OrderDetail {
       o.delivery_phone,
       o.delivery_address,
       [o.delivery_postal_code, o.delivery_city].filter(Boolean).join(' '),
-      COUNTRY_NAME[o.country],
+      this.i18n.t(COUNTRY_NAME[o.country]),
     ]
       .filter(Boolean)
       .join('\n');
@@ -232,6 +240,7 @@ export class OrderDetail {
     }
   }
 
+  /** `success` is a translation key. */
   private async act(step: () => Promise<void>, success: string): Promise<void> {
     if (this.busy()) return;
     this.busy.set(true);
@@ -240,7 +249,7 @@ export class OrderDetail {
       await step();
       this.panel.set(null);
       await this.load(this.order()!.id, false);
-      this.done.set(success);
+      this.done.set(this.i18n.t(success));
     } catch (e) {
       this.error.set((e as Error).message);
     } finally {

@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../core/i18n';
 import { Inventory, StockRow } from '../../core/inventory';
 import { formatMoney } from '../../core/money';
 import { StockDetail } from './stock-detail';
@@ -16,18 +17,18 @@ interface Group {
 }
 
 const FILTERS: { id: Filter; label: string }[] = [
-  { id: 'all', label: 'Everything' },
-  { id: 'low', label: 'Running low' },
-  { id: 'out', label: 'Sold out' },
-  { id: 'road', label: 'On the road' },
-  { id: 'damaged', label: 'Damaged' },
+  { id: 'all', label: 'admin.stock.everything' },
+  { id: 'low', label: 'admin.dashboard.runningLow' },
+  { id: 'out', label: 'shop.soldOut' },
+  { id: 'road', label: 'admin.stock.onTheRoad' },
+  { id: 'damaged', label: 'admin.stock.damaged' },
 ];
 
 const qty = (r: StockRow) => r.stock ?? { qty_physical: 0, qty_reserved: 0, qty_available: 0, qty_in_transit: 0, qty_damaged: 0, min_stock: 0 };
 
 @Component({
   selector: 'app-stock-overview',
-  imports: [RouterLink, StockDetail, StockTabs],
+  imports: [RouterLink, StockDetail, StockTabs, TranslatePipe],
   templateUrl: './stock-overview.html',
   styleUrl: './stock-overview.scss',
 })

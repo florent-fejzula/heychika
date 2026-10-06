@@ -2,10 +2,11 @@ import { Routes } from '@angular/router';
 import { staffGuard } from './core/auth';
 import { pagesResolver, productResolver, productsResolver, shopContextResolver } from './shop/resolvers';
 
+// Titles are translation keys (src/i18n), shown by core/title.ts.
 export const routes: Routes = [
   {
     path: 'admin/login',
-    title: 'Sign in · Hey Chika',
+    title: 'titles.signIn',
     loadComponent: () => import('./admin/login/login').then((m) => m.Login),
   },
   {
@@ -15,12 +16,12 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        title: 'Today · Hey Chika',
+        title: 'titles.today',
         loadComponent: () => import('./admin/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
         path: 'products',
-        title: 'Products · Hey Chika',
+        title: 'titles.products',
         loadComponent: () => import('./admin/products/product-list').then((m) => m.ProductList),
       },
       {
@@ -30,117 +31,117 @@ export const routes: Routes = [
       },
       {
         path: 'products/:id',
-        title: 'Design · Hey Chika',
+        title: 'titles.design',
         loadComponent: () => import('./admin/products/product-editor').then((m) => m.ProductEditor),
       },
       {
         path: 'scan',
-        title: 'Scan · Hey Chika',
+        title: 'titles.scan',
         loadComponent: () => import('./admin/scan/scan').then((m) => m.Scan),
       },
       {
         path: 'labels',
-        title: 'Labels · Hey Chika',
+        title: 'titles.labels',
         loadComponent: () => import('./admin/labels/labels').then((m) => m.Labels),
       },
       {
         path: 'lists',
-        title: 'Categories, colours & sizes · Hey Chika',
+        title: 'titles.lists',
         loadComponent: () => import('./admin/lists/lists').then((m) => m.Lists),
       },
       {
         path: 'stock',
-        title: 'Stock · Hey Chika',
+        title: 'titles.stock',
         loadComponent: () => import('./admin/stock/stock-overview').then((m) => m.StockOverview),
       },
       {
         path: 'stock/add',
-        title: 'Add stock · Hey Chika',
+        title: 'titles.addStock',
         loadComponent: () => import('./admin/stock/add-item').then((m) => m.AddItem),
       },
       {
         path: 'stock/purchases/:id/add',
-        title: 'Add item · Hey Chika',
+        title: 'titles.addItem',
         loadComponent: () => import('./admin/stock/add-item').then((m) => m.AddItem),
       },
       {
         path: 'stock/purchases',
-        title: 'Buying trips · Hey Chika',
+        title: 'titles.trips',
         loadComponent: () => import('./admin/stock/purchase-list').then((m) => m.PurchaseList),
       },
       {
         path: 'stock/purchases/new',
-        title: 'New buying trip · Hey Chika',
+        title: 'titles.newTrip',
         loadComponent: () => import('./admin/stock/purchase-editor').then((m) => m.PurchaseEditor),
       },
       {
         path: 'stock/purchases/:id',
-        title: 'Buying trip · Hey Chika',
+        title: 'titles.trip',
         loadComponent: () => import('./admin/stock/purchase-editor').then((m) => m.PurchaseEditor),
       },
       {
         path: 'orders',
-        title: 'Orders · Hey Chika',
+        title: 'titles.orders',
         loadComponent: () => import('./admin/orders/order-list').then((m) => m.OrderList),
       },
       {
         path: 'orders/new',
-        title: 'New order · Hey Chika',
+        title: 'titles.newOrder',
         loadComponent: () => import('./admin/orders/order-editor').then((m) => m.OrderEditor),
       },
       {
         path: 'orders/:id',
-        title: 'Order · Hey Chika',
+        title: 'titles.adminOrder',
         loadComponent: () => import('./admin/orders/order-detail').then((m) => m.OrderDetail),
       },
       {
         path: 'orders/:id/pack',
-        title: 'Pack & send · Hey Chika',
+        title: 'titles.pack',
         loadComponent: () => import('./admin/orders/order-pack').then((m) => m.OrderPack),
       },
       {
         path: 'orders/:id/items',
-        title: 'Change items · Hey Chika',
+        title: 'titles.changeItems',
         loadComponent: () => import('./admin/orders/order-editor').then((m) => m.OrderEditor),
       },
       {
         path: 'orders/:id/return',
-        title: 'Return · Hey Chika',
+        title: 'titles.return',
         loadComponent: () => import('./admin/orders/order-return').then((m) => m.OrderReturn),
       },
       {
         path: 'customers',
-        title: 'Customers · Hey Chika',
+        title: 'titles.customers',
         loadComponent: () => import('./admin/customers/customer-list').then((m) => m.CustomerList),
       },
       {
         path: 'customers/:id',
-        title: 'Customer · Hey Chika',
+        title: 'titles.customer',
         loadComponent: () => import('./admin/customers/customer-detail').then((m) => m.CustomerDetail),
       },
       {
         path: 'reports',
-        title: 'Sales · Hey Chika',
+        title: 'titles.sales',
         loadComponent: () => import('./admin/reports/sales-report').then((m) => m.SalesReport),
       },
       {
         path: 'reports/owed',
-        title: 'Money owed · Hey Chika',
+        title: 'titles.owed',
         loadComponent: () => import('./admin/reports/owed-report').then((m) => m.OwedReport),
       },
       {
         path: 'reports/stock',
-        title: 'Stock value · Hey Chika',
+        title: 'titles.stockValue',
         loadComponent: () => import('./admin/reports/stock-report').then((m) => m.StockReport),
       },
       {
         path: 'reports/buying',
-        title: 'Buying · Hey Chika',
+        title: 'titles.buying',
         loadComponent: () => import('./admin/reports/buying-report').then((m) => m.BuyingReport),
       },
       {
         path: 'settings',
-        title: 'Settings · Hey Chika',
+        title: 'titles.settings',
         loadComponent: () => import('./admin/settings/settings').then((m) => m.Settings),
       },
     ],
@@ -154,7 +155,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        title: 'Hey Chika',
+        title: 'titles.shop',
         loadComponent: () => import('./shop/home/home').then((m) => m.Home),
         resolve: { products: productsResolver },
       },
@@ -166,39 +167,39 @@ export const routes: Routes = [
       },
       {
         path: 'bag',
-        title: 'Your bag · Hey Chika',
+        title: 'titles.bag',
         loadComponent: () => import('./shop/bag-page/bag-page').then((m) => m.BagPage),
       },
       {
         path: 'checkout',
-        title: 'Checkout · Hey Chika',
+        title: 'titles.checkout',
         loadComponent: () => import('./shop/checkout/checkout').then((m) => m.Checkout),
       },
       {
         path: 'order',
-        title: 'Track an order · Hey Chika',
+        title: 'titles.track',
         loadComponent: () => import('./shop/order/order-page').then((m) => m.OrderPage),
       },
       {
         path: 'order/:number',
-        title: 'Your order · Hey Chika',
+        title: 'titles.order',
         loadComponent: () => import('./shop/order/order-page').then((m) => m.OrderPage),
       },
       {
         path: 'about',
-        title: 'About us · Hey Chika',
+        title: 'titles.about',
         loadComponent: () => import('./shop/info/info-pages').then((m) => m.AboutPage),
         resolve: { pages: pagesResolver },
       },
       {
         path: 'delivery',
-        title: 'Delivery & returns · Hey Chika',
+        title: 'titles.delivery',
         loadComponent: () => import('./shop/info/info-pages').then((m) => m.DeliveryPage),
         resolve: { pages: pagesResolver },
       },
       {
         path: '**',
-        title: 'Not found · Hey Chika',
+        title: 'titles.notFound',
         loadComponent: () => import('./shop/info/info-pages').then((m) => m.NotFoundPage),
       },
     ],

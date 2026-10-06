@@ -1,39 +1,39 @@
 <div class="stack">
   <div class="page-head">
-    <h1>Products</h1>
-    <a class="btn btn-primary" routerLink="/admin/stock/add">Add product</a>
+    <h1>{{ 'admin.shell.products' | t }}</h1>
+    <a class="btn btn-primary" routerLink="/admin/stock/add">{{ 'admin.products.add' | t }}</a>
   </div>
 
   @if (error(); as message) {
     <p class="notice notice-error">{{ message }}</p>
   } @else if (products() === null) {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   } @else {
     <div class="filters">
-      <input type="search" placeholder="Search name or code" aria-label="Search products"
+      <input type="search" [placeholder]="'admin.products.searchPlaceholder' | t" [attr.aria-label]="'admin.products.search' | t"
              [value]="search()" (input)="search.set($any($event.target).value)" />
-      <select aria-label="Category" [value]="category()" (change)="category.set($any($event.target).value)">
-        <option value="">All categories</option>
+      <select [attr.aria-label]="'admin.common.category' | t" [value]="category()" (change)="category.set($any($event.target).value)">
+        <option value="">{{ 'admin.products.allCategories' | t }}</option>
         @for (c of categories(); track c.code) {
           <option [value]="c.code">{{ c.name }}</option>
         }
       </select>
-      <select aria-label="Status" [value]="status()" (change)="setStatus($any($event.target).value)">
-        <option value="">Draft &amp; active</option>
-        <option value="active">Active only</option>
-        <option value="draft">Drafts only</option>
-        <option value="archived">Archived</option>
+      <select [attr.aria-label]="'admin.products.status' | t" [value]="status()" (change)="setStatus($any($event.target).value)">
+        <option value="">{{ 'admin.products.draftActive' | t }}</option>
+        <option value="active">{{ 'admin.products.activeOnly' | t }}</option>
+        <option value="draft">{{ 'admin.products.draftsOnly' | t }}</option>
+        <option value="archived">{{ 'admin.productStatus.archived' | t }}</option>
       </select>
     </div>
 
     @if (products()!.length === 0) {
       <section class="card stack empty">
-        <h2>No designs yet</h2>
-        <p class="muted">A design is one style, like “black satin wrap dress”. You add its colours and sizes on the next screen.</p>
-        <a class="btn btn-primary" routerLink="/admin/stock/add">Add the first product</a>
+        <h2>{{ 'admin.products.noneTitle' | t }}</h2>
+        <p class="muted">{{ 'admin.products.noneText' | t }}</p>
+        <a class="btn btn-primary" routerLink="/admin/stock/add">{{ 'admin.products.addFirst' | t }}</a>
       </section>
     } @else if (shown().length === 0) {
-      <p class="muted">Nothing matches. Try clearing the search or filters.</p>
+      <p class="muted">{{ 'admin.products.noMatch' | t }}</p>
     } @else {
       <ul class="list">
         @for (p of shown(); track p.id) {
@@ -49,30 +49,30 @@
                 <span class="muted meta">{{ p.category.name }} · {{ code(p) }}</span>
                 <span class="tags">
                   @if (p.status !== 'active') {
-                    <span class="badge badge-muted">{{ statusLabel(p.status) }}</span>
+                    <span class="badge badge-muted">{{ 'admin.productStatus.' + p.status | t }}</span>
                   }
                   @if (p.status === 'active' && p.show_online) {
-                    <span class="badge badge-ok">Online</span>
+                    <span class="badge badge-ok">{{ 'admin.products.online' | t }}</span>
                   }
                   @if (p.featured) {
-                    <span class="badge">Featured</span>
+                    <span class="badge">{{ 'admin.products.featured' | t }}</span>
                   }
                   @if (!p.variants.length) {
-                    <span class="badge badge-muted">No sizes yet</span>
+                    <span class="badge badge-muted">{{ 'admin.products.noSizes' | t }}</span>
                   }
                 </span>
               </span>
               <span class="numbers">
                 <span>{{ price(p) }}</span>
-                <span class="muted">{{ units(p) }} in stock</span>
+                <span class="muted">{{ 'admin.products.inStock' | t: { count: units(p) } }}</span>
               </span>
             </a>
           </li>
         }
       </ul>
-      <p class="muted count">{{ shown().length }} {{ shown().length === 1 ? 'design' : 'designs' }}</p>
+      <p class="muted count">{{ 'admin.products.designs' | t: { count: shown().length } }}</p>
     }
 
-    <p class="muted"><a routerLink="/admin/lists">Categories, colours &amp; sizes</a></p>
+    <p class="muted"><a routerLink="/admin/lists">{{ 'admin.lists.title' | t }}</a></p>
   }
 </div>

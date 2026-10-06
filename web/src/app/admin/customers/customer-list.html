@@ -1,27 +1,27 @@
 <div class="stack">
   <div class="page-head">
-    <h1>Customers</h1>
-    <a class="btn btn-primary" routerLink="/admin/orders/new">New order</a>
+    <h1>{{ 'admin.customers.title' | t }}</h1>
+    <a class="btn btn-primary" routerLink="/admin/orders/new">{{ 'admin.orders.new' | t }}</a>
   </div>
   <app-orders-tabs />
 
   @if (error(); as message) {
     <p class="notice notice-error">{{ message }}</p>
   } @else if (rows() === null) {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   } @else if (!rows()!.length) {
     <section class="card stack empty">
-      <h2>No customers yet</h2>
-      <p class="muted">Everyone who orders, from the shop or in a DM, is listed here with what they’ve bought.</p>
+      <h2>{{ 'admin.customers.noneTitle' | t }}</h2>
+      <p class="muted">{{ 'admin.customers.noneText' | t }}</p>
     </section>
   } @else {
     <label class="field">
-      <span class="sr-only">Search customers</span>
-      <input type="search" placeholder="Search by name, phone or town" [value]="search()" (input)="search.set($any($event.target).value)" />
+      <span class="sr-only">{{ 'admin.customers.search' | t }}</span>
+      <input type="search" [placeholder]="'admin.customers.searchPlaceholder' | t" [value]="search()" (input)="search.set($any($event.target).value)" />
     </label>
 
     @if (!shown().length) {
-      <p class="muted">No customers match.</p>
+      <p class="muted">{{ 'admin.customers.noMatch' | t }}</p>
     }
     <ul class="list">
       @for (c of shown(); track c.id) {
@@ -29,13 +29,13 @@
           <a class="card item" [routerLink]="['/admin/customers', c.id]">
             <span class="body">
               <strong>{{ c.first_name }} {{ c.last_name }}</strong>
-              <span class="muted">{{ c.phone }} · {{ c.city }}, {{ countryName[c.country] }}</span>
+              <span class="muted">{{ c.phone }} · {{ c.city }}, {{ countryName[c.country] | t }}</span>
             </span>
             <span class="nums">
-              <span>{{ c.orders.length }} {{ c.orders.length === 1 ? 'order' : 'orders' }}</span>
-              <span class="muted">{{ spent(c) }} paid</span>
+              <span>{{ 'admin.dashboard.orders' | t: { count: c.orders.length } }}</span>
+              <span class="muted">{{ 'admin.customers.paid' | t: { amount: spent(c) } }}</span>
               @if (returned(c)) {
-                <span class="badge">{{ returned(c) }} not delivered or returned</span>
+                <span class="badge">{{ 'admin.customers.notDelivered' | t: { count: returned(c) } }}</span>
               }
             </span>
           </a>

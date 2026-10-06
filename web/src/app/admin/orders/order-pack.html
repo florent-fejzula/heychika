@@ -1,26 +1,26 @@
 <div class="stack">
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
       <p class="notice notice-error">{{ loadError() }}</p>
     }
     @case ('missing') {
-      <p class="notice">There’s no such order.</p>
+      <p class="notice">{{ 'admin.order.missing' | t }}</p>
     }
     @case ('ready') {
       @let o = order()!;
       <a class="back" [routerLink]="['/admin/orders', o.id]">← {{ o.order_number }}</a>
-      <h1>Pack & send</h1>
+      <h1>{{ 'admin.order.packSend' | t }}</h1>
 
       @if (!canPack()) {
-        <p class="notice">This order has already left, or it was cancelled. Nothing to pack.</p>
+        <p class="notice">{{ 'admin.pack.nothing' | t }}</p>
       } @else {
-        <p class="muted">For {{ o.delivery_name }}, {{ o.delivery_city }}. Scan each item as it goes in the parcel.</p>
+        <p class="muted">{{ 'admin.pack.forWhom' | t: { name: o.delivery_name, city: o.delivery_city } }}</p>
 
         <section class="card">
-          <app-scanner label="Scan each item, or type its SKU" (scanned)="onScan($event)" />
+          <app-scanner label="admin.scan.scanEach" (scanned)="onScan($event)" />
         </section>
 
         @if (feedback(); as f) {
@@ -30,7 +30,7 @@
         }
 
         <section class="card stack">
-          <h2>{{ done() }} of {{ total() }} packed</h2>
+          <h2>{{ 'admin.pack.progress' | t: { done: done(), count: total() } }}</h2>
           <ul class="lines">
             @for (l of o.lines; track l.id) {
               @let n = packedOf(l);
@@ -45,10 +45,10 @@
                   <span class="nums">{{ n }} / {{ l.qty }}</span>
                   <span class="toolbar">
                     @if (n > 0) {
-                      <button class="btn btn-small" type="button" (click)="untick(l)" [attr.aria-label]="'Take one out: ' + l.product_name_snapshot">−</button>
+                      <button class="btn btn-small" type="button" (click)="untick(l)" [attr.aria-label]="'admin.pack.takeOut' | t: { name: l.product_name_snapshot }">−</button>
                     }
                     @if (n < l.qty) {
-                      <button class="btn btn-small" type="button" (click)="tick(l)" [attr.aria-label]="'Tick by hand: ' + l.product_name_snapshot">Tick</button>
+                      <button class="btn btn-small" type="button" (click)="tick(l)" [attr.aria-label]="'admin.pack.tickByHand' | t: { name: l.product_name_snapshot }">{{ 'admin.pack.tick' | t }}</button>
                     }
                   </span>
                 </span>
@@ -60,11 +60,11 @@
         <section class="card stack">
           <div class="grid-2">
             <label class="field">
-              <span>Courier <span class="muted">(optional)</span></span>
-              <input [value]="courier()" (input)="courier.set($any($event.target).value)" placeholder="e.g. Post Express" />
+              <span>{{ 'admin.pack.courier' | t }} <span class="muted">{{ 'shop.checkout.optional' | t }}</span></span>
+              <input [value]="courier()" (input)="courier.set($any($event.target).value)" [placeholder]="'admin.pack.courierExample' | t" />
             </label>
             <label class="field">
-              <span>Tracking <span class="muted">(optional)</span></span>
+              <span>{{ 'admin.pack.tracking' | t }} <span class="muted">{{ 'shop.checkout.optional' | t }}</span></span>
               <input [value]="tracking()" (input)="tracking.set($any($event.target).value)" autocapitalize="characters" />
             </label>
           </div>
@@ -72,7 +72,7 @@
           @if (!allPacked()) {
             <label class="check">
               <input type="checkbox" [checked]="skipCheck()" (change)="skipCheck.set($any($event.target).checked)" />
-              Send without scanning everything
+              {{ 'admin.pack.skip' | t }}
             </label>
           }
 
@@ -81,9 +81,9 @@
           }
 
           <button class="btn btn-primary btn-block" type="button" (click)="send()" [disabled]="busy() || (!allPacked() && !skipCheck())">
-            {{ busy() ? 'Sending…' : 'Mark as sent' }}
+            {{ (busy() ? 'admin.pack.sending' : 'admin.pack.markSent') | t }}
           </button>
-          <p class="muted small">The items come off the shelf and count as on the road until delivered.</p>
+          <p class="muted small">{{ 'admin.pack.offShelf' | t }}</p>
         </section>
       }
     }

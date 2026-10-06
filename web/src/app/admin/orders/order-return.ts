@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { formatMoney, parseAmount } from '../../core/money';
 import { OrderDetail, OrderLine, Orders, ReturnCondition } from '../../core/orders';
 
@@ -8,7 +9,8 @@ interface Back {
   condition: ReturnCondition;
 }
 
-export const RETURN_REASONS = ['Refused at the door', 'Couldn’t be delivered', 'Wrong size', 'Didn’t like it', 'Faulty or damaged'];
+/** Translation keys; the return keeps the words. */
+export const RETURN_REASONS = ['admin.return.reason.refused', 'admin.return.reason.undelivered', 'admin.return.reason.wrongSize', 'admin.return.reason.didntLike', 'admin.return.reason.faulty'];
 
 /**
  * Something came back. Each item is looked at and recorded as fit to sell again (back
@@ -16,13 +18,14 @@ export const RETURN_REASONS = ['Refused at the door', 'Couldn’t be delivered',
  */
 @Component({
   selector: 'app-order-return',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './order-return.html',
   styleUrl: './order-return.scss',
 })
 export class OrderReturn {
   private readonly orders = inject(Orders);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
 
   readonly id = input.required<string>();
 
@@ -89,18 +92,18 @@ export class OrderReturn {
       .filter(([, b]) => b.qty > 0)
       .map(([id, b]) => ({ order_line_id: Number(id), qty: b.qty, condition: b.condition }));
     if (!lines.length) {
-      this.error.set('Choose what came back.');
+      this.error.set(this.i18n.t('admin.return.chooseWhat'));
       return;
     }
     if (!this.reason().trim()) {
-      this.error.set('Say why it came back.');
+      this.error.set(this.i18n.t('errors.return.reason'));
       return;
     }
     let refund = 0;
     if (this.paid() && this.refund().trim()) {
       const parsed = parseAmount(this.refund());
       if (parsed === null) {
-        this.error.set('Enter the refund as a number, like 1550 or 25.50, or 0 for none.');
+        this.error.set(this.i18n.t('admin.return.badRefund'));
         return;
       }
       refund = parsed;
@@ -134,8 +137,10 @@ export class OrderReturn {
         if (qty > 0) start[l.id] = { qty, condition: 'saleable' };
       }
       this.back.set(start);
-      this.reason.set(undelivered ? (o.status === 'delivery_failed' ? 'Couldn’t be delivered' : 'Refused at the door')
-        : o.lines.some((l) => l.refused_qty > 0) ? 'Refused at the door' : '');
+      const reason = undelivered
+        ? (o.status === 'delivery_failed' ? 'admin.return.reason.undelivered' : 'admin.return.reason.refused')
+        : o.lines.some((l) => l.refused_qty > 0) ? 'admin.return.reason.refused' : null;
+      this.reason.set(reason ? this.i18n.t(reason) : '');
       this.refund.set(this.paid() && !o.lines.some((l) => l.refused_qty > 0) ? String(this.value()) : '0');
     } catch (e) {
       this.loadError.set((e as Error).message);

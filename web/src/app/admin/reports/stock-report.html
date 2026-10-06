@@ -1,10 +1,10 @@
 <div class="stack">
-  <h1>Reports</h1>
+  <h1>{{ 'admin.dashboard.reports' | t }}</h1>
   <app-reports-tabs />
 
   <div class="bar">
-    <p class="muted">As of now</p>
-    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report()">Download for Excel</button>
+    <p class="muted">{{ 'admin.reports.asOfNow' | t }}</p>
+    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report()">{{ 'admin.reports.download' | t }}</button>
   </div>
 
   @if (error(); as message) {
@@ -12,59 +12,58 @@
   } @else if (report(); as r) {
     @if (!r.lines.length) {
       <section class="card stack empty">
-        <h2>No stock yet</h2>
-        <p class="muted">Receive a buying trip and what it brought in shows here, with what it’s worth.</p>
+        <h2>{{ 'admin.stock.noneTitle' | t }}</h2>
+        <p class="muted">{{ 'admin.reports.stock.noneText' | t }}</p>
       </section>
     } @else {
-      <section class="tiles" aria-label="Summary">
+      <section class="tiles" [attr.aria-label]="'admin.dashboard.summary' | t">
         <div class="card tile">
-          <span class="label">On the shelf</span>
+          <span class="label">{{ 'admin.dashboard.onShelf' | t }}</span>
           <strong>{{ euros(r.totals.valueCost) }}</strong>
-          <span class="muted">{{ r.totals.shelf }} items, at what they cost</span>
+          <span class="muted">{{ 'admin.reports.stock.shelfNote' | t: { count: r.totals.shelf } }}</span>
         </div>
         <div class="card tile">
-          <span class="label">If it all sold</span>
+          <span class="label">{{ 'admin.reports.stock.ifAllSold' | t }}</span>
           <strong>{{ euros(r.totals.valuePrice) }}</strong>
-          <span class="muted">at today’s prices: {{ euros(r.totals.valuePrice - r.totals.valueCost, true) }} profit</span>
+          <span class="muted">{{ 'admin.reports.stock.todaysPrices' | t: { profit: euros(r.totals.valuePrice - r.totals.valueCost, true) } }}</span>
         </div>
         <div class="card tile">
-          <span class="label">On the road</span>
+          <span class="label">{{ 'admin.stock.onTheRoad' | t }}</span>
           <strong>{{ r.totals.road }}</strong>
-          <span class="muted">items, {{ euros(r.totals.roadCost, true) }} at cost</span>
+          <span class="muted">{{ 'admin.reports.stock.itemsAtCost' | t: { cost: euros(r.totals.roadCost, true) } }}</span>
         </div>
         <div class="card tile">
-          <span class="label">Damaged</span>
+          <span class="label">{{ 'admin.stock.damaged' | t }}</span>
           <strong>{{ r.totals.damaged }}</strong>
-          <span class="muted">items, {{ euros(r.totals.damagedCost, true) }} at cost</span>
+          <span class="muted">{{ 'admin.reports.stock.itemsAtCost' | t: { cost: euros(r.totals.damagedCost, true) } }}</span>
         </div>
       </section>
 
       @if (r.totals.soldOut || r.totals.low) {
         <p class="notice">
-          @if (r.totals.soldOut) {{{ r.totals.soldOut }} {{ r.totals.soldOut === 1 ? 'size is' : 'sizes are' }} sold out}@if (r.totals.soldOut && r.totals.low) {, and }@if (r.totals.low) {{{ r.totals.low }} running low}.
-          <a routerLink="/admin/stock">See which</a>
+          @if (r.totals.soldOut) {{{ 'admin.reports.stock.soldOut' | t: { count: r.totals.soldOut } }}}@if (r.totals.soldOut && r.totals.low) {, }@if (r.totals.low) {{{ 'admin.reports.stock.low' | t: { count: r.totals.low } }}}.
+          <a routerLink="/admin/stock">{{ 'admin.reports.stock.seeWhich' | t }}</a>
         </p>
       }
       @if (r.totals.uncosted > 0) {
         <p class="notice">
-          {{ r.totals.uncosted }} {{ r.totals.uncosted === 1 ? 'item has' : 'items have' }} no cost recorded (counted in rather than
-          received from a buying trip), so the value at cost is lower than it really is.
+          {{ 'admin.reports.stock.uncosted' | t: { count: r.totals.uncosted } }}
         </p>
       }
 
-      <p class="muted small">On the shelf includes items held for orders not sent yet ({{ r.totals.reserved }} now).</p>
+      <p class="muted small">{{ 'admin.reports.stock.includesReserved' | t: { count: r.totals.reserved } }}</p>
 
       <section class="card stack">
-        <h2>By category</h2>
-        <app-report-table [head]="head('Category')" [rows]="rows(r.byCategory)" [foot]="foot(r)" />
+        <h2>{{ 'admin.reports.byCategory' | t }}</h2>
+        <app-report-table [head]="head('admin.common.category')" [rows]="rows(r.byCategory)" [foot]="foot(r)" />
       </section>
 
       <section class="card stack">
-        <h2>By design</h2>
-        <app-report-table [head]="head('Design')" [rows]="rows(r.byDesign)" [foot]="foot(r)" />
+        <h2>{{ 'admin.reports.byDesign' | t }}</h2>
+        <app-report-table [head]="head('admin.reports.col.design')" [rows]="rows(r.byDesign)" [foot]="foot(r)" />
       </section>
     }
   } @else {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   }
 </div>

@@ -1,5 +1,5 @@
 <div class="narrow">
-  <h1>Your bag</h1>
+  <h1>{{ 'shop.bag.title' | t }}</h1>
 
   @for (note of contents.notices(); track note) {
     <p class="notice" role="status">{{ note }}</p>
@@ -7,16 +7,16 @@
 
   @switch (contents.state()) {
     @case ('loading') {
-      <p class="muted">Loading your bag…</p>
+      <p class="muted">{{ 'shop.bag.loading' | t }}</p>
     }
     @case ('error') {
-      <p class="notice notice-error">Your bag couldn’t load. Check your connection and refresh.</p>
+      <p class="notice notice-error">{{ 'shop.bag.failed' | t }}</p>
     }
     @default {
       @if (!contents.rows().length) {
         <section class="empty">
-          <p>Your bag is empty.</p>
-          <a class="btn btn-primary" routerLink="/">See what’s in the shop</a>
+          <p>{{ 'shop.bag.empty' | t }}</p>
+          <a class="btn btn-primary" routerLink="/">{{ 'shop.product.seeShop' | t }}</a>
         </section>
       } @else {
         <ul class="lines">
@@ -33,14 +33,14 @@
                 <span class="each">{{ shop.price(row.item.priceEur) }}</span>
               </div>
               <div class="qty">
-                <div class="stepper" role="group" [attr.aria-label]="'How many ' + row.item.product.name">
+                <div class="stepper" role="group" [attr.aria-label]="'shop.bag.howMany' | t: { name: row.item.product.name }">
                   <button type="button" (click)="change(row.item.variantId, row.qty - 1)"
-                          [attr.aria-label]="row.qty === 1 ? 'Remove' : 'One fewer'">−</button>
+                          [attr.aria-label]="(row.qty === 1 ? 'common.remove' : 'shop.bag.oneFewer') | t">−</button>
                   <span aria-live="polite">{{ row.qty }}</span>
                   <button type="button" (click)="change(row.item.variantId, row.qty + 1)" [disabled]="row.qty >= row.max"
-                          aria-label="One more">+</button>
+                          [attr.aria-label]="'shop.bag.oneMore' | t">+</button>
                 </div>
-                <button class="remove" type="button" (click)="bag.remove(row.item.variantId)">Remove</button>
+                <button class="remove" type="button" (click)="bag.remove(row.item.variantId)">{{ 'common.remove' | t }}</button>
               </div>
             </li>
           }
@@ -49,21 +49,21 @@
         @if (contents.totals(); as t) {
           <section class="summary">
             <dl>
-              <div><dt>Items</dt><dd>{{ shop.money(t.items) }}</dd></div>
+              <div><dt>{{ 'shop.bag.items' | t }}</dt><dd>{{ shop.money(t.items) }}</dd></div>
               <div>
-                <dt>Delivery to {{ countryName() }}</dt>
-                <dd>{{ t.delivery === 0 ? 'Free' : shop.money(t.delivery) }}</dd>
+                <dt>{{ 'shop.bag.deliveryTo' | t: { country: countryName() } }}</dt>
+                <dd>{{ t.delivery === 0 ? ('shop.bag.free' | t) : shop.money(t.delivery) }}</dd>
               </div>
-              <div class="total"><dt>Total</dt><dd>{{ shop.money(t.total) }}</dd></div>
+              <div class="total"><dt>{{ 'shop.bag.total' | t }}</dt><dd>{{ shop.money(t.total) }}</dd></div>
             </dl>
             @if (t.toFreeDeliveryEur) {
-              <p class="muted hint">Add {{ shop.price(t.toFreeDeliveryEur) }} more for free delivery.</p>
+              <p class="muted hint">{{ 'shop.bag.toFree' | t: { amount: shop.price(t.toFreeDeliveryEur) } }}</p>
             }
-            <a class="btn btn-primary btn-block" routerLink="/checkout">Checkout</a>
-            <p class="muted hint">You pay in cash when it arrives.</p>
+            <a class="btn btn-primary btn-block" routerLink="/checkout">{{ 'shop.product.checkout' | t }}</a>
+            <p class="muted hint">{{ 'shop.bag.payCash' | t }}</p>
           </section>
         } @else {
-          <p class="notice notice-error">Delivery isn’t available to {{ countryName() }} right now. Choose another country at the top.</p>
+          <p class="notice notice-error">{{ 'shop.bag.noDelivery' | t: { country: countryName() } }}</p>
         }
       }
     }

@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../core/i18n';
 import { COUNTRY_NAME, formatMoney } from '../../core/money';
 import { CustomerSummary, Orders, phoneDigits } from '../../core/orders';
 import { OrdersTabs } from '../orders/orders-tabs';
@@ -11,7 +12,7 @@ export function spent(c: { orders: { payment_status: string; total_eur: number }
 
 @Component({
   selector: 'app-customer-list',
-  imports: [RouterLink, OrdersTabs],
+  imports: [RouterLink, OrdersTabs, TranslatePipe],
   templateUrl: './customer-list.html',
   styleUrl: './customer-list.scss',
 })

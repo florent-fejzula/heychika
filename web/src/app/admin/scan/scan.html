@@ -1,15 +1,15 @@
 <div class="stack">
-  <h1>Scan</h1>
+  <h1>{{ 'admin.shell.scan' | t }}</h1>
 
   <section class="card stack">
     <form class="entry" (submit)="$event.preventDefault(); lookup(code())">
       <label class="field grow">
-        <span>Scan a sticker, or type a SKU</span>
+        <span>{{ 'admin.scan.label' | t }}</span>
         <!-- A hardware scanner types the code and presses Enter; this form catches that. -->
         <input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" #entry
                placeholder="DR-001-BLK-M" [value]="code()" (input)="code.set($any($event.target).value)" />
       </label>
-      <button class="btn btn-primary" type="submit" [disabled]="busy() || !code().trim()">Look up</button>
+      <button class="btn btn-primary" type="submit" [disabled]="busy() || !code().trim()">{{ 'admin.scan.lookUp' | t }}</button>
     </form>
 
     <!-- Always in the page (just hidden): the scanner needs a stable element to attach to. -->
@@ -18,9 +18,9 @@
       <div class="aim" aria-hidden="true"></div>
     </div>
     @if (cameraOn()) {
-      <button class="btn" type="button" (click)="stopCamera()">Stop camera</button>
+      <button class="btn" type="button" (click)="stopCamera()">{{ 'admin.scan.stopCamera' | t }}</button>
     } @else {
-      <button class="btn" type="button" (click)="startCamera()">Scan with the camera</button>
+      <button class="btn" type="button" (click)="startCamera()">{{ 'admin.scan.camera' | t }}</button>
     }
 
     @if (cameraError(); as message) {
@@ -33,7 +33,7 @@
   }
 
   @if (notFound(); as missing) {
-    <p class="notice" role="status">Nothing found for <code>{{ missing }}</code>. Check the sticker, or search by name in Products.</p>
+    <p class="notice" role="status">{{ 'admin.scan.notFound' | t: { code: missing } }}</p>
   }
 
   @if (result(); as r) {
@@ -50,21 +50,21 @@
       </div>
 
       @if (!r.active) {
-        <p class="notice">This size is marked inactive, so it is not for sale.</p>
+        <p class="notice">{{ 'admin.scan.inactive' | t }}</p>
       }
 
       <dl class="levels">
-        <div><dt>On the shelf</dt><dd>{{ r.stock?.qty_physical ?? 0 }}</dd></div>
-        <div><dt>Reserved</dt><dd>{{ r.stock?.qty_reserved ?? 0 }}</dd></div>
-        <div class="key"><dt>Available</dt><dd>{{ r.stock?.qty_available ?? 0 }}</dd></div>
-        <div><dt>On the road</dt><dd>{{ r.stock?.qty_in_transit ?? 0 }}</dd></div>
-        <div><dt>Damaged</dt><dd>{{ r.stock?.qty_damaged ?? 0 }}</dd></div>
+        <div><dt>{{ 'admin.dashboard.onShelf' | t }}</dt><dd>{{ r.stock?.qty_physical ?? 0 }}</dd></div>
+        <div><dt>{{ 'admin.stock.reserved' | t }}</dt><dd>{{ r.stock?.qty_reserved ?? 0 }}</dd></div>
+        <div class="key"><dt>{{ 'admin.stock.available' | t }}</dt><dd>{{ r.stock?.qty_available ?? 0 }}</dd></div>
+        <div><dt>{{ 'admin.stock.onTheRoad' | t }}</dt><dd>{{ r.stock?.qty_in_transit ?? 0 }}</dd></div>
+        <div><dt>{{ 'admin.stock.damaged' | t }}</dt><dd>{{ r.stock?.qty_damaged ?? 0 }}</dd></div>
       </dl>
 
       <p class="muted sku"><code>{{ r.sku }}</code></p>
       <div class="toolbar">
-        <a class="btn" routerLink="/admin/stock" [queryParams]="{ find: r.sku }">Stock details</a>
-        <a class="btn" [routerLink]="['/admin/products', r.product.id]">Open design</a>
+        <a class="btn" routerLink="/admin/stock" [queryParams]="{ find: r.sku }">{{ 'admin.scan.stockDetails' | t }}</a>
+        <a class="btn" [routerLink]="['/admin/products', r.product.id]">{{ 'admin.scan.openDesign' | t }}</a>
       </div>
     </section>
   }

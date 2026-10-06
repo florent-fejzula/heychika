@@ -5,6 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -64,6 +65,27 @@ app.use((req, _res, next) => {
 });
 
 /**
+ * Which build this server runs: its main script and stylesheet, whose names
+ * change with every release. The app compares them with the ones it was loaded
+ * with and offers a refresh when they differ (src/app/core/app-update.ts).
+ * Empty on the development server, which builds without hashes.
+ */
+const buildFiles = (() => {
+  try {
+    return readdirSync(browserDistFolder)
+      .filter((name) => /^(main|styles)-[A-Z0-9]+\.(js|css)$/.test(name))
+      .sort();
+  } catch {
+    return [];
+  }
+})();
+
+app.get('/app-version', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ files: buildFiles });
+});
+
+/**
  * Serve static files from /browser
  */
 app.use(
@@ -76,8 +98,11 @@ app.use(
 
 /**
  * Handle all other requests by rendering the Angular application.
+ * Pages come out in the visitor's language (the cookie the language menu sets,
+ * else the browser's), so no cache may hand one visitor's page to another.
  */
 app.use((req, res, next) => {
+  res.setHeader('Vary', 'Cookie, Accept-Language');
   angularApp
     .handle(req)
     .then((response) =>

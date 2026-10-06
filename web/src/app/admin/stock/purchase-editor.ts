@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { landedCosts, weightedAverage } from '../../core/costing';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { formatCode, formatMoney, parseAmount, parseRate } from '../../core/money';
 import { PurchaseInput, PurchaseLine, PurchaseRow, PurchaseCurrency, Purchases } from '../../core/purchases';
 import { BarcodeLinker, LinkableSize, isLinked } from '../shared/barcode-linker';
@@ -22,26 +23,28 @@ interface Group {
 }
 
 const PROBLEMS = {
-  no_items: 'Add some items first.',
-  zero_value: 'Trip costs can’t be spread by price when every item is free. Spread them equally instead.',
+  no_items: 'admin.trip.problem.noItems',
+  zero_value: 'admin.trip.problem.zeroValue',
 } as const;
 
 const blankToNull = (s: string): string | null => (s.trim() === '' ? null : s.trim());
 
 @Component({
   selector: 'app-purchase-editor',
-  imports: [ReactiveFormsModule, RouterLink, BarcodeLinker],
+  imports: [ReactiveFormsModule, RouterLink, BarcodeLinker, TranslatePipe],
   templateUrl: './purchase-editor.html',
   styleUrl: './purchase-editor.scss',
 })
 export class PurchaseEditor {
   private readonly purchases = inject(Purchases);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
 
   /** From the route (`stock/purchases/:id`). Absent on `stock/purchases/new`. */
   readonly id = input<string>();
-  /** `?added=Wrap dress: 6 items`, after the Add item form. */
+  /** `?added=6&name=Wrap dress`, after the Add item form. */
   readonly added = input<string>();
+  readonly name = input<string>();
   /** `?photos=2`: photos that didn't upload. */
   readonly photos = input<string>();
 
@@ -163,10 +166,10 @@ export class PurchaseEditor {
     const rate = v.currency === 'EUR' ? 1 : parseRate(v.rate);
     const extra = parseAmount(v.extra);
 
-    if (!v.reference.trim()) return this.fail('Give the trip a name, like “Istanbul, October”.');
-    if (!v.purchase_date) return this.fail('Pick the date.');
-    if (rate === null) return this.fail(`Enter the exchange rate: how many ${v.currency} equal €1 (for example ${v.currency === 'TRY' ? '38.5' : '1.08'}).`);
-    if (extra === null) return this.fail('Enter the trip costs in euros, or 0 if there were none.');
+    if (!v.reference.trim()) return this.fail(this.i18n.t('admin.trip.nameIt'));
+    if (!v.purchase_date) return this.fail(this.i18n.t('admin.trip.pickDate'));
+    if (rate === null) return this.fail(this.i18n.t('admin.trip.enterRate', { currency: v.currency, example: v.currency === 'TRY' ? '38.5' : '1.08' }));
+    if (extra === null) return this.fail(this.i18n.t('admin.trip.enterCosts'));
 
     const input: PurchaseInput = {
       reference: v.reference.trim(),
@@ -191,7 +194,7 @@ export class PurchaseEditor {
         this.purchase.set(await this.purchases.get(this.purchase()!.id));
         this.form.markAsPristine();
         this.dirty.set(false);
-        this.message.set({ kind: 'ok', text: 'Saved.' });
+        this.message.set({ kind: 'ok', text: this.i18n.t('admin.common.saved') });
       }
     } catch (e) {
       this.fail((e as Error).message);
@@ -216,7 +219,7 @@ export class PurchaseEditor {
     const p = this.purchase();
     const s = this.summary();
     if (!p || !s || this.receiving()) return;
-    if (!confirm(`Put ${s.items} ${s.items === 1 ? 'item' : 'items'} on the shelf?\n\nTheir cost is fixed at ${s.average} each on average. This can’t be undone.`)) return;
+    if (!confirm(this.i18n.t('admin.trip.confirmReceive', { count: s.items, average: s.average }))) return;
 
     this.receiving.set(true);
     this.receiveError.set(null);
@@ -233,7 +236,7 @@ export class PurchaseEditor {
 
   protected async remove(): Promise<void> {
     const p = this.purchase();
-    if (!p || !confirm(`Delete the draft “${p.reference}” and everything entered on it?`)) return;
+    if (!p || !confirm(this.i18n.t('admin.trip.confirmDelete', { name: p.reference }))) return;
     await this.guarded(async () => {
       await this.purchases.remove(p.id);
       await this.router.navigateByUrl('/admin/stock/purchases');
@@ -245,18 +248,17 @@ export class PurchaseEditor {
   }
 
   protected date(iso: string): string {
-    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    return this.i18n.date(iso, { day: 'numeric', month: 'long', year: 'numeric' });
   }
-
-  protected readonly methodLabel = (m: PurchaseRow['allocation_method']): string =>
-    m === 'by_quantity' ? 'Equally per item' : 'By price (dearer items carry more)';
 
   private averageNote(line: PurchaseLine, landed: number): string | null {
     const onHand = line.variant.stock?.qty_physical ?? 0;
     const cost = Number(line.variant.cost_eur);
     if (onHand <= 0 || cost <= 0) return null;
     const after = weightedAverage(cost, onHand, landed, line.qty);
-    return after === cost ? null : `average cost ${formatMoney(cost, 'EUR')} → ${formatMoney(after, 'EUR')} (${onHand} already on the shelf)`;
+    return after === cost
+      ? null
+      : this.i18n.t('admin.trip.averageNote', { from: formatMoney(cost, 'EUR'), to: formatMoney(after, 'EUR'), count: onHand });
   }
 
   private fail(text: string): void {

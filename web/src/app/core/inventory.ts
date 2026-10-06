@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { explain } from './errors';
+import { t } from './i18n';
 import { Supabase, allRows } from './supabase';
 
 export interface StockRow {
@@ -40,19 +41,7 @@ export interface Movement {
   created_at: string;
 }
 
-/** Plain-language names for the ledger, in the words the shop uses. */
-export const MOVEMENT_LABEL: Record<MovementType, string> = {
-  stock_in: 'Received',
-  reserve: 'Reserved for an order',
-  release: 'Reservation released',
-  dispatch: 'Sent out',
-  deliver: 'Delivered',
-  return_saleable: 'Came back, fit to sell',
-  return_damaged: 'Came back, damaged',
-  adjust: 'Count corrected',
-  mark_damaged: 'Marked damaged',
-  writeoff: 'Written off',
-};
+// Each type's name on screen is admin.movement.<type> in src/i18n.
 
 function fail(error: unknown, fallback?: string): never {
   throw new Error(explain(error, fallback));
@@ -75,7 +64,7 @@ export class Inventory {
         .order('id')
         .range(from, to)
         .overrideTypes<StockRow[], { merge: false }>(),
-    ).catch((e) => fail(e, 'Couldn’t load the stock.'));
+    ).catch((e) => fail(e, 'errors.loadStock'));
     return data.map((v) => ({ ...v, stock: first(v.stock) }));
   }
 
@@ -87,7 +76,7 @@ export class Inventory {
       .order('id', { ascending: false })
       .limit(40)
       .overrideTypes<Movement[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the history.');
+    if (error) fail(error, 'errors.loadHistory');
     return data;
   }
 
@@ -112,7 +101,7 @@ export class Inventory {
 
   async setMinStock(variantId: number, min: number): Promise<void> {
     const { error } = await this.sb.from('stock').update({ min_stock: min }).eq('variant_id', variantId);
-    if (error) fail(error, 'Couldn’t save the low-stock level.');
+    if (error) fail(error, 'errors.saveMinStock');
   }
 
   private async change(variantId: number, type: 'adjust' | 'mark_damaged' | 'writeoff', qty: number, note: string): Promise<void> {
@@ -120,9 +109,9 @@ export class Inventory {
     if (error) {
       // The common failure deserves a specific answer rather than the generic one.
       if (/insufficient_stock/.test(`${error.message} ${error.details ?? ''}`)) {
-        throw new Error('That would leave fewer on the shelf than are already promised to orders.');
+        throw new Error(t('errors.belowReserved'));
       }
-      fail(error, 'Couldn’t record that change.');
+      fail(error, 'errors.recordChange');
     }
   }
 }

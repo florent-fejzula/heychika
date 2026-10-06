@@ -2,7 +2,8 @@ export type Currency = 'EUR' | 'MKD' | 'ALL';
 export type Country = 'XK' | 'MK' | 'AL';
 
 export const COUNTRY_CURRENCY: Record<Country, Currency> = { XK: 'EUR', MK: 'MKD', AL: 'ALL' };
-export const COUNTRY_NAME: Record<Country, string> = { XK: 'Kosovo', MK: 'North Macedonia', AL: 'Albania' };
+/** Translation keys: {{ COUNTRY_NAME[c] | t }}. */
+export const COUNTRY_NAME: Record<Country, string> = { XK: 'common.country.XK', MK: 'common.country.MK', AL: 'common.country.AL' };
 
 // Rates are units per 1 EUR, the way people quote them: 61.5 MKD, 98 ALL.
 export interface FxSettings {

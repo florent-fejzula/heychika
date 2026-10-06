@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { COUNTRY_NAME, formatMoney } from '../../core/money';
 import { Owed, OwedReport as Report, Reports, dayLabel, owedReport } from '../../core/reports';
 import { downloadWorkbook } from '../../core/xlsx';
@@ -11,12 +12,13 @@ export const CHASE_AFTER_DAYS = 7;
 
 @Component({
   selector: 'app-owed-report',
-  imports: [RouterLink, ReportsTabs],
+  imports: [RouterLink, ReportsTabs, TranslatePipe],
   templateUrl: './owed-report.html',
   styleUrl: './reports.scss',
 })
 export class OwedReport {
   private readonly reports = inject(Reports);
+  private readonly i18n = inject(I18n);
 
   protected readonly report = signal<Report | null>(null);
   protected readonly error = signal<string | null>(null);
@@ -39,7 +41,7 @@ export class OwedReport {
   }
 
   protected ago(days: number): string {
-    return days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+    return this.i18n.t(days === 0 ? 'admin.reports.owed.today' : days === 1 ? 'admin.reports.owed.yesterday' : 'admin.reports.owed.daysAgo', { count: days });
   }
 
   protected download(): void {

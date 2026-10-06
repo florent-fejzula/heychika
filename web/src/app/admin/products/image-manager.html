@@ -1,13 +1,12 @@
 <section class="card stack">
-  <h2>Photos</h2>
+  <h2>{{ 'admin.images.title' | t }}</h2>
 
   <label class="btn drop">
     <input type="file" accept="image/*" multiple (change)="upload($any($event.target))" [disabled]="progress() !== null" />
-    {{ progress() ?? (images().length ? 'Add more photos' : 'Add photos') }}
+    {{ progress() ?? ((images().length ? 'admin.images.addMore' : 'admin.images.add') | t) }}
   </label>
   <p class="muted hint">
-    Take them on the phone or pick from the gallery. They’re shrunk automatically. The first photo
-    is the cover; change it with “Make cover”.
+    {{ 'admin.images.hint' | t }}
   </p>
 
   @if (message(); as m) {
@@ -19,15 +18,15 @@
       @for (image of images(); track image.id; let i = $index; let first = $first; let last = $last) {
         <li class="tile">
           <div class="frame">
-            <img [src]="url(image)" alt="Photo {{ i + 1 }}" loading="lazy" />
+            <img [src]="url(image)" [alt]="'shop.product.photo' | t: { n: i + 1 }" loading="lazy" />
             @if (image.is_primary) {
-              <span class="badge cover">Cover</span>
+              <span class="badge cover">{{ 'admin.images.cover' | t }}</span>
             }
           </div>
 
           @if (colours().length) {
-            <select aria-label="Colour shown in photo {{ i + 1 }}" [value]="image.color_id ?? ''" (change)="tag(image, $any($event.target).value)">
-              <option value="">Any colour</option>
+            <select [attr.aria-label]="'admin.images.colourOf' | t: { n: i + 1 }" [value]="image.color_id ?? ''" (change)="tag(image, $any($event.target).value)">
+              <option value="">{{ 'shop.home.anyColour' | t }}</option>
               @for (c of colours(); track c.id) {
                 <option [value]="c.id">{{ c.name }}</option>
               }
@@ -35,12 +34,12 @@
           }
 
           <div class="tools">
-            <button class="btn btn-small" type="button" aria-label="Move earlier" [disabled]="first" (click)="move(image, -1)">←</button>
-            <button class="btn btn-small" type="button" aria-label="Move later" [disabled]="last" (click)="move(image, 1)">→</button>
+            <button class="btn btn-small" type="button" [attr.aria-label]="'admin.images.earlier' | t" [disabled]="first" (click)="move(image, -1)">←</button>
+            <button class="btn btn-small" type="button" [attr.aria-label]="'admin.images.later' | t" [disabled]="last" (click)="move(image, 1)">→</button>
             @if (!image.is_primary) {
-              <button class="btn btn-small" type="button" (click)="makeCover(image)">Make cover</button>
+              <button class="btn btn-small" type="button" (click)="makeCover(image)">{{ 'admin.images.makeCover' | t }}</button>
             }
-            <button class="btn btn-small btn-danger" type="button" aria-label="Delete photo {{ i + 1 }}" (click)="remove(image)">✕</button>
+            <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'admin.images.delete' | t: { n: i + 1 }" (click)="remove(image)">✕</button>
           </div>
         </li>
       }

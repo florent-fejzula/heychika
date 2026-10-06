@@ -3,6 +3,7 @@ import { Component, DestroyRef, Injector, computed, effect, inject, input, signa
 import { barcodeImage } from '../../core/barcode';
 import { Catalogue, LabelVariant } from '../../core/catalogue';
 import { LAYOUTS, LabelLayout, labelsPerPage, paginate } from '../../core/labels';
+import { TranslatePipe } from '../../core/i18n';
 import { formatMoney } from '../../core/money';
 import { Purchases } from '../../core/purchases';
 
@@ -14,6 +15,7 @@ interface Block {
 
 @Component({
   selector: 'app-labels',
+  imports: [TranslatePipe],
   templateUrl: './labels.html',
   styleUrl: './labels.scss',
 })

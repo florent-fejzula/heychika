@@ -2,17 +2,19 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Auth, safeNext } from '../../core/auth';
+import { TranslatePipe } from '../../core/i18n';
 import { supabaseConfigured } from '../../core/supabase';
+import { LangPicker } from '../../shared/lang-picker';
 
 const MESSAGES = {
-  invalid: 'That email and password don’t match.',
-  not_staff: 'This account isn’t set up for the shop admin. Ask the owner to add it.',
-  offline: 'Couldn’t reach the server. Check your connection and try again.',
+  invalid: 'admin.login.invalid',
+  not_staff: 'admin.login.notStaff',
+  offline: 'errors.offline',
 } as const;
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe, LangPicker],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -23,6 +25,7 @@ export class Login {
 
   protected readonly configured = supabaseConfigured;
   protected readonly busy = signal(false);
+  /** A translation key. */
   protected readonly error = signal<string | null>(null);
 
   protected readonly form = inject(FormBuilder).nonNullable.group({

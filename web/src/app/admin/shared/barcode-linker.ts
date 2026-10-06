@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { Purchases } from '../../core/purchases';
 import { Scanner } from './scanner';
 
@@ -21,15 +22,15 @@ export const isLinked = (s: { sku: string; barcode: string }): boolean => s.barc
  */
 @Component({
   selector: 'app-barcode-linker',
-  imports: [Scanner],
+  imports: [Scanner, TranslatePipe],
   template: `
-    <p class="progress"><strong>{{ linkedCount() }} of {{ sizes().length }}</strong> sizes linked to the barcode on their tag</p>
+    <p class="progress">{{ 'admin.barcodes.progress' | t: { done: linkedCount(), count: sizes().length } }}</p>
 
-    <app-scanner label="Scan the tag of one item" placeholder="or type the barcode" (scanned)="onScan($event)" />
+    <app-scanner label="admin.barcodes.scanOne" placeholder="admin.barcodes.orType" (scanned)="onScan($event)" />
 
     @if (pending(); as code) {
-      <div class="pick" role="group" aria-label="Which size is it?">
-        <p>Which one is <code>{{ code }}</code>?</p>
+      <div class="pick" role="group" [attr.aria-label]="'admin.barcodes.whichSize' | t">
+        <p>{{ 'admin.barcodes.whichOne' | t: { code } }}</p>
         <div class="options">
           @for (s of unlinked(); track s.variantId) {
             <button class="btn" type="button" [disabled]="busy()" (click)="link(s, code)">
@@ -37,7 +38,7 @@ export const isLinked = (s: { sku: string; barcode: string }): boolean => s.barc
             </button>
           }
         </div>
-        <button class="btn btn-small" type="button" (click)="pending.set(null)">None of these</button>
+        <button class="btn btn-small" type="button" (click)="pending.set(null)">{{ 'admin.barcodes.noneOfThese' | t }}</button>
       </div>
     }
 
@@ -51,9 +52,9 @@ export const isLinked = (s: { sku: string; barcode: string }): boolean => s.barc
           <span>{{ s.design }} · {{ s.colour }} <strong>{{ s.size }}</strong></span>
           @if (linked(s)) {
             <span class="code"><code>{{ s.barcode }}</code>
-              <button class="btn btn-small" type="button" [disabled]="busy()" (click)="unlink(s)">Unlink</button></span>
+              <button class="btn btn-small" type="button" [disabled]="busy()" (click)="unlink(s)">{{ 'admin.barcodes.unlink' | t }}</button></span>
           } @else {
-            <span class="muted">not linked</span>
+            <span class="muted">{{ 'admin.barcodes.notLinked' | t }}</span>
           }
         </li>
       }
@@ -121,6 +122,7 @@ export const isLinked = (s: { sku: string; barcode: string }): boolean => s.barc
 })
 export class BarcodeLinker {
   private readonly purchases = inject(Purchases);
+  private readonly i18n = inject(I18n);
 
   readonly sizes = input.required<LinkableSize[]>();
   /** After every change, so the page can reload the sizes. */
@@ -140,11 +142,11 @@ export class BarcodeLinker {
     const known = this.sizes().find((s) => s.barcode === code || s.sku === code);
     if (known) {
       this.pending.set(null);
-      this.feedback.set({ ok: true, text: `That’s ${describe(known)}, already linked.` });
+      this.feedback.set({ ok: true, text: this.i18n.t('admin.barcodes.already', { item: describe(known) }) });
       return;
     }
     if (!this.unlinked().length) {
-      this.feedback.set({ ok: false, text: 'Every size here is linked already. That tag belongs to something else.' });
+      this.feedback.set({ ok: false, text: this.i18n.t('admin.barcodes.allTaken') });
       return;
     }
     this.feedback.set(null);
@@ -152,11 +154,11 @@ export class BarcodeLinker {
   }
 
   protected async link(size: LinkableSize, code: string): Promise<void> {
-    await this.change(size, code, `Linked: scanning that tag now finds ${describe(size)}.`);
+    await this.change(size, code, this.i18n.t('admin.barcodes.linked', { item: describe(size) }));
   }
 
   protected async unlink(size: LinkableSize): Promise<void> {
-    await this.change(size, null, `${describe(size)} is unlinked.`);
+    await this.change(size, null, this.i18n.t('admin.barcodes.unlinked', { item: describe(size) }));
   }
 
   private async change(size: LinkableSize, code: string | null, done: string): Promise<void> {

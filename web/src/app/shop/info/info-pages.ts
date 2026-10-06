@@ -1,6 +1,7 @@
 import { Component, RESPONSE_INIT, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { COUNTRY_NAME, Currency, formatMoney, localPrice } from '../../core/money';
+import { I18n, TranslatePipe } from '../../core/i18n';
+import { formatMoney, localPrice } from '../../core/money';
 import { Loaded } from '../resolvers';
 import { ShopPages } from '../shop-api';
 import { ShopState } from '../shop-state';
@@ -16,11 +17,9 @@ export function paragraphs(text: string | null | undefined): string[] {
     .filter(Boolean);
 }
 
-const CURRENCY_WORD: Record<Currency, string> = { EUR: 'euros', MKD: 'denars', ALL: 'lek' };
-
 @Component({
   selector: 'app-about-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './about-page.html',
   styleUrl: './info.scss',
 })
@@ -54,12 +53,13 @@ export class AboutPage {
 
 @Component({
   selector: 'app-delivery-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './delivery-page.html',
   styleUrl: './info.scss',
 })
 export class DeliveryPage {
   private readonly shop = inject(ShopState);
+  private readonly i18n = inject(I18n);
   readonly pages = input.required<Loaded<ShopPages>>();
 
   protected readonly returns = computed(() => {
@@ -74,29 +74,30 @@ export class DeliveryPage {
     return [...(this.shop.context()?.zones ?? [])]
       .sort((a, b) => order.indexOf(a.country) - order.indexOf(b.country))
       .map((z) => ({
-        country: COUNTRY_NAME[z.country],
-        fee: z.fee_eur === 0 ? 'Free' : formatMoney(localPrice(z.fee_eur, z.currency, fx), z.currency),
+        country: z.country,
+        /** Null when it's free. */
+        fee: z.fee_eur === 0 ? null : formatMoney(localPrice(z.fee_eur, z.currency, fx), z.currency),
         freeOver: z.fee_eur > 0 && z.free_over_eur !== null ? formatMoney(localPrice(z.free_over_eur, z.currency, fx), z.currency) : null,
         days: z.est_days,
-        currency: z.currency,
       }));
   });
 
   /** "in euros in Kosovo, in denars in North Macedonia and in lek in Albania" */
   protected readonly currencies = computed(() => {
-    const parts = this.zones().map((z) => `in ${CURRENCY_WORD[z.currency]} in ${z.country}`);
-    return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : (parts[0] ?? '');
+    const parts = this.zones().map((z) => this.i18n.t('shop.info.payIn.' + z.country));
+    const and = this.i18n.t('shop.info.and');
+    return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} ${and} ${parts.at(-1)}` : (parts[0] ?? '');
   });
 }
 
 @Component({
   selector: 'app-not-found',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   template: `
     <article class="info message">
-      <h1>This page isn’t here</h1>
-      <p class="muted">The link may be old or mistyped. Everything that’s for sale is in the shop.</p>
-      <a class="btn btn-primary" routerLink="/">See what’s in the shop</a>
+      <h1>{{ 'shop.info.notFoundTitle' | t }}</h1>
+      <p class="muted">{{ 'shop.info.notFoundText' | t }}</p>
+      <a class="btn btn-primary" routerLink="/">{{ 'shop.product.seeShop' | t }}</a>
     </article>
   `,
   styleUrl: './info.scss',

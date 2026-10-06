@@ -1,17 +1,19 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { formatCode } from '../../core/money';
 import { PurchaseSummary, Purchases } from '../../core/purchases';
 import { StockTabs } from './stock-tabs';
 
 @Component({
   selector: 'app-purchase-list',
-  imports: [RouterLink, StockTabs],
+  imports: [RouterLink, StockTabs, TranslatePipe],
   templateUrl: './purchase-list.html',
   styleUrl: './purchase-list.scss',
 })
 export class PurchaseList {
   private readonly purchases = inject(Purchases);
+  private readonly i18n = inject(I18n);
 
   protected readonly rows = signal<PurchaseSummary[] | null>(null);
   protected readonly error = signal<string | null>(null);
@@ -42,6 +44,6 @@ export class PurchaseList {
   }
 
   protected date(p: PurchaseSummary): string {
-    return new Date(p.purchase_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    return this.i18n.date(p.purchase_date, { day: 'numeric', month: 'short', year: 'numeric' });
   }
 }

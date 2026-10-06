@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { explain } from './errors';
-import { COUNTRY_NAME, Country, Currency } from './money';
+import { dateLocale, t } from './i18n';
+import { Country, Currency } from './money';
 import { OrderStatus } from './orders';
 import { Supabase, allRows } from './supabase';
 
@@ -28,12 +29,13 @@ export interface Period {
   to: string | null;
 }
 
+/** Labels are translation keys. */
 export const PERIODS: { key: Exclude<PeriodKey, 'custom'>; label: string }[] = [
-  { key: 'month', label: 'This month' },
-  { key: 'last_month', label: 'Last month' },
-  { key: 'year', label: 'This year' },
-  { key: 'last_year', label: 'Last year' },
-  { key: 'all', label: 'All time' },
+  { key: 'month', label: 'admin.reports.period.month' },
+  { key: 'last_month', label: 'admin.reports.period.last_month' },
+  { key: 'year', label: 'admin.reports.period.year' },
+  { key: 'last_year', label: 'admin.reports.period.last_year' },
+  { key: 'all', label: 'admin.reports.period.all' },
 ];
 
 export function periodFor(key: Exclude<PeriodKey, 'custom'>, today = new Date()): Period {
@@ -55,9 +57,9 @@ export function periodFor(key: Exclude<PeriodKey, 'custom'>, today = new Date())
 
 /** "1 Oct 2026 – 31 Oct 2026", "All time", "Since 3 Mar 2026". */
 export function periodLabel(p: Period): string {
-  if (!p.from && !p.to) return 'All time';
-  if (!p.to) return `Since ${dayLabel(p.from!)}`;
-  if (!p.from) return `Up to ${dayLabel(p.to)}`;
+  if (!p.from && !p.to) return t('admin.reports.period.all');
+  if (!p.to) return t('admin.reports.since', { date: dayLabel(p.from!) });
+  if (!p.from) return t('admin.reports.upTo', { date: dayLabel(p.to) });
   return p.from === p.to ? dayLabel(p.from) : `${dayLabel(p.from)} – ${dayLabel(p.to)}`;
 }
 
@@ -69,7 +71,7 @@ export function periodSlug(p: Period): string {
 
 export function dayLabel(date: string): string {
   const [y, m, d] = date.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 /** The local calendar day of a moment. */
@@ -149,7 +151,8 @@ export function expectedCash(o: { total_in_currency: number; currency_per_eur: n
 // Sales
 
 export type Channel = 'online' | 'manual';
-export const CHANNEL_LABEL: Record<Channel, string> = { online: 'Online shop', manual: 'From a DM' };
+/** Translation keys. */
+export const CHANNEL_LABEL: Record<Channel, string> = { online: 'admin.reports.channel.online', manual: 'admin.reports.channel.manual' };
 
 export interface SaleOrderRow {
   id: number;
@@ -277,7 +280,7 @@ export function salesReport(rows: SaleOrderRow[]): SalesReport {
         channel: o.channel,
         designKey: String(l.variant?.product?.id ?? l.product_name_snapshot),
         design: l.variant?.product?.name ?? l.product_name_snapshot,
-        category: l.variant?.product?.category?.name ?? 'Other',
+        category: l.variant?.product?.category?.name ?? t('admin.reports.other'),
         colour: l.color_snapshot,
         size: l.size_snapshot,
         sku: l.sku_snapshot,
@@ -337,8 +340,8 @@ export function salesReport(rows: SaleOrderRow[]): SalesReport {
     uncosted,
     byDesign: groupLines(lines, (l) => l.designKey, (l) => l.design).sort(bySales),
     byCategory: groupLines(lines, (l) => l.category, (l) => l.category).sort(bySales),
-    byCountry: groupLines(lines, (l) => l.country, (l) => COUNTRY_NAME[l.country]).sort(bySales),
-    byChannel: groupLines(lines, (l) => l.channel, (l) => CHANNEL_LABEL[l.channel]).sort((a, b) =>
+    byCountry: groupLines(lines, (l) => l.country, (l) => t('common.country.' + l.country)).sort(bySales),
+    byChannel: groupLines(lines, (l) => l.channel, (l) => t(CHANNEL_LABEL[l.channel])).sort((a, b) =>
       a.key === b.key ? 0 : a.key === 'online' ? -1 : 1,
     ),
     byMonth: groupLines(lines, (l) => l.paidOn.slice(0, 7), (l) => monthLabel(l.paidOn)).sort((a, b) => a.key.localeCompare(b.key)),
@@ -372,7 +375,7 @@ function groupLines(lines: SaleLine[], key: (l: SaleLine) => string, label: (l: 
 
 function monthLabel(date: string): string {
   const [y, m] = date.split('-').map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+  return new Date(y, m - 1, 1).toLocaleDateString(dateLocale(), { month: 'short', year: 'numeric' });
 }
 
 // ---------------------------------------------------------------------------
@@ -631,7 +634,7 @@ export function stockReport(rows: StockReportRow[]): StockReport {
       sku: v.sku,
       designKey: String(v.product?.id ?? v.sku),
       design: v.product?.name ?? v.sku,
-      category: v.product?.category?.name ?? 'Other',
+      category: v.product?.category?.name ?? t('admin.reports.other'),
       colour: v.color?.name ?? '',
       size: v.size?.label ?? '',
       sizeOrder: v.size?.sort_order ?? 0,
@@ -649,7 +652,7 @@ export function stockReport(rows: StockReportRow[]): StockReport {
   lines.sort((a, b) => a.category.localeCompare(b.category) || a.design.localeCompare(b.design) || a.colour.localeCompare(b.colour) || a.sizeOrder - b.sizeOrder);
 
   const byValue = (a: StockGroup, b: StockGroup) => b.valueCost - a.valueCost || a.label.localeCompare(b.label);
-  const all = stockGroup('all', 'All', lines);
+  const all = stockGroup('all', '', lines);
   return {
     totals: {
       ...all,
@@ -765,14 +768,12 @@ export interface BuyingReport {
   lines: BuyLine[];
 }
 
-export const NO_SUPPLIER = 'No supplier named';
-
 export function buyingReport(rows: PurchaseReportRow[]): BuyingReport {
   const trips: Trip[] = [];
   const lines: BuyLine[] = [];
 
   for (const p of rows) {
-    const supplier = p.supplier_name?.trim() || NO_SUPPLIER;
+    const supplier = p.supplier_name?.trim() || t('admin.reports.noSupplier');
     let items = 0;
     let goods = 0;
     let total = 0;
@@ -864,7 +865,7 @@ export class Reports {
         return q.order('id').range(from, to).overrideTypes<SaleOrderRow[], { merge: false }>();
       });
     } catch (e) {
-      throw new Error(explain(e, 'Couldn’t load the sales.'));
+      throw new Error(explain(e, 'errors.loadSales'));
     }
   }
 
@@ -900,7 +901,7 @@ export class Reports {
       ]);
       return { orders, handedBack };
     } catch (e) {
-      throw new Error(explain(e, 'Couldn’t load what’s owed.'));
+      throw new Error(explain(e, 'errors.loadOwed'));
     }
   }
 
@@ -919,7 +920,7 @@ export class Reports {
           .overrideTypes<StockReportRow[], { merge: false }>(),
       );
     } catch (e) {
-      throw new Error(explain(e, 'Couldn’t load the stock.'));
+      throw new Error(explain(e, 'errors.loadStock'));
     }
   }
 
@@ -939,7 +940,7 @@ export class Reports {
         return q.order('id').range(from, to).overrideTypes<PurchaseReportRow[], { merge: false }>();
       });
     } catch (e) {
-      throw new Error(explain(e, 'Couldn’t load the buying trips.'));
+      throw new Error(explain(e, 'errors.loadTrips'));
     }
   }
 }

@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { OrderDetail, OrderLine, Orders } from '../../core/orders';
 import { Scanner } from '../shared/scanner';
 
@@ -14,13 +15,14 @@ type Feedback = { kind: 'ok' | 'warn' | 'wrong'; text: string };
  */
 @Component({
   selector: 'app-order-pack',
-  imports: [RouterLink, Scanner],
+  imports: [RouterLink, Scanner, TranslatePipe],
   templateUrl: './order-pack.html',
   styleUrl: './order-pack.scss',
 })
 export class OrderPack {
   private readonly orders = inject(Orders);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
 
   readonly id = input.required<string>();
 
@@ -59,11 +61,11 @@ export class OrderPack {
 
     if (!line) {
       navigator.vibrate?.([80, 60, 80, 60, 80]);
-      this.feedback.set({ kind: 'wrong', text: `${raw.trim()} is not in this order. Put it back.` });
+      this.feedback.set({ kind: 'wrong', text: this.i18n.t('admin.pack.notInOrder', { code: raw.trim() }) });
       return;
     }
     if (this.packedOf(line) >= line.qty) {
-      this.feedback.set({ kind: 'warn', text: `Already have ${line.qty === 1 ? 'this one' : `all ${line.qty}`} of ${this.name(line)}.` });
+      this.feedback.set({ kind: 'warn', text: this.i18n.t('admin.pack.alreadyAll', { count: line.qty, name: this.name(line) }) });
       return;
     }
     this.tick(line);
@@ -74,7 +76,10 @@ export class OrderPack {
     if (this.packedOf(line) >= line.qty) return;
     const now = this.packedOf(line) + 1;
     this.packed.update((p) => ({ ...p, [line.id]: now }));
-    this.feedback.set({ kind: 'ok', text: `${this.name(line)}${line.qty > 1 ? ` (${now} of ${line.qty})` : ''}` });
+    this.feedback.set({
+      kind: 'ok',
+      text: line.qty > 1 ? this.i18n.t('admin.pack.nOf', { name: this.name(line), n: now, count: line.qty }) : this.name(line),
+    });
   }
 
   protected untick(line: OrderLine): void {

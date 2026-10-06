@@ -1,49 +1,49 @@
 <div class="stack">
-  <a class="back" routerLink="/admin/stock/purchases">← Buying trips</a>
+  <a class="back" routerLink="/admin/stock/purchases">← {{ 'admin.trips.title' | t }}</a>
 
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
       <p class="notice notice-error">{{ loadError() }}</p>
     }
     @case ('missing') {
       <section class="card stack">
-        <h1>Buying trip not found</h1>
-        <p class="muted">It may have been deleted.</p>
-        <div><a class="btn" routerLink="/admin/stock/purchases">Back to buying trips</a></div>
+        <h1>{{ 'admin.trip.notFound' | t }}</h1>
+        <p class="muted">{{ 'admin.design.maybeDeleted' | t }}</p>
+        <div><a class="btn" routerLink="/admin/stock/purchases">{{ 'admin.trip.backToTrips' | t }}</a></div>
       </section>
     }
     @case ('ready') {
       <div class="page-head">
-        <h1>{{ purchase()?.reference ?? 'New buying trip' }}</h1>
+        <h1>{{ purchase()?.reference ?? ('admin.trips.new' | t) }}</h1>
         @if (purchase(); as p) {
-          <span class="badge" [class.badge-ok]="p.status === 'received'">{{ p.status === 'received' ? 'Received' : 'Draft' }}</span>
+          <span class="badge" [class.badge-ok]="p.status === 'received'">{{ (p.status === 'received' ? 'admin.trip.receivedBadge' : 'admin.productStatus.draft') | t }}</span>
         }
       </div>
 
       @if (justReceived()) {
         <section class="card stack done" role="status">
-          <h2>Received. The items are on the shelf.</h2>
-          <p class="muted">Each item now has its real cost, trip costs included.</p>
+          <h2>{{ 'admin.trip.receivedTitle' | t }}</h2>
+          <p class="muted">{{ 'admin.trip.receivedText' | t }}</p>
           <div class="toolbar">
             @if (unlinkedCount()) {
-              <button class="btn btn-primary" type="button" (click)="showLinker.set(true)">Scan the tags</button>
+              <button class="btn btn-primary" type="button" (click)="showLinker.set(true)">{{ 'admin.barcodes.scanTags' | t }}</button>
             }
-            <a class="btn" routerLink="/admin/stock">See the stock</a>
+            <a class="btn" routerLink="/admin/stock">{{ 'admin.trip.seeStock' | t }}</a>
           </div>
         </section>
-      } @else if (added(); as what) {
+      } @else if (added(); as count) {
         <section class="card stack done" role="status">
-          <h2>Added {{ what }}</h2>
+          <h2>{{ 'admin.trip.added' | t: { name: name() ?? '', count: +count } }}</h2>
           @if (photos()) {
-            <p class="notice notice-error">{{ photos() }} {{ photos() === '1' ? 'photo' : 'photos' }} didn’t upload. Add them again on the design’s page.</p>
+            <p class="notice notice-error">{{ 'admin.trip.photosFailed' | t: { count: +photos()! } }}</p>
           }
           @if (isDraft()) {
-            <p class="muted">Anything else from this trip? When everything’s in, press Receive at the bottom.</p>
+            <p class="muted">{{ 'admin.trip.anythingElse' | t }}</p>
             <div class="toolbar">
-              <a class="btn btn-primary" [routerLink]="['/admin/stock/purchases', purchase()!.id, 'add']">Add another item</a>
+              <a class="btn btn-primary" [routerLink]="['/admin/stock/purchases', purchase()!.id, 'add']">{{ 'admin.trip.addAnother' | t }}</a>
             </div>
           }
         </section>
@@ -52,56 +52,56 @@
       @if (isNew() || isDraft()) {
         <form class="card stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
           <label class="field">
-            <span>Name</span>
-            <input type="text" formControlName="reference" placeholder="Istanbul, October" autocomplete="off" />
+            <span>{{ 'admin.common.name' | t }}</span>
+            <input type="text" formControlName="reference" [placeholder]="'admin.trip.namePlaceholder' | t" autocomplete="off" />
           </label>
 
           <div class="grid-2">
             <label class="field">
-              <span>Date</span>
+              <span>{{ 'admin.trip.date' | t }}</span>
               <input type="date" formControlName="purchase_date" />
             </label>
             <label class="field">
-              <span>Bought from <em>(optional)</em></span>
+              <span>{{ 'admin.trip.boughtFrom' | t }} <em>{{ 'shop.checkout.optional' | t }}</em></span>
               <input type="text" formControlName="supplier_name" autocomplete="off" />
             </label>
           </div>
 
           <div class="grid-2">
             <label class="field">
-              <span>Prices on the invoice are in</span>
+              <span>{{ 'admin.trip.invoiceIn' | t }}</span>
               <select formControlName="currency">
-                <option value="EUR">Euros (€)</option>
-                <option value="USD">US dollars</option>
-                <option value="TRY">Turkish lira</option>
+                <option value="EUR">{{ 'admin.trip.currency.EUR' | t }}</option>
+                <option value="USD">{{ 'admin.trip.currency.USD' | t }}</option>
+                <option value="TRY">{{ 'admin.trip.currency.TRY' | t }}</option>
               </select>
             </label>
             @if (formCurrency() !== 'EUR') {
               <label class="field">
-                <span>{{ formCurrency() }} per €1</span>
+                <span>{{ 'admin.trip.perEuro' | t: { currency: formCurrency() } }}</span>
                 <input type="text" inputmode="decimal" formControlName="rate" autocomplete="off" [placeholder]="formCurrency() === 'TRY' ? '38.5' : '1.08'" />
-                <small>The rate you actually got, not today’s.</small>
+                <small>{{ 'admin.trip.rateHint' | t }}</small>
               </label>
             }
           </div>
 
           <div class="grid-2">
             <label class="field">
-              <span>Trip costs (€)</span>
+              <span>{{ 'admin.trip.costsEur' | t }}</span>
               <input type="text" inputmode="decimal" formControlName="extra" autocomplete="off" />
-              <small>Travel, transport, customs: everything it cost to get these here.</small>
+              <small>{{ 'admin.trip.costsHint' | t }}</small>
             </label>
             <label class="field">
-              <span>Share the trip costs</span>
+              <span>{{ 'admin.trip.share' | t }}</span>
               <select formControlName="method">
-                <option value="by_quantity">Equally per item</option>
-                <option value="by_value">By price (dearer items carry more)</option>
+                <option value="by_quantity">{{ 'admin.trip.method.by_quantity' | t }}</option>
+                <option value="by_value">{{ 'admin.trip.method.by_value' | t }}</option>
               </select>
             </label>
           </div>
 
           <label class="field">
-            <span>Notes <em>(optional)</em></span>
+            <span>{{ 'admin.trip.notes' | t }} <em>{{ 'shop.checkout.optional' | t }}</em></span>
             <textarea rows="2" formControlName="notes"></textarea>
           </label>
 
@@ -111,20 +111,20 @@
 
           <div class="actions">
             <button class="btn btn-primary" type="submit" [disabled]="saving() || (!isNew() && !dirty())">
-              {{ saving() ? 'Saving…' : isNew() ? 'Create buying trip' : 'Save changes' }}
+              {{ (saving() ? 'common.saving' : isNew() ? 'admin.trip.create' : 'admin.common.saveChanges') | t }}
             </button>
           </div>
         </form>
       } @else if (purchase(); as p) {
         <section class="card stack">
           <dl class="facts">
-            <div><dt>Date</dt><dd>{{ date(p.purchase_date) }}</dd></div>
-            @if (p.supplier_name) { <div><dt>Bought from</dt><dd>{{ p.supplier_name }}</dd></div> }
-            <div><dt>Invoice in</dt><dd>{{ p.currency }}@if (p.currency !== 'EUR') { <span class="muted"> at {{ p.currency_per_eur }} per €1</span> }</dd></div>
-            <div><dt>Trip costs</dt><dd>{{ money(p.extra_costs_eur) }}, shared {{ methodLabel(p.allocation_method).toLowerCase() }}</dd></div>
-            @if (p.notes) { <div><dt>Notes</dt><dd>{{ p.notes }}</dd></div> }
+            <div><dt>{{ 'admin.trip.date' | t }}</dt><dd>{{ date(p.purchase_date) }}</dd></div>
+            @if (p.supplier_name) { <div><dt>{{ 'admin.trip.boughtFrom' | t }}</dt><dd>{{ p.supplier_name }}</dd></div> }
+            <div><dt>{{ 'admin.trip.invoiceInShort' | t }}</dt><dd>{{ p.currency }}@if (p.currency !== 'EUR') { <span class="muted"> {{ 'admin.trip.atRate' | t: { rate: p.currency_per_eur } }}</span> }</dd></div>
+            <div><dt>{{ 'admin.trip.costs' | t }}</dt><dd>{{ money(p.extra_costs_eur) }}, {{ 'admin.trip.sharedHow.' + p.allocation_method | t }}</dd></div>
+            @if (p.notes) { <div><dt>{{ 'admin.trip.notes' | t }}</dt><dd>{{ p.notes }}</dd></div> }
           </dl>
-          <p class="muted">This trip has been received, so it is a permanent record and can’t be edited. To fix a miscount on the shelf, use Recount under Stock.</p>
+          <p class="muted">{{ 'admin.trip.permanent' | t }}</p>
         </section>
       }
 
@@ -132,21 +132,21 @@
         <!-- What is on the trip -->
         <section class="card stack">
           <div class="page-head">
-            <h2>Items on this trip</h2>
+            <h2>{{ 'admin.trip.itemsTitle' | t }}</h2>
             @if (isDraft()) {
-              <a class="btn btn-primary btn-small" [routerLink]="['/admin/stock/purchases', p.id, 'add']">+ Add item</a>
+              <a class="btn btn-primary btn-small" [routerLink]="['/admin/stock/purchases', p.id, 'add']">+ {{ 'admin.addItem.title' | t }}</a>
             }
           </div>
           @if (!groups().length) {
-            <p class="muted">Nothing yet. @if (isDraft()) { Press <strong>Add item</strong> for each thing you bought. }</p>
+            <p class="muted">{{ 'admin.trip.nothingYet' | t }} @if (isDraft()) { {{ 'admin.trip.pressAdd' | t }} }</p>
           }
           @for (g of groups(); track g.id) {
             <div class="design">
               <h3>
                 <span>{{ g.name }}</span>
-                <span class="muted">{{ g.qty }} {{ g.qty === 1 ? 'item' : 'items' }}</span>
+                <span class="muted">{{ 'admin.trips.items' | t: { count: g.qty } }}</span>
                 @if (isDraft()) {
-                  <a class="btn btn-small" [routerLink]="['/admin/stock/purchases', p.id, 'add']" [queryParams]="{ design: g.id }">Change</a>
+                  <a class="btn btn-small" [routerLink]="['/admin/stock/purchases', p.id, 'add']" [queryParams]="{ design: g.id }">{{ 'common.change' | t }}</a>
                 }
               </h3>
               @for (r of g.rows; track r.line.id) {
@@ -157,9 +157,9 @@
                     <span class="muted">{{ r.line.qty }} × {{ money(r.line.unit_price, p.currency) }}</span>
                   </div>
                   <div class="landed">
-                    <strong>{{ money(r.landed) }}</strong> <span class="muted">each, all in</span>
+                    <strong>{{ money(r.landed) }}</strong> <span class="muted">{{ 'admin.trip.eachAllIn' | t }}</span>
                     @if (isDraft()) {
-                      <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'Remove ' + r.line.variant.sku" (click)="removeLine(r.line)">✕</button>
+                      <button class="btn btn-small btn-danger" type="button" [attr.aria-label]="'admin.trip.removeX' | t: { sku: r.line.variant.sku }" (click)="removeLine(r.line)">✕</button>
                     }
                   </div>
                   @if (r.averageNote) {
@@ -173,70 +173,70 @@
 
         @if (summary(); as s) {
           <section class="card stack">
-            <h2>{{ isDraft() ? 'What this trip will cost' : 'What this trip cost' }}</h2>
+            <h2>{{ (isDraft() ? 'admin.trip.willCost' : 'admin.trip.didCost') | t }}</h2>
             <dl class="sum">
-              <div><dt>Items</dt><dd>{{ s.items }}</dd></div>
-              <div><dt>Goods</dt><dd>{{ s.goods }}@if (s.foreign) { <span class="muted"> ≈ {{ s.goodsEur }}</span> }</dd></div>
-              <div><dt>Trip costs</dt><dd>{{ s.trip }}</dd></div>
-              <div class="total"><dt>Everything</dt><dd>{{ s.total }}</dd></div>
-              <div><dt>Per item, on average</dt><dd>{{ s.average }}</dd></div>
+              <div><dt>{{ 'shop.bag.items' | t }}</dt><dd>{{ s.items }}</dd></div>
+              <div><dt>{{ 'admin.trip.goods' | t }}</dt><dd>{{ s.goods }}@if (s.foreign) { <span class="muted"> ≈ {{ s.goodsEur }}</span> }</dd></div>
+              <div><dt>{{ 'admin.trip.costs' | t }}</dt><dd>{{ s.trip }}</dd></div>
+              <div class="total"><dt>{{ 'admin.trip.everything' | t }}</dt><dd>{{ s.total }}</dd></div>
+              <div><dt>{{ 'admin.trip.perItem' | t }}</dt><dd>{{ s.average }}</dd></div>
             </dl>
             @if (s.problem) {
-              <p class="notice notice-error">{{ s.problem }}</p>
+              <p class="notice notice-error">{{ s.problem | t }}</p>
             }
           </section>
         }
 
         @if (isDraft()) {
           <section class="card stack">
-            <h2>Received it?</h2>
+            <h2>{{ 'admin.trip.receivedIt' | t }}</h2>
             <p class="muted">
-              This puts the items on the shelf and fixes what each one cost. It can’t be undone, so check the numbers above first.
+              {{ 'admin.trip.receiveHint' | t }}
             </p>
             @if (dirty()) {
-              <p class="notice">Save the changes at the top first. The costs above are for the saved version.</p>
+              <p class="notice">{{ 'admin.trip.saveFirst' | t }}</p>
             }
             @if (receiveError(); as problem) {
               <p class="notice notice-error" role="alert">{{ problem }}</p>
             }
             <div class="toolbar">
               <button class="btn btn-primary" type="button" [disabled]="receiving() || dirty() || !summary() || !!summary()?.problem" (click)="receive()">
-                {{ receiving() ? 'Receiving…' : summary() ? 'Receive ' + summary()!.items + ' items' : 'Receive' }}
+                {{ receiving() ? ('admin.trip.receiving' | t) : summary() ? ('admin.trip.receiveN' | t: { count: summary()!.items }) : ('admin.trip.receive' | t) }}
               </button>
-              <button class="btn btn-danger" type="button" (click)="remove()">Delete this draft</button>
+              <button class="btn btn-danger" type="button" (click)="remove()">{{ 'admin.trip.deleteDraft' | t }}</button>
             </div>
           </section>
         } @else {
           <div class="toolbar">
-            <a class="btn" routerLink="/admin/stock">See the stock</a>
+            <a class="btn" routerLink="/admin/stock">{{ 'admin.trip.seeStock' | t }}</a>
           </div>
         }
 
         <!-- The barcodes already on the tags -->
         @if (lines().length) {
           <section class="card stack">
-            <h2>Barcodes on the tags</h2>
+            <h2>{{ 'admin.barcodes.title' | t }}</h2>
             @if (showLinker()) {
               <app-barcode-linker [sizes]="linkable()" (changed)="reloadLines()" />
               <p class="muted small">
-                Something with no barcode on its tag?
-                <a routerLink="/admin/labels" [queryParams]="{ purchase: p.id }">Print a label</a> for it instead.
+                {{ 'admin.barcodes.noBarcode' | t }}
+                <a routerLink="/admin/labels" [queryParams]="{ purchase: p.id }">{{ 'admin.barcodes.printLabel' | t }}</a>
               </p>
             } @else {
               <p class="muted">
                 @if (unlinkedCount()) {
-                  Scan one tag of each size once, and from then on scanning any of its tags finds it: when packing, looking it up, or adding it to an order.
-                  {{ linkable().length - unlinkedCount() }} of {{ linkable().length }} sizes done.
+                  {{ 'admin.barcodes.explainTrip' | t }}
+                  {{ 'admin.barcodes.done' | t: { done: linkable().length - unlinkedCount(), count: linkable().length } }}
                 } @else {
-                  Every size on this trip is linked to the barcode on its tag.
+                  {{ 'admin.barcodes.allLinkedTrip' | t }}
                 }
               </p>
-              <div><button class="btn" type="button" (click)="showLinker.set(true)">Scan the tags</button></div>
+              <div><button class="btn" type="button" (click)="showLinker.set(true)">{{ 'admin.barcodes.scanTags' | t }}</button></div>
             }
           </section>
         }
       } @else {
-        <p class="muted">After you create the trip, you can add the items you bought.</p>
+        <p class="muted">{{ 'admin.trip.afterCreate' | t }}</p>
       }
     }
   }

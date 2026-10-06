@@ -1,40 +1,40 @@
 <div class="stack">
   <div class="page-head">
-    <h1>Stock</h1>
-    <a class="btn btn-primary" routerLink="/admin/stock/add">Add stock</a>
+    <h1>{{ 'admin.shell.stock' | t }}</h1>
+    <a class="btn btn-primary" routerLink="/admin/stock/add">{{ 'admin.design.addStock' | t }}</a>
   </div>
   <app-stock-tabs />
 
   @if (error(); as message) {
     <p class="notice notice-error">{{ message }}</p>
   } @else if (rows() === null) {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   } @else {
-    <section class="tiles" aria-label="Totals">
-      <div class="card tile"><span class="label">On the shelf</span><strong>{{ totals().shelf }}</strong><span class="muted">items</span></div>
-      <div class="card tile"><span class="label">Worth</span><strong>{{ money(totals().value) }}</strong><span class="muted">at cost</span></div>
-      <div class="card tile"><span class="label">On the road</span><strong>{{ totals().road }}</strong><span class="muted">out for delivery</span></div>
-      <div class="card tile"><span class="label">Damaged</span><strong>{{ totals().damaged }}</strong><span class="muted">not for sale</span></div>
+    <section class="tiles" [attr.aria-label]="'admin.stock.totals' | t">
+      <div class="card tile"><span class="label">{{ 'admin.dashboard.onShelf' | t }}</span><strong>{{ totals().shelf }}</strong><span class="muted">{{ 'admin.dashboard.units' | t }}</span></div>
+      <div class="card tile"><span class="label">{{ 'admin.stock.worth' | t }}</span><strong>{{ money(totals().value) }}</strong><span class="muted">{{ 'admin.dashboard.atCost' | t }}</span></div>
+      <div class="card tile"><span class="label">{{ 'admin.stock.onTheRoad' | t }}</span><strong>{{ totals().road }}</strong><span class="muted">{{ 'admin.stock.outForDelivery' | t }}</span></div>
+      <div class="card tile"><span class="label">{{ 'admin.stock.damaged' | t }}</span><strong>{{ totals().damaged }}</strong><span class="muted">{{ 'admin.stock.notForSale' | t }}</span></div>
     </section>
 
     @if (!rows()!.length) {
       <section class="card stack empty">
-        <h2>No stock yet</h2>
-        <p class="muted">Add what you have: one product at a time, or a whole buying trip so its travel and customs costs count.</p>
+        <h2>{{ 'admin.stock.noneTitle' | t }}</h2>
+        <p class="muted">{{ 'admin.stock.noneText' | t }}</p>
         <div class="toolbar">
-          <a class="btn btn-primary" routerLink="/admin/stock/add">Add stock</a>
-          <a class="btn" routerLink="/admin/stock/purchases/new">New buying trip</a>
+          <a class="btn btn-primary" routerLink="/admin/stock/add">{{ 'admin.design.addStock' | t }}</a>
+          <a class="btn" routerLink="/admin/stock/purchases/new">{{ 'admin.trips.new' | t }}</a>
         </div>
       </section>
     } @else {
-      <input type="search" placeholder="Find a design, colour or SKU" aria-label="Find in stock"
+      <input type="search" [placeholder]="'admin.stock.findPlaceholder' | t" [attr.aria-label]="'admin.stock.find' | t"
              [value]="search()" (input)="search.set($any($event.target).value)" />
 
-      <div class="chips" role="group" aria-label="Show">
+      <div class="chips" role="group" [attr.aria-label]="'admin.stock.show' | t">
         @for (f of filters; track f.id) {
           <label class="chip">
             <input type="radio" name="stock-filter" [checked]="filter() === f.id" (change)="filter.set(f.id)" />
-            {{ f.label }}
+            {{ f.label | t }}
             @if (f.id !== 'all' && counts()[f.id]) {
               <span class="n">{{ counts()[f.id] }}</span>
             }
@@ -46,7 +46,7 @@
         <section class="card group">
           <header>
             <a [routerLink]="['/admin/products', g.id]">{{ g.name }}</a>
-            <span class="muted">{{ g.shelf }} on the shelf</span>
+            <span class="muted">{{ 'admin.stock.nOnShelf' | t: { count: g.shelf } }}</span>
           </header>
 
           @for (r of g.rows; track r.id) {
@@ -55,17 +55,17 @@
                 <span class="swatch" [style.background]="r.color.hex ?? '#ccc'"></span>
                 {{ r.color.name }} · <strong>{{ r.size.label }}</strong>
                 @if (isOut(r)) {
-                  <span class="badge badge-muted">Sold out</span>
+                  <span class="badge badge-muted">{{ 'shop.soldOut' | t }}</span>
                 } @else if (isLow(r)) {
-                  <span class="badge">Running low</span>
+                  <span class="badge">{{ 'admin.dashboard.runningLow' | t }}</span>
                 }
               </span>
               <span class="nums">
                 <strong>{{ s(r).qty_available }}</strong>
-                <span class="muted">available</span>
-                @if (s(r).qty_reserved) { <span class="muted">· {{ s(r).qty_reserved }} reserved</span> }
-                @if (s(r).qty_in_transit) { <span class="muted">· {{ s(r).qty_in_transit }} on the road</span> }
-                @if (s(r).qty_damaged) { <span class="muted">· {{ s(r).qty_damaged }} damaged</span> }
+                <span class="muted">{{ 'admin.stock.availableLower' | t }}</span>
+                @if (s(r).qty_reserved) { <span class="muted">· {{ 'admin.stock.nReserved' | t: { count: s(r).qty_reserved } }}</span> }
+                @if (s(r).qty_in_transit) { <span class="muted">· {{ 'admin.stock.nOnRoad' | t: { count: s(r).qty_in_transit } }}</span> }
+                @if (s(r).qty_damaged) { <span class="muted">· {{ 'admin.stock.nDamaged' | t: { count: s(r).qty_damaged } }}</span> }
               </span>
             </button>
             @if (open() === r.id && current(r.id); as row) {
@@ -74,7 +74,7 @@
           }
         </section>
       } @empty {
-        <p class="muted">Nothing matches.</p>
+        <p class="muted">{{ 'admin.stock.noMatch' | t }}</p>
       }
     }
   }

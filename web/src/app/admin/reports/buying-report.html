@@ -1,12 +1,12 @@
 <div class="stack">
-  <h1>Reports</h1>
+  <h1>{{ 'admin.dashboard.reports' | t }}</h1>
   <app-reports-tabs />
 
   <app-period-picker [key]="key()" [from]="period().from" [to]="period().to" (changed)="choosePeriod($event)" />
 
   <div class="bar">
-    <p class="muted" aria-live="polite">{{ label() }}{{ loading() ? ' · loading…' : '' }}</p>
-    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report() || loading()">Download for Excel</button>
+    <p class="muted" aria-live="polite">{{ label() }}{{ loading() ? ' · ' + ('admin.reports.loading' | t) : '' }}</p>
+    <button class="btn btn-small" type="button" (click)="download()" [disabled]="!report() || loading()">{{ 'admin.reports.download' | t }}</button>
   </div>
 
   @if (error(); as message) {
@@ -15,45 +15,45 @@
     <div class="stack" [class.stale]="loading()">
       @if (!r.trips.length) {
         <section class="card stack empty">
-          <h2>No buying trips in this period</h2>
-          <p class="muted">A trip shows here once it has been received into stock.</p>
+          <h2>{{ 'admin.reports.buying.noneTitle' | t }}</h2>
+          <p class="muted">{{ 'admin.reports.buying.noneText' | t }}</p>
         </section>
       } @else {
-        <section class="tiles" aria-label="Summary">
+        <section class="tiles" [attr.aria-label]="'admin.dashboard.summary' | t">
           <div class="card tile">
-            <span class="label">Spent</span>
+            <span class="label">{{ 'admin.reports.buying.spent' | t }}</span>
             <strong>{{ euros(r.totals.totalEur) }}</strong>
-            <span class="muted">{{ r.totals.trips }} {{ r.totals.trips === 1 ? 'trip' : 'trips' }} · {{ r.totals.items }} items</span>
+            <span class="muted">{{ 'admin.reports.buying.trips' | t: { count: r.totals.trips } }} · {{ 'admin.trips.items' | t: { count: r.totals.items } }}</span>
           </div>
           <div class="card tile">
-            <span class="label">An item cost</span>
+            <span class="label">{{ 'admin.reports.buying.itemCost' | t }}</span>
             <strong>{{ euros(r.totals.items ? r.totals.totalEur / r.totals.items : 0) }}</strong>
-            <span class="muted">on average, with trip costs</span>
+            <span class="muted">{{ 'admin.reports.buying.onAverage' | t }}</span>
           </div>
           <div class="card tile">
-            <span class="label">Goods</span>
+            <span class="label">{{ 'admin.trip.goods' | t }}</span>
             <strong>{{ euros(r.totals.goodsEur) }}</strong>
-            <span class="muted">what the clothes cost</span>
+            <span class="muted">{{ 'admin.reports.buying.goodsNote' | t }}</span>
           </div>
           <div class="card tile">
-            <span class="label">Trip costs</span>
+            <span class="label">{{ 'admin.trip.costs' | t }}</span>
             <strong>{{ euros(r.totals.extraEur) }}</strong>
-            <span class="muted">travel, freight, customs</span>
+            <span class="muted">{{ 'admin.reports.buying.costsNote' | t }}</span>
           </div>
         </section>
 
         <section class="card stack">
-          <h2>Trips</h2>
-          <app-report-table [head]="['Trip', 'Items', 'Trip costs', 'Total']" [rows]="trips(r)" [foot]="foot(r)" />
+          <h2>{{ 'admin.trips.title' | t }}</h2>
+          <app-report-table [head]="head('admin.reports.col.trip')" [rows]="trips(r)" [foot]="foot(r)" />
         </section>
 
         <section class="card stack">
-          <h2>By supplier</h2>
-          <app-report-table [head]="['Supplier', 'Items', 'Trip costs', 'Total']" [rows]="suppliers(r)" [foot]="foot(r)" />
+          <h2>{{ 'admin.reports.bySupplier' | t }}</h2>
+          <app-report-table [head]="head('admin.reports.col.supplier')" [rows]="suppliers(r)" [foot]="foot(r)" />
         </section>
       }
     </div>
   } @else {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   }
 </div>

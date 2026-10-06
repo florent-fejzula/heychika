@@ -1,7 +1,8 @@
 import { Component, ElementRef, computed, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { COUNTRY_CURRENCY, COUNTRY_NAME, Country } from '../../core/money';
+import { I18n, TranslatePipe } from '../../core/i18n';
+import { COUNTRY_CURRENCY, Country } from '../../core/money';
 import { Bag } from '../bag';
 import { BagContents, describe } from '../bag-contents';
 import { CheckoutError, CheckoutProblem, CustomerDetails, ShopApi } from '../shop-api';
@@ -20,19 +21,11 @@ function phoneNumber(control: AbstractControl<string>): ValidationErrors | null 
 
 type Field = 'first_name' | 'last_name' | 'phone' | 'city' | 'address' | 'postal_code' | 'notes';
 
-const FIELD_ERROR: Record<Field, string> = {
-  first_name: 'Enter your first name.',
-  last_name: 'Enter your last name.',
-  phone: 'Enter a phone number we can call, like ',
-  city: 'Enter your town or city.',
-  address: 'Enter the street and house number.',
-  postal_code: 'That postcode looks too long.',
-  notes: 'Keep the note under 500 characters.',
-};
+// Messages under each field: shop.checkout.error.<field> in src/i18n.
 
 @Component({
   selector: 'app-checkout',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss',
 })
@@ -43,13 +36,14 @@ export class Checkout {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly contents = inject(BagContents);
   protected readonly shop = inject(ShopState);
+  private readonly i18n = inject(I18n);
 
   protected readonly countries = (['XK', 'MK', 'AL'] as Country[]).map((code) => ({
     code,
-    name: COUNTRY_NAME[code],
+    name: `common.country.${code}`,
     currency: COUNTRY_CURRENCY[code],
   }));
-  protected readonly countryName = computed(() => COUNTRY_NAME[this.shop.country()]);
+  protected readonly countryName = computed(() => this.i18n.t('common.countryIn.' + this.shop.country()));
   protected readonly phoneExample = computed(() => PHONE_EXAMPLE[this.shop.country()]);
   protected readonly days = computed(() => this.shop.zone()?.est_days ?? null);
 
@@ -86,9 +80,9 @@ export class Checkout {
 
   protected errorFor(field: Field): string {
     if (this.form.controls[field].hasError('server') && field === 'phone') {
-      return `That number doesn’t look right for ${this.countryName()}. Try it like ${this.phoneExample()}.`;
+      return this.i18n.t('shop.checkout.error.phoneServer', { country: this.countryName(), example: this.phoneExample() });
     }
-    return FIELD_ERROR[field] + (field === 'phone' ? `${this.phoneExample()}.` : '');
+    return this.i18n.t(`shop.checkout.error.${field}`, { example: this.phoneExample() });
   }
 
   protected async place(): Promise<void> {
@@ -141,27 +135,21 @@ export class Checkout {
         const item = this.contents.rows().find((r) => r.item.variantId === problem.variantId)?.item;
         await this.contents.load();
         this.problem.set(
-          `${item ? describe(item) : 'Something in your bag'} sold out while you were ordering. ` +
-            'Your bag has been updated. Check it and place the order again.',
+          item
+            ? this.i18n.t('shop.checkout.problem.soldOut', { item: describe(item) })
+            : this.i18n.t('shop.checkout.problem.somethingSoldOut'),
         );
         break;
       }
       case 'price_changed':
         await this.contents.load();
-        this.problem.set(
-          `A price changed since you added it. The total is now ${this.shop.money(problem.total)}. Check it and place the order again.`,
-        );
+        this.problem.set(this.i18n.t('shop.checkout.problem.priceChanged', { total: this.shop.money(problem.total) }));
         break;
       case 'too_many_orders':
-        this.problem.set(
-          'You already have orders waiting for us to confirm. We’ll call you soon. If you need to change one, message us.',
-        );
+        this.problem.set(this.i18n.t('shop.checkout.problem.tooMany'));
         break;
       case 'busy':
-        this.problem.set(
-          'We have a lot of orders waiting to be confirmed, so the shop has paused new ones for a little while. ' +
-            'Send us a message and we’ll take your order there, or try again later.',
-        );
+        this.problem.set(this.i18n.t('shop.checkout.problem.busy'));
         break;
       case 'invalid':
         if (problem.field in this.form.controls) {
@@ -169,17 +157,17 @@ export class Checkout {
           control.setErrors({ server: true });
           control.markAsTouched();
           this.focusFirstError();
-          this.problem.set('Check the highlighted detail and try again.');
+          this.problem.set(this.i18n.t('shop.checkout.problem.field'));
         } else {
           await this.contents.load();
-          this.problem.set('Something in your bag couldn’t be ordered. Your bag has been refreshed; please try again.');
+          this.problem.set(this.i18n.t('shop.checkout.problem.item'));
         }
         break;
       case 'offline':
-        this.problem.set('Couldn’t reach the shop. Check your connection and try again.');
+        this.problem.set(this.i18n.t('shop.checkout.problem.offline'));
         break;
       default:
-        this.problem.set('Something went wrong and the order wasn’t placed. Try again in a moment, or message us.');
+        this.problem.set(this.i18n.t('shop.checkout.problem.unknown'));
     }
   }
 

@@ -1,19 +1,21 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
-import { Group, Period, Reports, SalesReport as Report, periodLabel, salesReport } from '../../core/reports';
+import { I18n, TranslatePipe } from '../../core/i18n';
+import { Group, Period, Reports, periodLabel, salesReport } from '../../core/reports';
 import { downloadWorkbook } from '../../core/xlsx';
 import { fileName, salesSheets } from './exports';
 import { PeriodChange, PeriodPicker, ReportTable, ReportsTabs, TableRow, euros, inCurrencies, percent, readPeriod } from './report-parts';
 
 @Component({
   selector: 'app-sales-report',
-  imports: [ReportsTabs, PeriodPicker, ReportTable],
+  imports: [ReportsTabs, PeriodPicker, ReportTable, TranslatePipe],
   templateUrl: './sales-report.html',
   styleUrl: './reports.scss',
 })
 export class SalesReport {
   private readonly reports = inject(Reports);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
   private readonly today = new Date();
 
   readonly periodParam = input<string>(undefined, { alias: 'period' });
@@ -25,14 +27,20 @@ export class SalesReport {
   protected readonly period = computed(() => this.chosen().period, { equal: samePeriod });
   protected readonly label = computed(() => periodLabel(this.period()));
 
-  protected readonly report = signal<Report | null>(null);
+  // Worked out from the rows here rather than when they arrive, so its labels follow the language.
+  private readonly data = signal<Awaited<ReturnType<Reports['sales']>> | null>(null);
+  protected readonly report = computed(() => {
+    const rows = this.data();
+    return rows ? salesReport(rows) : null;
+  });
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
   protected readonly euros = euros;
   protected readonly percent = percent;
   protected readonly inCurrencies = inCurrencies;
-  protected readonly head = (what: string) => [what, 'Items', 'Sales', 'Profit'];
+  protected readonly head = (what: string) =>
+    [what, 'shop.bag.items', 'admin.reports.tab.sales', 'admin.reports.sales.profit'].map((k) => this.i18n.t(k));
 
   private request = 0;
 
@@ -46,13 +54,13 @@ export class SalesReport {
   protected rows(groups: Group[]): TableRow[] {
     return groups.map((g) => ({
       label: g.label,
-      sub: `${g.orders} ${g.orders === 1 ? 'order' : 'orders'} · ${percent(g.sales > 0 ? g.profit / g.sales : null)} margin`,
+      sub: this.i18n.t('admin.reports.sales.groupSub', { count: g.orders, pct: percent(g.sales > 0 ? g.profit / g.sales : null) }),
       cells: [String(g.items), euros(g.sales, true), euros(g.profit, true)],
     }));
   }
 
-  protected foot(r: Report): string[] {
-    return ['Total', String(r.items), euros(r.sales, true), euros(r.profit, true)];
+  protected foot(r: ReturnType<typeof salesReport>): string[] {
+    return [this.i18n.t('admin.reports.total'), String(r.items), euros(r.sales, true), euros(r.profit, true)];
   }
 
   protected choosePeriod(change: PeriodChange): void {
@@ -73,8 +81,8 @@ export class SalesReport {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const report = salesReport(await this.reports.sales(period));
-      if (id === this.request) this.report.set(report);
+      const rows = await this.reports.sales(period);
+      if (id === this.request) this.data.set(rows);
     } catch (e) {
       if (id === this.request) this.error.set((e as Error).message);
     } finally {

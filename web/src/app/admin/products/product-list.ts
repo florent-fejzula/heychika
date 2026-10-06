@@ -1,13 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Catalogue, ProductStatus, ProductSummary } from '../../core/catalogue';
+import { TranslatePipe } from '../../core/i18n';
 import { formatMoney } from '../../core/money';
-
-const STATUS_LABEL: Record<ProductStatus, string> = { draft: 'Draft', active: 'Active', archived: 'Archived' };
 
 @Component({
   selector: 'app-product-list',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
 })
@@ -49,10 +48,6 @@ export class ProductList {
       .listProducts()
       .then((p) => this.products.set(p))
       .catch((e: Error) => this.error.set(e.message));
-  }
-
-  protected statusLabel(s: ProductStatus): string {
-    return STATUS_LABEL[s];
   }
 
   protected code(p: ProductSummary): string {

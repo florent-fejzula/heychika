@@ -1,34 +1,32 @@
 <div class="stack">
   <div class="page-head">
-    <h1>Orders</h1>
-    <a class="btn btn-primary" routerLink="/admin/orders/new">New order</a>
+    <h1>{{ 'admin.shell.orders' | t }}</h1>
+    <a class="btn btn-primary" routerLink="/admin/orders/new">{{ 'admin.orders.new' | t }}</a>
   </div>
   <app-orders-tabs />
 
   @if (error(); as message) {
     <p class="notice notice-error">{{ message }}</p>
   } @else if (rows() === null) {
-    <p class="muted">Loading…</p>
+    <p class="muted">{{ 'common.loading' | t }}</p>
   } @else if (!rows()!.length) {
     <section class="card stack empty">
-      <h2>No orders yet</h2>
+      <h2>{{ 'admin.orders.noneTitle' | t }}</h2>
       <p class="muted">
-        Orders customers place in the shop arrive here with their name, phone and address already filled in.
-        Send them a link to a product and they can order it themselves. An order agreed in a DM can be typed in
-        with <strong>New order</strong>.
+        {{ 'admin.orders.noneText' | t }}
       </p>
     </section>
   } @else {
     <label class="field">
-      <span class="sr-only">Search orders</span>
-      <input type="search" placeholder="Search by name, phone, town or order number" [value]="search()" (input)="search.set($any($event.target).value)" />
+      <span class="sr-only">{{ 'admin.orders.search' | t }}</span>
+      <input type="search" [placeholder]="'admin.orders.searchPlaceholder' | t" [value]="search()" (input)="search.set($any($event.target).value)" />
     </label>
 
     @if (!search().trim()) {
-      <nav class="stages" aria-label="Order stages">
+      <nav class="stages" [attr.aria-label]="'admin.orders.stages' | t">
         @for (s of stages(); track s.stage) {
           <button type="button" class="stage" [class.on]="stage() === s.stage" [attr.aria-pressed]="stage() === s.stage" (click)="choose(s.stage)">
-            {{ s.label }}
+            {{ s.label | t }}
             @if (s.count) { <span class="count">{{ s.count }}</span> }
           </button>
         }
@@ -36,21 +34,21 @@
     }
 
     @if (!shown().length) {
-      <p class="muted">{{ search().trim() ? 'No orders match.' : 'Nothing here.' }}</p>
+      <p class="muted">{{ (search().trim() ? 'admin.orders.noMatch' : 'admin.orders.nothingHere') | t }}</p>
     }
     <ul class="list">
       @for (o of shown(); track o.id) {
         <li>
           <a class="card item" [routerLink]="['/admin/orders', o.id]">
             <span class="body">
-              <strong>{{ o.delivery_name || 'No name' }}</strong>
-              <span class="muted">{{ o.order_number }} · {{ o.delivery_city }}, {{ countryName[o.country] }}@if (o.channel === 'manual') { · DM}</span>
+              <strong>{{ o.delivery_name || ('admin.orders.noName' | t) }}</strong>
+              <span class="muted">{{ o.order_number }} · {{ o.delivery_city }}, {{ countryName[o.country] | t }}@if (o.channel === 'manual') { · DM}</span>
             </span>
             <span class="nums">
               <span>{{ total(o) }}</span>
-              <span class="muted">{{ items(o) }} {{ items(o) === 1 ? 'item' : 'items' }} · {{ when(o) }}</span>
+              <span class="muted">{{ 'admin.trips.items' | t: { count: items(o) } }} · {{ when(o) }}</span>
               @if (search().trim() || o.status === 'delivery_failed' || stageOf(o) === 'closed') {
-                <span class="badge" [class.badge-muted]="o.status !== 'delivery_failed'">{{ label[o.status] }}</span>
+                <span class="badge" [class.badge-muted]="o.status !== 'delivery_failed'">{{ label[o.status] | t }}</span>
               }
             </span>
           </a>

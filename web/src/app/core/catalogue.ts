@@ -167,7 +167,7 @@ export class Catalogue {
       )
       .order('created_at', { ascending: false })
       .overrideTypes<ProductSummary[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the products.');
+    if (error) fail(error, 'errors.loadProducts');
     return data.map((p) => ({ ...p, variants: p.variants.map((v) => ({ ...v, stock: first(v.stock) })) }));
   }
 
@@ -178,26 +178,26 @@ export class Catalogue {
       .eq('id', id)
       .maybeSingle()
       .overrideTypes<ProductDetail, { merge: false }>();
-    if (error) fail(error, 'Couldn’t load this design.');
+    if (error) fail(error, 'errors.loadDesign');
     return data;
   }
 
   async createProduct(input: ProductInput & { category_id: number }): Promise<number> {
     const { data, error } = await this.sb.from('products').insert(input).select('id').single<{ id: number }>();
-    if (error) fail(error, 'Couldn’t create the design.');
+    if (error) fail(error, 'errors.createDesign');
     return data.id;
   }
 
   async updateProduct(id: number, input: Omit<ProductInput, 'category_id'>): Promise<void> {
     const { error } = await this.sb.from('products').update(input).eq('id', id);
-    if (error) fail(error, 'Couldn’t save the design.');
+    if (error) fail(error, 'errors.saveDesign');
   }
 
   /** Only works while the design has no sizes. Removes its photos from storage too. */
   async deleteProduct(id: number): Promise<void> {
     const images = await this.listImages(id);
     const { error } = await this.sb.from('products').delete().eq('id', id);
-    if (error) fail(error, 'Couldn’t delete the design. Remove its sizes first.');
+    if (error) fail(error, 'errors.deleteDesign');
     await this.removeFiles(images.map((i) => i.storage_path));
   }
 
@@ -213,7 +213,7 @@ export class Catalogue {
       )
       .eq('product_id', productId)
       .overrideTypes<VariantRow[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the sizes.');
+    if (error) fail(error, 'errors.loadSizes');
     return data
       .map((v) => ({ ...v, stock: first(v.stock) }))
       .sort((a, b) => a.color.name.localeCompare(b.color.name) || a.size.sort_order - b.size.sort_order);
@@ -223,23 +223,23 @@ export class Catalogue {
     if (!combos.length) return;
     const rows = combos.map((c) => ({ product_id: productId, ...c, price_eur: priceEur }));
     const { error } = await this.sb.from('variants').insert(rows);
-    if (error) fail(error, 'Couldn’t add those sizes.');
+    if (error) fail(error, 'errors.addSizes');
   }
 
   /** One request: every size of the design gets this price. */
   async setAllPrices(productId: number, priceEur: number): Promise<void> {
     const { error } = await this.sb.from('variants').update({ price_eur: priceEur }).eq('product_id', productId);
-    if (error) fail(error, 'Couldn’t save the prices.');
+    if (error) fail(error, 'errors.savePrices');
   }
 
   async updateVariant(id: number, patch: { price_eur?: number; active?: boolean }): Promise<void> {
     const { error } = await this.sb.from('variants').update(patch).eq('id', id);
-    if (error) fail(error, 'Couldn’t save.');
+    if (error) fail(error, 'errors.save');
   }
 
   async deleteVariant(id: number): Promise<void> {
     const { error } = await this.sb.from('variants').delete().eq('id', id);
-    if (error) fail(error, 'Couldn’t remove this size.');
+    if (error) fail(error, 'errors.removeSize');
   }
 
   // ----------------------------------------------------------------- photos
@@ -256,7 +256,7 @@ export class Catalogue {
       .order('sort_order')
       .order('id')
       .overrideTypes<ImageRow[], { merge: false }>();
-    if (error) fail(error, 'Couldn’t load the photos.');
+    if (error) fail(error, 'errors.loadPhotos');
     return data;
   }
 
@@ -273,11 +273,11 @@ export class Catalogue {
     const options = { contentType: 'image/jpeg', cacheControl: '31536000' }; // names are unique, so cache forever
 
     const full = await bucket.upload(path, prepared.full, options);
-    if (full.error) fail(full.error, 'Couldn’t upload the photo.');
+    if (full.error) fail(full.error, 'errors.uploadPhoto');
     const thumb = await bucket.upload(thumbPath(path), prepared.thumb, options);
     if (thumb.error) {
       await this.removeFiles([path]);
-      fail(thumb.error, 'Couldn’t upload the photo.');
+      fail(thumb.error, 'errors.uploadPhoto');
     }
 
     const { error } = await this.sb
@@ -285,28 +285,28 @@ export class Catalogue {
       .insert({ product_id: productId, storage_path: path, sort_order: sortOrder });
     if (error) {
       await this.removeFiles([path]);
-      fail(error, 'Couldn’t save the photo.');
+      fail(error, 'errors.savePhoto');
     }
   }
 
   async setCover(imageId: number): Promise<void> {
     const { error } = await this.sb.rpc('set_primary_image', { p_image_id: imageId });
-    if (error) fail(error, 'Couldn’t change the cover photo.');
+    if (error) fail(error, 'errors.changeCover');
   }
 
   async reorderImages(productId: number, ids: number[]): Promise<void> {
     const { error } = await this.sb.rpc('reorder_images', { p_product_id: productId, p_ids: ids });
-    if (error) fail(error, 'Couldn’t reorder the photos.');
+    if (error) fail(error, 'errors.reorderPhotos');
   }
 
   async setImageColour(imageId: number, colourId: number | null): Promise<void> {
     const { error } = await this.sb.from('product_images').update({ color_id: colourId }).eq('id', imageId);
-    if (error) fail(error, 'Couldn’t save.');
+    if (error) fail(error, 'errors.save');
   }
 
   async deleteImage(image: ImageRow): Promise<void> {
     const { error } = await this.sb.from('product_images').delete().eq('id', image.id);
-    if (error) fail(error, 'Couldn’t delete the photo.');
+    if (error) fail(error, 'errors.deletePhoto');
     await this.removeFiles([image.storage_path]);
   }
 
@@ -329,7 +329,7 @@ export class Catalogue {
         .order('id')
         .range(from, to)
         .overrideTypes<LabelVariant[], { merge: false }>(),
-    ).catch((e) => fail(e, 'Couldn’t load the products.'));
+    ).catch((e) => fail(e, 'errors.loadProducts'));
     return data.map((v) => ({ ...v, stock: first(v.stock) }));
   }
 
@@ -346,7 +346,7 @@ export class Catalogue {
         .eq(column, code)
         .maybeSingle()
         .overrideTypes<ScanResult, { merge: false }>();
-      if (error) fail(error, 'Couldn’t look that up.');
+      if (error) fail(error, 'errors.lookUp');
       if (data) return { ...data, stock: first(data.stock) };
     }
     return null;

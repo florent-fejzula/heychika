@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Catalogue, Category, Colour, ProductDetail, ProductInput, ProductStatus, Size, VariantRow } from '../../core/catalogue';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { BarcodeLinker, LinkableSize, isLinked } from '../shared/barcode-linker';
 import { ImageManager } from './image-manager';
 import { VariantManager } from './variant-manager';
@@ -10,13 +11,14 @@ const blankToNull = (s: string): string | null => (s.trim() === '' ? null : s.tr
 
 @Component({
   selector: 'app-product-editor',
-  imports: [ReactiveFormsModule, RouterLink, VariantManager, ImageManager, BarcodeLinker],
+  imports: [ReactiveFormsModule, RouterLink, VariantManager, ImageManager, BarcodeLinker, TranslatePipe],
   templateUrl: './product-editor.html',
   styleUrl: './product-editor.scss',
 })
 export class ProductEditor {
   private readonly catalogue = inject(Catalogue);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
 
   /** From the route (`products/:id`). Absent on `products/new`. */
   readonly id = input<string>();
@@ -80,7 +82,7 @@ export class ProductEditor {
   protected async save(): Promise<void> {
     if (this.form.invalid || this.saving()) {
       this.form.markAllAsTouched();
-      this.message.set({ kind: 'error', text: this.isNew() && !this.form.controls.category_id.value ? 'Pick a category first.' : 'The name is needed.' });
+      this.message.set({ kind: 'error', text: this.i18n.t(this.isNew() && !this.form.controls.category_id.value ? 'admin.design.pickCategory' : 'admin.design.nameNeeded') });
       return;
     }
     this.saving.set(true);
@@ -105,7 +107,7 @@ export class ProductEditor {
         await this.catalogue.updateProduct(this.product()!.id, input);
         this.product.update((p) => (p ? { ...p, ...input } : p));
         this.form.markAsPristine();
-        this.message.set({ kind: 'ok', text: 'Saved.' });
+        this.message.set({ kind: 'ok', text: this.i18n.t('admin.common.saved') });
       }
     } catch (e) {
       this.message.set({ kind: 'error', text: (e as Error).message });
@@ -143,7 +145,7 @@ export class ProductEditor {
 
   protected async remove(): Promise<void> {
     const p = this.product();
-    if (!p || !confirm(`Delete “${p.name}” and its photos? This can’t be undone.`)) return;
+    if (!p || !confirm(this.i18n.t('admin.design.confirmDelete', { name: p.name }))) return;
     try {
       await this.catalogue.deleteProduct(p.id);
       await this.router.navigateByUrl('/admin/products');

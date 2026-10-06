@@ -7,6 +7,7 @@ import {
   buyingReport, owedReport, periodFor, salesReport, stockReport,
 } from '../../core/reports';
 import { workbook } from '../../core/xlsx';
+import { I18n } from '../../core/i18n';
 import { BuyingReport } from './buying-report';
 import { buyingSheets, owedSheets, salesSheets, stockSheets } from './exports';
 import { OwedReport } from './owed-report';
@@ -160,6 +161,8 @@ describe('BuyingReport', () => {
 });
 
 describe('Excel exports', () => {
+  beforeEach(() => TestBed.inject(I18n));
+
   it('build a workbook for every report', () => {
     const period = periodFor('month');
     const books = [

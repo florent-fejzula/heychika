@@ -1,5 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../core/i18n';
 import { Loaded } from '../resolvers';
 import { ShopApi, ShopProduct, slugify } from '../shop-api';
 import { ShopState } from '../shop-state';
@@ -20,7 +21,7 @@ interface Card {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })

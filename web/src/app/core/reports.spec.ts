@@ -17,6 +17,11 @@ import {
   stockReport,
   unitSaleEur,
 } from './reports';
+import { TestBed } from '@angular/core/testing';
+import { I18n } from './i18n';
+
+// The words come from the English translations (src/test-providers.ts).
+beforeEach(() => TestBed.inject(I18n));
 
 // Midday, so the tests read the same in any time zone.
 const at = (date: string) => new Date(`${date}T12:00:00`).toISOString();

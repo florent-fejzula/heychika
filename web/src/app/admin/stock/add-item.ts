@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, effect, inject, input, signal, untrack
 import { Router, RouterLink } from '@angular/router';
 import { Catalogue, Category, Colour, ProductSummary, Size, VariantRow } from '../../core/catalogue';
 import { landedCosts } from '../../core/costing';
+import { I18n, TranslatePipe } from '../../core/i18n';
 import { formatCode, formatMoney, parseAmount, parseCount } from '../../core/money';
 import { PurchaseLine, PurchaseRow, Purchases, TripItem } from '../../core/purchases';
 
@@ -23,7 +24,7 @@ const key = (colourId: number, sizeId: number) => `${colourId}-${sizeId}`;
  */
 @Component({
   selector: 'app-add-item',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './add-item.html',
   styleUrl: './add-item.scss',
 })
@@ -31,6 +32,7 @@ export class AddItem {
   private readonly catalogue = inject(Catalogue);
   private readonly purchases = inject(Purchases);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18n);
 
   /** The trip, from `stock/purchases/:id/add`. Absent when adding straight to stock. */
   readonly id = input<string>();
@@ -217,7 +219,7 @@ export class AddItem {
   protected applyFill(): void {
     const n = parseCount(this.fill());
     if (n === null) {
-      this.error.set('Enter a whole number to put in every box.');
+      this.error.set(this.i18n.t('admin.addItem.enterWhole'));
       return;
     }
     const q: Record<string, string> = { ...this.qty() };
@@ -254,27 +256,27 @@ export class AddItem {
     const existing = this.existing();
     const isNew = this.mode() === 'new';
 
-    if (!isNew && !existing) return this.fail('Find the design first.');
-    if (isNew && !this.name().trim()) return this.fail('Give it a name, like “Black satin wrap dress”.');
-    if (isNew && !this.categoryId()) return this.fail('Choose a category.');
-    if (!this.gridColours().length) return this.fail('Tick at least one colour.');
-    if (!this.gridSizes().length) return this.fail('Tick at least one size.');
+    if (!isNew && !existing) return this.fail('admin.addItem.findFirst');
+    if (isNew && !this.name().trim()) return this.fail('admin.addItem.nameIt');
+    if (isNew && !this.categoryId()) return this.fail('admin.addItem.chooseCategory');
+    if (!this.gridColours().length) return this.fail('admin.addItem.tickColour');
+    if (!this.gridSizes().length) return this.fail('admin.addItem.tickSize');
 
     const lines: TripItem['lines'] = [];
     for (const c of this.gridColours()) {
       for (const s of this.gridSizes()) {
         const text = this.qtyOf(c.id, s.id).trim();
         const n = text === '' ? 0 : parseCount(text);
-        if (n === null) return this.fail(`“${text}” isn’t a number of items (${c.name} ${s.label}).`);
+        if (n === null) return this.fail('admin.addItem.notANumber', { text, colour: c.name, size: s.label });
         lines.push({ color_id: c.id, size_id: s.id, qty: n });
       }
     }
-    if (!lines.some((l) => l.qty > 0)) return this.fail('Enter how many you have in at least one box.');
+    if (!lines.some((l) => l.qty > 0)) return this.fail('admin.addItem.enterOne');
 
     const paid = parseAmount(this.paid());
-    if (paid === null) return this.fail(`Enter what you paid per item, in ${this.currency()}.`);
+    if (paid === null) return this.fail('admin.addItem.enterPaid', { currency: this.currency() });
     const price = parseAmount(this.price());
-    if (price === null) return this.fail('Enter the selling price in euros.');
+    if (price === null) return this.fail('admin.addItem.enterPrice');
 
     const item: TripItem = isNew
       ? { product_id: null, category_id: this.categoryId()!, name: this.name().trim(), show_online: this.showOnline(), price_eur: price, unit_price: paid, lines }
@@ -290,7 +292,7 @@ export class AddItem {
       const startAt = existing?.images.length ?? 0;
       const failed: string[] = [];
       for (const [i, photo] of photos.entries()) {
-        this.progress.set(`Uploading photo ${i + 1} of ${photos.length}…`);
+        this.progress.set(this.i18n.t('admin.images.uploadingN', { n: i + 1, total: photos.length }));
         try {
           await this.catalogue.uploadImage(saved.product_id, photo.file, startAt + i);
         } catch {
@@ -301,7 +303,7 @@ export class AddItem {
       const added = this.total();
       if (trip) {
         await this.router.navigate(['/admin/stock/purchases', trip.id], {
-          queryParams: { added: `${item.name ?? existing!.name}: ${added} ${added === 1 ? 'item' : 'items'}`, photos: failed.length || null },
+          queryParams: { added, name: item.name ?? existing!.name, photos: failed.length || null },
         });
       } else {
         await this.router.navigate(['/admin/products', saved.product_id], {
@@ -309,7 +311,7 @@ export class AddItem {
         });
       }
     } catch (e) {
-      this.fail((e as Error).message);
+      this.error.set((e as Error).message);
     } finally {
       this.saving.set(false);
       this.progress.set(null);
@@ -339,8 +341,8 @@ export class AddItem {
     this.error.set(null);
   }
 
-  private fail(text: string): void {
-    this.error.set(text);
+  private fail(key: string, params?: Record<string, unknown>): void {
+    this.error.set(this.i18n.t(key, params));
   }
 
   private async load(id: string | undefined, design: string | undefined): Promise<void> {

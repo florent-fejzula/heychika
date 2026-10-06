@@ -1,15 +1,15 @@
 <div class="stack">
-  <a class="back" routerLink="/admin/customers">← Customers</a>
+  <a class="back" routerLink="/admin/customers">← {{ 'admin.customers.title' | t }}</a>
 
   @switch (state()) {
     @case ('loading') {
-      <p class="muted">Loading…</p>
+      <p class="muted">{{ 'common.loading' | t }}</p>
     }
     @case ('error') {
       <p class="notice notice-error">{{ loadError() }}</p>
     }
     @case ('missing') {
-      <p class="notice">There’s no such customer.</p>
+      <p class="notice">{{ 'admin.customers.missing' | t }}</p>
     }
     @case ('ready') {
       @let c = customer()!;
@@ -17,40 +17,40 @@
 
       @if (totals(); as t) {
         <p class="muted">
-          {{ t.orders }} {{ t.orders === 1 ? 'order' : 'orders' }} · {{ t.spent }} paid
-          @if (t.notDelivered) { · <strong class="warn">{{ t.notDelivered }} not delivered or returned</strong> }
+          {{ 'admin.dashboard.orders' | t: { count: t.orders } }} · {{ 'admin.customers.paid' | t: { amount: t.spent } }}
+          @if (t.notDelivered) { · <strong class="warn">{{ 'admin.customers.notDelivered' | t: { count: t.notDelivered } }}</strong> }
         </p>
       }
       @if (saved()) {
-        <p class="notice notice-ok" role="status">Saved. Orders already placed keep the address they were sent to.</p>
+        <p class="notice notice-ok" role="status">{{ 'admin.customers.saved' | t }}</p>
       }
 
       <section class="card stack">
         @if (editing()) {
           <div class="grid-2">
-            <label class="field"><span>First name</span><input [value]="form().first_name" (input)="set('first_name', $any($event.target).value)" /></label>
-            <label class="field"><span>Last name</span><input [value]="form().last_name" (input)="set('last_name', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.firstName' | t }}</span><input [value]="form().first_name" (input)="set('first_name', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.lastName' | t }}</span><input [value]="form().last_name" (input)="set('last_name', $any($event.target).value)" /></label>
           </div>
-          <label class="field"><span>Phone</span><input type="tel" [value]="form().phone" (input)="set('phone', $any($event.target).value)" /></label>
-          <label class="field"><span>Town or city</span><input [value]="form().city" (input)="set('city', $any($event.target).value)" /></label>
-          <label class="field"><span>Street and number</span><input [value]="form().address" (input)="set('address', $any($event.target).value)" /></label>
+          <label class="field"><span>{{ 'shop.checkout.phone' | t }}</span><input type="tel" [value]="form().phone" (input)="set('phone', $any($event.target).value)" /></label>
+          <label class="field"><span>{{ 'shop.checkout.city' | t }}</span><input [value]="form().city" (input)="set('city', $any($event.target).value)" /></label>
+          <label class="field"><span>{{ 'shop.checkout.street' | t }}</span><input [value]="form().address" (input)="set('address', $any($event.target).value)" /></label>
           <div class="grid-2">
-            <label class="field"><span>Postcode</span><input [value]="form().postal_code" (input)="set('postal_code', $any($event.target).value)" /></label>
-            <label class="field"><span>Email</span><input type="email" [value]="form().email" (input)="set('email', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'shop.checkout.postcode' | t }}</span><input [value]="form().postal_code" (input)="set('postal_code', $any($event.target).value)" /></label>
+            <label class="field"><span>{{ 'admin.login.email' | t }}</span><input type="email" [value]="form().email" (input)="set('email', $any($event.target).value)" /></label>
           </div>
-          <label class="field"><span>Notes about her</span><textarea rows="2" [value]="form().notes" (input)="set('notes', $any($event.target).value)" placeholder="e.g. size M in dresses, prefers WhatsApp"></textarea></label>
+          <label class="field"><span>{{ 'admin.customers.notes' | t }}</span><textarea rows="2" [value]="form().notes" (input)="set('notes', $any($event.target).value)" [placeholder]="'admin.customers.notesExample' | t"></textarea></label>
           @if (error(); as message) {
             <p class="notice notice-error" role="alert">{{ message }}</p>
           }
           <div class="toolbar">
-            <button class="btn btn-primary" type="button" (click)="save()" [disabled]="busy()">Save</button>
-            <button class="btn" type="button" (click)="editing.set(false)">Never mind</button>
+            <button class="btn btn-primary" type="button" (click)="save()" [disabled]="busy()">{{ 'common.save' | t }}</button>
+            <button class="btn" type="button" (click)="editing.set(false)">{{ 'admin.order.neverMind' | t }}</button>
           </div>
         } @else {
           <div class="phone">
             <a class="number" [href]="'tel:+' + digits()">{{ c.phone }}</a>
             <div class="toolbar">
-              <a class="btn btn-small" [href]="'tel:+' + digits()">Call</a>
+              <a class="btn btn-small" [href]="'tel:+' + digits()">{{ 'admin.order.call' | t }}</a>
               <a class="btn btn-small" [href]="'https://wa.me/' + digits()" target="_blank" rel="noopener">WhatsApp</a>
               <a class="btn btn-small" [href]="'viber://chat?number=%2B' + digits()">Viber</a>
             </div>
@@ -58,18 +58,18 @@
           <address>
             {{ c.address }}<br />
             {{ c.postal_code ? c.postal_code + ' ' : '' }}{{ c.city }}<br />
-            {{ countryName[c.country] }}
+            {{ countryName[c.country] | t }}
           </address>
           @if (c.email) { <p class="line">{{ c.email }}</p> }
           @if (c.notes) { <p class="note">{{ c.notes }}</p> }
           <div class="toolbar">
-            <button class="btn btn-small" type="button" (click)="edit()">Edit</button>
+            <button class="btn btn-small" type="button" (click)="edit()">{{ 'common.edit' | t }}</button>
           </div>
         }
       </section>
 
       <section class="stack">
-        <h2>Orders</h2>
+        <h2>{{ 'admin.shell.orders' | t }}</h2>
         <ul class="list">
           @for (o of c.orders; track o.id) {
             <li>
@@ -80,7 +80,7 @@
                 </span>
                 <span class="nums">
                   <span>{{ money(o.total_in_currency, o.currency) }}</span>
-                  <span class="badge badge-muted">{{ label[o.status] }}</span>
+                  <span class="badge badge-muted">{{ label[o.status] | t }}</span>
                 </span>
               </a>
             </li>

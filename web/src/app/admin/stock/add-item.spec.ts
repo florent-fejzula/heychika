@@ -222,7 +222,7 @@ describe('AddItem', () => {
       saveButton(el).click();
       await settle(fixture);
       expect(purchases.saveItem).toHaveBeenCalledWith(9, expect.objectContaining({ unit_price: 600, price_eur: 24 }));
-      expect(navigate).toHaveBeenCalledWith(['/admin/stock/purchases', 9], { queryParams: { added: 'Linen dress: 10 items', photos: null } });
+      expect(navigate).toHaveBeenCalledWith(['/admin/stock/purchases', 9], { queryParams: { added: 10, name: 'Linen dress', photos: null } });
     });
 
     it('opens a design already on the trip with its sizes, numbers and prices, to correct them', async () => {
