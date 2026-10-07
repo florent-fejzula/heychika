@@ -6,7 +6,7 @@
     {{ progress() ?? ((images().length ? 'admin.images.addMore' : 'admin.images.add') | t) }}
   </label>
   <p class="muted hint">
-    {{ 'admin.images.hint' | t }}
+    {{ 'admin.images.hint' | t }} <span class="paste-hint">{{ 'admin.images.pasteHint' | t }}</span>
   </p>
 
   @if (message(); as m) {

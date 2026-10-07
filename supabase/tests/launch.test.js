@@ -104,8 +104,8 @@ test('the public can read only the catalogue, prices, stock levels and shop sett
      where grantee = 'anon' and table_schema = 'public'
      group by 1, 2 order by 1, 2`);
   assert.deepEqual(columns, [
-    { t: 'categories', p: 'SELECT', c: 'active,code,created_at,id,name,size_type,sort_order' },
-    { t: 'colors', p: 'SELECT', c: 'active,code,hex,id,name,sort_order' },
+    { t: 'categories', p: 'SELECT', c: 'active,code,created_at,id,name,name_sq,size_type,sort_order' },
+    { t: 'colors', p: 'SELECT', c: 'active,code,hex,id,name,name_sq,sort_order' },
     { t: 'delivery_zones', p: 'SELECT', c: 'active,country,currency,est_days,fee_eur,free_over_eur' },
     { t: 'product_images', p: 'SELECT', c: 'color_id,created_at,id,is_primary,product_id,sort_order,storage_path' },
     { t: 'products', p: 'SELECT', c: 'brand,category_id,created_at,description,featured,id,material,model_code,name,show_online,slug,status,updated_at' },
@@ -113,7 +113,7 @@ test('the public can read only the catalogue, prices, stock levels and shop sett
       t: 'settings', p: 'SELECT',
       c: 'about_text,all_per_eur,all_rounding,contact_email,contact_phone,facebook_url,id,instagram_url,mkd_per_eur,mkd_rounding,returns_text,store_name,tiktok_url',
     },
-    { t: 'sizes', p: 'SELECT', c: 'active,code,id,label,size_type,sort_order' },
+    { t: 'sizes', p: 'SELECT', c: 'active,code,id,label,label_sq,size_type,sort_order' },
     { t: 'stock', p: 'SELECT', c: 'qty_available,variant_id' },
     { t: 'variants', p: 'SELECT', c: 'active,color_id,compare_at_price_eur,id,price_eur,product_id,size_id,sku' },
   ]);

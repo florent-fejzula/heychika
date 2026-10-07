@@ -313,6 +313,13 @@ input[type='checkbox'] {
   }
 }
 
+// "You can paste a photo with Ctrl+V": means nothing on a phone.
+@media (hover: none) {
+  .paste-hint {
+    display: none;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Printing: only the page content, none of the admin chrome.
 

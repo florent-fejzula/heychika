@@ -1,5 +1,5 @@
 <div class="stack">
-  @if (trip(); as t) {
+  @if (id() !== undefined && trip(); as t) {
     <a class="back" [routerLink]="['/admin/stock/purchases', t.id]">← {{ t.reference }}</a>
   } @else {
     <a class="back" routerLink="/admin/stock">← {{ 'admin.shell.stock' | t }}</a>
@@ -26,16 +26,7 @@
       </section>
     }
     @case ('ready') {
-      <div>
-        <h1>{{ 'admin.addItem.title' | t }}</h1>
-        <p class="muted lead">
-          @if (onTrip()) {
-            {{ 'admin.addItem.leadTrip' | t }}
-          } @else {
-            {{ 'admin.addItem.leadStock' | t }}
-          }
-        </p>
-      </div>
+      <h1>{{ 'admin.addItem.title' | t }}</h1>
 
       <div class="chips" role="radiogroup" [attr.aria-label]="'admin.addItem.what' | t">
         <label class="chip"><input type="radio" name="mode" [checked]="mode() === 'new'" (change)="setMode('new')" /> {{ 'admin.addItem.somethingNew' | t }}</label>
@@ -80,7 +71,7 @@
               <span>+ {{ 'admin.images.title' | t }}</span>
             </label>
           </div>
-          <p class="muted small">{{ 'admin.addItem.photosHint' | t }}</p>
+          <p class="muted small">{{ 'admin.addItem.photosHint' | t }} <span class="paste-hint">{{ 'admin.images.pasteHint' | t }}</span></p>
 
           <label class="field">
             <span>{{ 'admin.common.name' | t }}</span>
@@ -93,6 +84,25 @@
               @for (c of categories(); track c.id) {
                 <label class="chip small"><input type="radio" name="category" [checked]="categoryId() === c.id" (change)="chooseCategory(c.id)" /> {{ c.name }}</label>
               }
+            </div>
+          </div>
+
+          <label class="field">
+            <span>{{ 'admin.design.description' | t }} <em>{{ 'shop.checkout.optional' | t }}</em></span>
+            <textarea rows="3" [placeholder]="'admin.design.descriptionPlaceholder' | t" [value]="description()" (input)="description.set($any($event.target).value)"></textarea>
+          </label>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>{{ 'admin.design.material' | t }} <em>{{ 'shop.checkout.optional' | t }}</em></span>
+              <input type="text" autocomplete="off" [placeholder]="'admin.design.materialPlaceholder' | t" [value]="material()" (input)="material.set($any($event.target).value)" />
+            </label>
+            <div class="field">
+              <label class="field">
+                <span>{{ 'admin.design.brand' | t }} <em>{{ 'shop.checkout.optional' | t }}</em></span>
+                <input type="text" autocomplete="off" [value]="brand()" (input)="brand.set($any($event.target).value)" />
+              </label>
+              <app-brand-picks [brands]="brands()" [value]="brand()" (pick)="brand.set($event)" />
             </div>
           </div>
         </section>
@@ -169,6 +179,92 @@
 
         <!-- ------------------------------------------------------------- money -->
         <section class="card stack">
+          <div class="field">
+            <span id="trip-label">{{ 'admin.addItem.trip' | t }}</span>
+            <div class="trip-row">
+              <select aria-labelledby="trip-label" [disabled]="newTrip() !== null" (change)="chooseTrip($any($event.target).value)">
+                <option value="" [selected]="!trip()">{{ 'admin.addItem.tripNone' | t }}</option>
+                @for (p of trips(); track p.id) {
+                  <option [value]="p.id" [selected]="trip()?.id === p.id">{{ p.reference }}</option>
+                }
+              </select>
+              @if (!newTrip()) {
+                <button class="btn" type="button" (click)="openNewTrip()">+ {{ 'admin.addItem.newTrip' | t }}</button>
+              }
+            </div>
+            @if (!newTrip()) {
+              <small>{{ (onTrip() ? 'admin.addItem.tripHint' : 'admin.addItem.noTripHint') | t }}</small>
+            }
+          </div>
+
+          @if (newTrip(); as nt) {
+            <div class="new-trip stack">
+              <strong>{{ 'admin.trips.new' | t }}</strong>
+              <div class="grid-2">
+                <label class="field">
+                  <span>{{ 'admin.common.name' | t }}</span>
+                  <input type="text" autocomplete="off" [placeholder]="'admin.trip.namePlaceholder' | t" [value]="nt.reference" (input)="editNewTrip({ reference: $any($event.target).value })" />
+                </label>
+                <label class="field">
+                  <span>{{ 'admin.trip.date' | t }}</span>
+                  <input type="date" [value]="nt.date" (change)="editNewTrip({ date: $any($event.target).value })" />
+                </label>
+              </div>
+              <div class="grid-2">
+                <label class="field">
+                  <span>{{ 'admin.trip.costsEur' | t }}</span>
+                  <input type="text" inputmode="decimal" autocomplete="off" placeholder="0" [value]="nt.costs" (input)="editNewTrip({ costs: $any($event.target).value })" />
+                  <small>{{ 'admin.trip.costsHint' | t }}</small>
+                </label>
+                <label class="field">
+                  <span>{{ 'admin.trip.expected' | t }}</span>
+                  <input type="text" inputmode="numeric" autocomplete="off" placeholder="150" [value]="nt.expected" (input)="editNewTrip({ expected: $any($event.target).value })" />
+                  <small>{{ 'admin.trip.expectedHint' | t }}</small>
+                </label>
+              </div>
+              <div class="grid-2">
+                <label class="field">
+                  <span>{{ 'admin.trip.invoiceIn' | t }}</span>
+                  <select (change)="editNewTrip({ currency: $any($event.target).value })">
+                    @for (c of currencies; track c) {
+                      <option [value]="c" [selected]="nt.currency === c">{{ 'admin.trip.currency.' + c | t }}</option>
+                    }
+                  </select>
+                </label>
+                @if (nt.currency !== 'EUR') {
+                  <label class="field">
+                    <span>{{ 'admin.trip.perEuro' | t: { currency: nt.currency } }}</span>
+                    <input type="text" inputmode="decimal" autocomplete="off" [placeholder]="nt.currency === 'TRY' ? '38.5' : '1.08'" [value]="nt.rate" (input)="editNewTrip({ rate: $any($event.target).value })" />
+                    <small>{{ 'admin.trip.rateHint' | t }}</small>
+                  </label>
+                }
+              </div>
+              @if (tripError(); as message) {
+                <p class="notice notice-error" role="alert">{{ message }}</p>
+              }
+              <div class="toolbar">
+                <button class="btn btn-primary" type="button" [disabled]="creatingTrip()" (click)="createTrip()">{{ (creatingTrip() ? 'common.saving' : 'admin.addItem.createTrip') | t }}</button>
+                <button class="btn" type="button" (click)="newTrip.set(null)">{{ 'common.cancel' | t }}</button>
+              </div>
+            </div>
+          } @else {
+            @if (tripError(); as message) {
+              <p class="notice notice-error" role="alert">{{ message }}</p>
+            }
+            @if (trip(); as tr) {
+              @if (tr.extra_costs_eur > 0 && !tr.expected_items) {
+                <div class="field">
+                  <span id="expected-label">{{ 'admin.trip.expectedOn' | t: { name: tr.reference } }}</span>
+                  <span class="fill">
+                    <input type="text" inputmode="numeric" autocomplete="off" placeholder="150" aria-labelledby="expected-label" [value]="expected()" (input)="expected.set($any($event.target).value)" />
+                    <button class="btn btn-small" type="button" (click)="saveExpected()">{{ 'common.save' | t }}</button>
+                  </span>
+                  <small>{{ 'admin.trip.expectedHint' | t }}</small>
+                </div>
+              }
+            }
+          }
+
           <div class="grid-2">
             <label class="field">
               <span>{{ 'admin.addItem.paid' | t: { currency: currency() === 'EUR' ? '€' : currency() } }}</span>
@@ -181,20 +277,38 @@
           </div>
 
           @if (estimate(); as e) {
-            <p class="estimate">
-              {{ (onTrip() && trip()!.extra_costs_eur > 0 ? 'admin.addItem.costsWithTrip' : 'admin.addItem.costs') | t: { cost: money(e.landed) } }}
-              {{ 'admin.addItem.withMarkup' | t: { pct: markup() } }} <strong>{{ money(e.suggested) }}</strong>.
-              @if (price() !== '' + e.suggested) {
-                <button class="btn btn-small" type="button" (click)="useSuggested()">{{ 'admin.addItem.use' | t: { price: money(e.suggested) } }}</button>
+            <div class="estimate">
+              <p>
+                @if (e.share > 0) {
+                  {{ 'admin.addItem.costsSplit' | t: { cost: money(e.landed), paid: money(e.paid), share: money(e.share) } }}
+                } @else {
+                  {{ 'admin.addItem.costs' | t: { cost: money(e.landed) } }}
+                }
+                {{ 'admin.addItem.withMarkup' | t: { pct: markup() } }} <strong>{{ money(e.suggested) }}</strong>
+                @if (e.tripAdds > 0) {
+                  <span class="trip-adds">{{ 'admin.addItem.tripAdds' | t: { amount: money(e.tripAdds) } }}</span>
+                }
+                @if (price() !== '' + e.suggested) {
+                  <button class="btn btn-small" type="button" (click)="useSuggested()">{{ 'admin.addItem.use' | t: { price: money(e.suggested) } }}</button>
+                }
+              </p>
+              @if (e.share > 0) {
+                <p class="muted small">{{ (e.guessing ? 'admin.addItem.spreadSoFar' : 'admin.addItem.spreadOver') | t: { costs: money(e.tripCosts), count: e.spreadOver } }}</p>
               }
-            </p>
+            </div>
           }
 
           @if (mode() === 'new') {
-            <label class="check">
-              <input type="checkbox" [checked]="showOnline()" (change)="showOnline.set($any($event.target).checked)" />
-              {{ 'admin.addItem.showOnline' | t }}
-            </label>
+            <div class="checks">
+              <label class="check">
+                <input type="checkbox" [checked]="showOnline()" (change)="showOnline.set($any($event.target).checked)" />
+                {{ 'admin.addItem.showOnline' | t }}
+              </label>
+              <label class="check">
+                <input type="checkbox" [checked]="featured()" (change)="featured.set($any($event.target).checked)" />
+                {{ 'admin.design.feature' | t }}
+              </label>
+            </div>
           }
         </section>
 

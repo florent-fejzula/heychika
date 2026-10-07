@@ -139,8 +139,8 @@ describe('VariantManager', () => {
     expect(rows[1].querySelector('.btn-danger')).toBeTruthy();
   });
 
-  it('shows cost and margin once a size has a cost', async () => {
+  it('shows the cost and what she makes on it once a size has a cost', async () => {
     const { el } = await setup([{ ...existing(1, 1, 40), cost_eur: 20 }]);
-    expect(el.querySelector('.row .price small')?.textContent).toContain('50% margin');
+    expect(el.querySelector('.row .price small')?.textContent).toContain('cost €20.00 · profit €20.00 (+100%)');
   });
 });

@@ -1,6 +1,7 @@
 import { Component, effect, inject, input, signal, untracked } from '@angular/core';
 import { Catalogue, ImageRow } from '../../core/catalogue';
 import { I18n, TranslatePipe } from '../../core/i18n';
+import { pastedImages } from '../../core/images';
 
 export interface ColourOption {
   id: number;
@@ -12,6 +13,7 @@ export interface ColourOption {
   imports: [TranslatePipe],
   templateUrl: './image-manager.html',
   styleUrl: './image-manager.scss',
+  host: { '(document:paste)': 'onPaste($event)' },
 })
 export class ImageManager {
   private readonly catalogue = inject(Catalogue);
@@ -40,6 +42,18 @@ export class ImageManager {
   protected async upload(input: HTMLInputElement): Promise<void> {
     const files = Array.from(input.files ?? []);
     input.value = ''; // lets the same photo be picked again later
+    await this.uploadFiles(files);
+  }
+
+  /** Ctrl+V of a screenshot or a copied photo, anywhere on the design's page. */
+  protected async onPaste(event: ClipboardEvent): Promise<void> {
+    const files = pastedImages(event);
+    if (!files.length || this.progress() !== null) return;
+    event.preventDefault();
+    await this.uploadFiles(files);
+  }
+
+  private async uploadFiles(files: File[]): Promise<void> {
     if (!files.length) return;
 
     this.message.set(null);

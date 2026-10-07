@@ -63,6 +63,39 @@ test('it can be kept out of the online shop', async () => {
   assert.equal((await one(db, 'select show_online from products where id = $1', [out.product_id])).show_online, false);
 });
 
+test('the rest of a new design goes in the same step: description, material, brand, featured', async () => {
+  const db = await freshDb();
+  const r = await ref(db);
+  const out = await save(db, null, {
+    category_id: r.dresses, name: 'Linen dress', description: '  Loose fit, falls below the knee.  ', material: 'Linen',
+    brand: 'Vavex', featured: true, price_eur: 35, unit_price: 12,
+    lines: [{ color_id: r.black, size_id: r.m, qty: 1 }],
+  });
+  assert.deepEqual(
+    { ...(await one(db, 'select description, material, brand, featured from products where id = $1', [out.product_id])) },
+    { description: 'Loose fit, falls below the knee.', material: 'Linen', brand: 'Vavex', featured: true },
+  );
+
+  // Left empty, they stay empty.
+  const bare = await save(db, null, {
+    category_id: r.dresses, name: 'Plain dress', description: ' ', brand: '', price_eur: 30, unit_price: 10,
+    lines: [{ color_id: r.black, size_id: r.m, qty: 1 }],
+  });
+  assert.deepEqual(
+    { ...(await one(db, 'select description, material, brand, featured from products where id = $1', [bare.product_id])) },
+    { description: null, material: null, brand: null, featured: false },
+  );
+});
+
+test('a trip can say about how many items it brought', async () => {
+  const db = await freshDb();
+  const trip = await staff(db, `insert into purchases (reference, extra_costs_eur, expected_items) values ('Istanbul, October', 300, 140) returning id, expected_items`);
+  assert.equal(trip.expected_items, 140);
+  await staff(db, 'update purchases set expected_items = 150 where id = $1 returning id', [trip.id]);
+  assert.equal((await one(db, 'select expected_items from purchases where id = $1', [trip.id])).expected_items, 150);
+  await assert.rejects(staff(db, 'update purchases set expected_items = 0 where id = $1 returning id', [trip.id]), /check/);
+});
+
 test('more of a design already in stock: same sizes reused, new ones added, the average cost moves', async () => {
   const db = await freshDb();
   const r = await ref(db);

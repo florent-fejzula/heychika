@@ -101,6 +101,12 @@
           </div>
 
           <label class="field">
+            <span>{{ 'admin.trip.expected' | t }}</span>
+            <input type="text" inputmode="numeric" formControlName="expected" autocomplete="off" placeholder="150" />
+            <small>{{ 'admin.trip.expectedHint' | t }}</small>
+          </label>
+
+          <label class="field">
             <span>{{ 'admin.trip.notes' | t }} <em>{{ 'shop.checkout.optional' | t }}</em></span>
             <textarea rows="2" formControlName="notes"></textarea>
           </label>

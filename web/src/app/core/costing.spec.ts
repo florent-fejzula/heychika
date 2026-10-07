@@ -1,4 +1,4 @@
-import { landedCosts, weightedAverage } from './costing';
+import { estimateLanded, landedCosts, weightedAverage } from './costing';
 
 const eur = { currencyPerEur: 1, extraCostsEur: 0, method: 'by_quantity' as const };
 
@@ -67,5 +67,31 @@ describe('weightedAverage', () => {
 
   it('is just the new cost when nothing was on the shelf', () => {
     expect(weightedAverage(99, 0, 23, 4)).toBe(23);
+  });
+});
+
+describe('estimateLanded', () => {
+  const eur = (extra: number, method: 'by_quantity' | 'by_value' = 'by_quantity') => ({ currencyPerEur: 1, extraCostsEur: extra, method });
+
+  it('spreads the trip costs over the items the trip is expected to bring, not just the first few entered', () => {
+    // €300 of trip costs, about 150 items: €2 each, even for the first 6 entered.
+    expect(estimateLanded([], { qty: 6, unitPrice: 10 }, eur(300), 150)).toEqual({ unitPriceEur: 10, extraEur: 2, landedEur: 12, spreadOver: 150 });
+    // Not told how many: only what's entered so far.
+    expect(estimateLanded([], { qty: 6, unitPrice: 10 }, eur(300), null)).toMatchObject({ extraEur: 50, spreadOver: 6 });
+  });
+
+  it('uses the real count once more than expected are entered', () => {
+    expect(estimateLanded([{ qty: 194, unitPrice: 8 }], { qty: 6, unitPrice: 10 }, eur(300), 150)).toMatchObject({ extraEur: 1.5, spreadOver: 200 });
+  });
+
+  it('by price: assumes the items still to come cost what the ones entered did, on average', () => {
+    // 16 entered worth €260; 160 expected, so about €2,600 of goods carry the €300.
+    const e = estimateLanded([{ qty: 10, unitPrice: 20 }], { qty: 6, unitPrice: 10 }, eur(300, 'by_value'), 160);
+    expect(e.extraEur).toBeCloseTo((300 * 10) / 2600, 4);
+  });
+
+  it('works in the trip currency', () => {
+    expect(estimateLanded([], { qty: 2, unitPrice: 400 }, { currencyPerEur: 40, extraCostsEur: 100, method: 'by_quantity' }, 50))
+      .toEqual({ unitPriceEur: 10, extraEur: 2, landedEur: 12, spreadOver: 50 });
   });
 });

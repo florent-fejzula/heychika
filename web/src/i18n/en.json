@@ -22,7 +22,8 @@
       "XK": "Kosovo",
       "MK": "North Macedonia",
       "AL": "Albania"
-    }
+    },
+    "cancel": "Cancel"
   },
   "titles": {
     "shop": "Hey Chika",
@@ -477,7 +478,8 @@
       "afterCreate": "After you create the design, you can add its colours, sizes and photos.",
       "pickCategory": "Pick a category first.",
       "nameNeeded": "The name is needed.",
-      "confirmDelete": "Delete “{{name}}” and its photos? This can’t be undone."
+      "confirmDelete": "Delete “{{name}}” and its photos? This can’t be undone.",
+      "brandsUsed": "Brands used before"
     },
     "barcodes": {
       "title": "Barcodes on the tags",
@@ -514,7 +516,6 @@
       "samePrice": "Same price for every size",
       "apply": "Apply",
       "priceFor": "Price in euros for {{sku}}",
-      "costMargin": "cost {{cost}} · {{pct}}% margin",
       "inStock": "in stock",
       "inUseTitle": "Has stock or sales history, so it can’t be removed",
       "inUse": "In use",
@@ -525,7 +526,8 @@
       "enterAllPrice": "Enter the price to give every size, for example 29.90.",
       "allNow": "Every size is now {{price}}.",
       "confirmRemove": "Remove {{colour}} {{size}} ({{sku}})? This can’t be undone.",
-      "removed": "Removed {{sku}}."
+      "removed": "Removed {{sku}}.",
+      "costProfit": "cost {{cost}} · profit {{profit}} ({{pct}})"
     },
     "images": {
       "title": "Photos",
@@ -540,7 +542,8 @@
       "delete": "Delete photo {{n}}",
       "uploadingN": "Uploading photo {{n}} of {{total}}…",
       "uploading": "Uploading…",
-      "confirmDelete": "Delete this photo?"
+      "confirmDelete": "Delete this photo?",
+      "pasteHint": "On a computer you can also paste one with Ctrl+V."
     },
     "lists": {
       "title": "Categories, colours & sizes",
@@ -799,7 +802,11 @@
       "confirmReceive": "Put {{count}} items on the shelf?\n\nTheir cost is fixed at {{average}} each on average. This can’t be undone.",
       "confirmReceive_one": "Put {{count}} item on the shelf?\n\nIts cost is fixed at {{average}}. This can’t be undone.",
       "confirmDelete": "Delete the draft “{{name}}” and everything entered on it?",
-      "averageNote": "average cost {{from}} → {{to}} ({{count}} already on the shelf)"
+      "averageNote": "average cost {{from}} → {{to}} ({{count}} already on the shelf)",
+      "expected": "About how many items did it bring?",
+      "expectedHint": "Optional. Spreads the trip costs over them in the suggested prices, from the first item you enter.",
+      "expectedOn": "About how many items did “{{name}}” bring?",
+      "enterExpected": "Enter about how many items as a whole number, or leave it empty."
     },
     "addItem": {
       "title": "Add item",
@@ -807,8 +814,6 @@
       "receivedTitle": "This trip is already received",
       "receivedText": "Its items are on the shelf and it can’t take more. Add these straight to stock, or start a new trip.",
       "straightToStock": "Add straight to stock",
-      "leadTrip": "To this trip. They go on the shelf when you receive it.",
-      "leadStock": "Straight into stock. Bought on a trip with travel or customs costs? Add it to the trip instead, so those costs count.",
       "what": "What are you adding?",
       "somethingNew": "Something new",
       "moreOfOne": "More of one I have",
@@ -825,7 +830,6 @@
       "paid": "Paid per item ({{currency}})",
       "sellingPrice": "Selling price (€)",
       "costs": "Costs you about {{cost}} each.",
-      "costsWithTrip": "Costs you about {{cost}} each, trip costs included.",
       "withMarkup": "With your {{pct}}% markup:",
       "use": "Use {{price}}",
       "showOnline": "Show it in the online shop",
@@ -844,7 +848,18 @@
       "notANumber": "“{{text}}” isn’t a number of items ({{colour}} {{size}}).",
       "enterOne": "Enter how many you have in at least one box.",
       "enterPaid": "Enter what you paid per item, in {{currency}}.",
-      "enterPrice": "Enter the selling price in euros."
+      "enterPrice": "Enter the selling price in euros.",
+      "trip": "Buying trip",
+      "tripNone": "None: straight onto the shelf",
+      "newTrip": "New trip",
+      "createTrip": "Create the trip and carry on",
+      "tripHint": "It goes on the shelf when you receive the trip, and the trip costs count in its price.",
+      "noTripHint": "Straight onto the shelf. Bought on a trip with travel or customs costs? Choose the trip, so they count in the price.",
+      "costsSplit": "Costs you about {{cost}} each: {{paid}} paid + {{share}} trip costs.",
+      "tripAdds": "(+{{amount}} for the trip costs)",
+      "spreadOver": "The trip’s {{costs}} of costs, spread over about {{count}} items.",
+      "spreadSoFar": "The trip’s {{costs}} of costs, spread over only the {{count}} items entered so far, so it’s high until the rest are in. Fill in above about how many the trip brought.",
+      "spreadSoFar_one": "The trip’s {{costs}} of costs, all on this {{count}} item so far, so it’s high until the rest are in. Fill in above about how many the trip brought."
     },
     "orderStatus": {
       "new": "New",

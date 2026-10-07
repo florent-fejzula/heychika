@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { landedCosts, weightedAverage } from '../../core/costing';
 import { I18n, TranslatePipe } from '../../core/i18n';
-import { formatCode, formatMoney, parseAmount, parseRate } from '../../core/money';
+import { formatCode, formatMoney, parseAmount, parseCount, parseRate } from '../../core/money';
 import { PurchaseInput, PurchaseLine, PurchaseRow, PurchaseCurrency, Purchases } from '../../core/purchases';
 import { BarcodeLinker, LinkableSize, isLinked } from '../shared/barcode-linker';
 
@@ -83,6 +83,7 @@ export class PurchaseEditor {
     rate: ['1'],
     extra: ['0'],
     method: ['by_quantity' as PurchaseRow['allocation_method']],
+    expected: [''],
     notes: [''],
   });
   protected readonly formCurrency = toSignal(this.form.controls.currency.valueChanges, { initialValue: 'EUR' as PurchaseCurrency });
@@ -170,6 +171,8 @@ export class PurchaseEditor {
     if (!v.purchase_date) return this.fail(this.i18n.t('admin.trip.pickDate'));
     if (rate === null) return this.fail(this.i18n.t('admin.trip.enterRate', { currency: v.currency, example: v.currency === 'TRY' ? '38.5' : '1.08' }));
     if (extra === null) return this.fail(this.i18n.t('admin.trip.enterCosts'));
+    const expected = v.expected.trim() === '' ? null : parseCount(v.expected);
+    if (expected === 0 || (v.expected.trim() !== '' && expected === null)) return this.fail(this.i18n.t('admin.trip.enterExpected'));
 
     const input: PurchaseInput = {
       reference: v.reference.trim(),
@@ -180,6 +183,8 @@ export class PurchaseEditor {
       extra_costs_eur: extra,
       allocation_method: v.method,
       notes: blankToNull(v.notes),
+      // Sent only when there's something to say, so trips save the same on a database without it.
+      ...((expected !== null || this.purchase()?.expected_items != null) && { expected_items: expected }),
     };
 
     this.saving.set(true);
@@ -303,6 +308,7 @@ export class PurchaseEditor {
         rate: String(p.currency_per_eur),
         extra: String(p.extra_costs_eur),
         method: p.allocation_method,
+        expected: p.expected_items ? String(p.expected_items) : '',
         notes: p.notes ?? '',
       });
       this.dirty.set(false);

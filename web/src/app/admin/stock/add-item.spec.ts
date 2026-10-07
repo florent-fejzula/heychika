@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { Catalogue, Category, Colour, ProductSummary, Size, VariantRow } from '../../core/catalogue';
-import { PurchaseLine, PurchaseRow, Purchases } from '../../core/purchases';
+import { PurchaseLine, PurchaseRow, PurchaseSummary, Purchases } from '../../core/purchases';
 import { AddItem } from './add-item';
 
 const categories: Category[] = [
@@ -55,17 +55,23 @@ async function settle(fixture: ComponentFixture<unknown>) {
   }
 }
 
-async function setup(opts: { tripId?: string; trip?: PurchaseRow | null; lines?: PurchaseLine[]; design?: string; variants?: VariantRow[] } = {}) {
+const summary = (t: PurchaseRow): PurchaseSummary => ({ ...t, lines: [] });
+
+async function setup(opts: { tripId?: string; trip?: PurchaseRow | null; lines?: PurchaseLine[]; design?: string; variants?: VariantRow[]; trips?: PurchaseRow[] } = {}) {
   const catalogue = {
     lookups: vi.fn().mockResolvedValue({ categories, colours, sizes }),
     listProducts: vi.fn().mockResolvedValue([wrap]),
     listVariants: vi.fn().mockResolvedValue(opts.variants ?? []),
     uploadImage: vi.fn().mockResolvedValue(undefined),
+    brands: vi.fn().mockResolvedValue(['Vavex', 'Zara']),
   };
   const purchases = {
     markup: vi.fn().mockResolvedValue(50),
     get: vi.fn().mockResolvedValue(opts.trip === undefined ? trip() : opts.trip),
     lines: vi.fn().mockResolvedValue(opts.lines ?? []),
+    list: vi.fn().mockResolvedValue((opts.trips ?? [trip(), trip({ id: 3, reference: 'Old one', status: 'received' })]).map(summary)),
+    create: vi.fn().mockResolvedValue(12),
+    setExpectedItems: vi.fn().mockResolvedValue(undefined),
     saveItem: vi.fn().mockResolvedValue({ product_id: 77, purchase_id: 9, variant_ids: [1] }),
   };
   TestBed.configureTestingModule({
@@ -85,6 +91,19 @@ const field = (el: HTMLElement, label: string) =>
   [...el.querySelectorAll<HTMLLabelElement>('label.field')].find((l) => l.querySelector('span')!.textContent!.startsWith(label))!.querySelector('input')!;
 const box = (el: HTMLElement, label: string) => el.querySelector<HTMLInputElement>(`input[aria-label="${label}, how many"]`)!;
 const saveButton = (el: HTMLElement) => el.querySelector<HTMLButtonElement>('button.btn-block')!;
+const button = (el: HTMLElement, text: string) => [...el.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent!.includes(text))!;
+const tripSelect = (el: HTMLElement) => el.querySelector<HTMLSelectElement>('select[aria-labelledby=trip-label]')!;
+
+/** A dress in black M, as far as the money: the part every trip test shares. */
+async function aDress(fixture: ComponentFixture<unknown>, el: HTMLElement, qty: string, paid: string, paidLabel = 'Paid per item') {
+  type(field(el, 'Name'), 'Linen dress');
+  await tick(fixture, chip(el, 'Dresses'));
+  await tick(fixture, chip(el, 'Black'));
+  await tick(fixture, chip(el, 'M'));
+  type(box(el, 'Black M'), qty);
+  type(field(el, paidLabel), paid);
+  await settle(fixture);
+}
 
 function type(input: HTMLInputElement, value: string) {
   input.value = value;
@@ -100,7 +119,7 @@ describe('AddItem', () => {
   describe('straight into stock', () => {
     it('takes a new product in one form, suggests its price, and opens it when done', async () => {
       const { fixture, el, purchases, navigate } = await setup();
-      expect(el.textContent).toContain('Straight into stock');
+      expect(el.textContent).toContain('Straight onto the shelf');
 
       type(field(el, 'Name'), ' Satin wrap dress ');
       await tick(fixture, chip(el, 'Dresses'));
@@ -122,7 +141,8 @@ describe('AddItem', () => {
       saveButton(el).click();
       await settle(fixture);
       expect(purchases.saveItem).toHaveBeenCalledWith(null, {
-        product_id: null, category_id: 1, name: 'Satin wrap dress', show_online: true, price_eur: 21, unit_price: 14,
+        product_id: null, category_id: 1, name: 'Satin wrap dress', description: null, material: null, brand: null,
+        show_online: true, featured: false, price_eur: 21, unit_price: 14,
         lines: [{ color_id: 10, size_id: 20, qty: 2 }, { color_id: 10, size_id: 21, qty: 3 }],
       });
       expect(navigate).toHaveBeenCalledWith(['/admin/products', 77], { queryParams: { added: 5, photos: null } });
@@ -178,6 +198,62 @@ describe('AddItem', () => {
       expect(purchases.saveItem).not.toHaveBeenCalled();
     });
 
+    it('takes the rest of the design too, and offers the brands used before', async () => {
+      const { fixture, el, purchases } = await setup();
+      el.querySelector<HTMLTextAreaElement>('textarea')!.value = ' Loose fit ';
+      el.querySelector('textarea')!.dispatchEvent(new Event('input'));
+      type(field(el, 'Material'), 'Linen');
+      const picks = () => [...el.querySelectorAll('app-brand-picks button')].map((b) => b.textContent!.trim());
+      expect(picks()).toEqual(['Vavex', 'Zara']);
+
+      // Typing narrows them; one tap fills the box.
+      type(field(el, 'Brand'), 'va');
+      await settle(fixture);
+      expect(picks()).toEqual(['Vavex']);
+      el.querySelector<HTMLButtonElement>('app-brand-picks button')!.click();
+      await settle(fixture);
+      expect(field(el, 'Brand').value).toBe('Vavex');
+      expect(picks()).toEqual([]);
+
+      await tick(fixture, [...el.querySelectorAll('label.check')].find((l) => l.textContent!.includes('Feature on the homepage'))!.querySelector('input')!);
+      await aDress(fixture, el, '1', '10');
+      saveButton(el).click();
+      await settle(fixture);
+      expect(purchases.saveItem).toHaveBeenCalledWith(null, expect.objectContaining({
+        description: 'Loose fit', material: 'Linen', brand: 'Vavex', featured: true,
+      }));
+    });
+
+    it('spells a brand the way it was written before', async () => {
+      const { fixture, el, purchases } = await setup();
+      type(field(el, 'Brand'), ' zara ');
+      await aDress(fixture, el, '1', '10');
+      saveButton(el).click();
+      await settle(fixture);
+      expect(purchases.saveItem).toHaveBeenCalledWith(null, expect.objectContaining({ brand: 'Zara' }));
+    });
+
+    it('takes a photo pasted with Ctrl+V, but leaves text pasted into a box alone', async () => {
+      const { fixture, el } = await setup();
+      Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() });
+      const shot = new File(['x'], 'image.png', { type: 'image/png' });
+      const paste = (target: EventTarget, types: string[]) => {
+        const event = new Event('paste', { bubbles: true, cancelable: true });
+        Object.defineProperty(event, 'clipboardData', { value: { types, files: [shot] } });
+        target.dispatchEvent(event);
+        return event;
+      };
+
+      expect(paste(document.body, ['Files']).defaultPrevented).toBe(true);
+      await settle(fixture);
+      expect(el.querySelectorAll('.photo').length).toBe(1);
+
+      // Copied from Excel: text, with a picture of it. Into the name box, it's the text she wants.
+      expect(paste(field(el, 'Name'), ['text/plain', 'Files']).defaultPrevented).toBe(false);
+      await settle(fixture);
+      expect(el.querySelectorAll('.photo').length).toBe(1);
+    });
+
     it('uploads the photos after saving', async () => {
       const { fixture, el, catalogue } = await setup();
       Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() });
@@ -206,17 +282,19 @@ describe('AddItem', () => {
       // Already 10 items on the trip; trip costs €20. Adding 10 more at 600 TRY (40 per €):
       // €15 each + €20 / 20 items = €16, + 50% = €24.
       const { fixture, el, purchases, navigate } = await setup({ tripId: '9', lines: [tripLine(99, 10, 400)] });
-      expect(el.textContent).toContain('go on the shelf when you receive it');
-      type(field(el, 'Name'), 'Linen dress');
-      await tick(fixture, chip(el, 'Dresses'));
-      await tick(fixture, chip(el, 'Black'));
-      await tick(fixture, chip(el, 'M'));
-      type(box(el, 'Black M'), '10');
-      type(field(el, 'Paid per item (TRY)'), '600');
-      await settle(fixture);
+      expect(el.textContent).toContain('goes on the shelf when you receive the trip');
+      expect(tripSelect(el).value).toBe('9');
+      await aDress(fixture, el, '10', '600', 'Paid per item (TRY)');
 
-      expect(el.querySelector('.estimate')!.textContent).toContain('€16.00');
-      expect(el.querySelector('.estimate')!.textContent).toContain('trip costs included');
+      const estimate = el.querySelector('.estimate')!.textContent!;
+      expect(estimate).toContain('€16.00 each: €15.00 paid + €1.00 trip costs');
+      expect(estimate).toContain('(+€1.00 for the trip costs)');
+      // The trip doesn't say how many items it brought, so the costs sit on the 20 entered.
+      expect(estimate).toContain('only the 20 items entered so far');
+      // Not filled in while it's a guess like that: she chooses.
+      expect(field(el, 'Selling price').value).toBe('');
+      button(el, 'Use €24.00').click();
+      await settle(fixture);
       expect(field(el, 'Selling price').value).toBe('24');
 
       saveButton(el).click();
@@ -244,6 +322,72 @@ describe('AddItem', () => {
         product_id: 5, price_eur: 39, unit_price: 500,
         lines: [{ color_id: 10, size_id: 20, qty: 1 }, { color_id: 10, size_id: 21, qty: 4 }],
       });
+    });
+
+    it('is picked in the form when adding from Stock, and only trips not yet received are offered', async () => {
+      const { fixture, el, purchases, navigate } = await setup({ lines: [tripLine(99, 10, 400)] });
+      expect([...tripSelect(el).options].map((o) => o.textContent!.trim())).toEqual(['None: straight onto the shelf', 'Istanbul, October']);
+
+      tripSelect(el).value = '9';
+      tripSelect(el).dispatchEvent(new Event('change'));
+      await settle(fixture);
+      expect(purchases.lines).toHaveBeenCalledWith(9);
+      await aDress(fixture, el, '10', '600', 'Paid per item (TRY)');
+      type(field(el, 'Selling price'), '25');
+
+      saveButton(el).click();
+      await settle(fixture);
+      expect(purchases.saveItem).toHaveBeenCalledWith(9, expect.objectContaining({ unit_price: 600, price_eur: 25 }));
+      expect(navigate).toHaveBeenCalledWith(['/admin/stock/purchases', 9], expect.anything());
+    });
+
+    it('can be made on the spot, and the item carries on with it, its costs spread over the items it brought', async () => {
+      const { fixture, el, purchases } = await setup({ trips: [] });
+      await aDress(fixture, el, '6', '10');
+      expect(field(el, 'Selling price').value).toBe('15');
+
+      button(el, 'New trip').click();
+      await settle(fixture);
+      const panel = el.querySelector<HTMLElement>('.new-trip')!;
+      type(field(panel, 'Name'), 'Istanbul, October 2026');
+      type(field(panel, 'Trip costs'), '300');
+      type(field(panel, 'About how many items'), '150');
+      const created = trip({ id: 12, reference: 'Istanbul, October 2026', currency: 'EUR', currency_per_eur: 1, extra_costs_eur: 300, expected_items: 150 });
+      purchases.get.mockResolvedValue(created);
+      purchases.list.mockResolvedValue([summary(created)]);
+      button(el, 'Create the trip and carry on').click();
+      await settle(fixture);
+
+      expect(purchases.create).toHaveBeenCalledWith(expect.objectContaining({
+        reference: 'Istanbul, October 2026', currency: 'EUR', currency_per_eur: 1, extra_costs_eur: 300, expected_items: 150,
+      }));
+      expect(tripSelect(el).value).toBe('12');
+      // What she typed is all still there.
+      expect(field(el, 'Name').value).toBe('Linen dress');
+      expect(box(el, 'Black M').value).toBe('6');
+
+      // €10 + €300 / 150 items = €12, + 50% = €18: €3 more because of the trip.
+      const estimate = el.querySelector('.estimate')!.textContent!;
+      expect(estimate).toContain('€10.00 paid + €2.00 trip costs');
+      expect(estimate).toContain('(+€3.00 for the trip costs)');
+      expect(estimate).toContain('spread over about 150 items');
+      expect(field(el, 'Selling price').value).toBe('18');
+    });
+
+    it('asks a trip without one about how many items it brought, and spreads its costs over them', async () => {
+      const { fixture, el, purchases } = await setup({ tripId: '9', lines: [tripLine(99, 10, 400)] });
+      await aDress(fixture, el, '10', '600', 'Paid per item (TRY)');
+      const ask = el.querySelector<HTMLInputElement>('input[aria-labelledby=expected-label]')!;
+      expect(el.querySelector('#expected-label')!.textContent).toContain('About how many items did “Istanbul, October” bring?');
+
+      type(ask, '100');
+      button(el, 'Save').click();
+      await settle(fixture);
+      expect(purchases.setExpectedItems).toHaveBeenCalledWith(9, 100);
+      // €20 over 100 items: €0.20 each, so €15.20 + 50% = €23, now filled in.
+      expect(el.querySelector('.estimate')!.textContent).toContain('€15.00 paid + €0.20 trip costs');
+      expect(field(el, 'Selling price').value).toBe('23');
+      expect(el.querySelector('input[aria-labelledby=expected-label]')).toBeNull();
     });
 
     it('won’t add to a trip that is already received', async () => {

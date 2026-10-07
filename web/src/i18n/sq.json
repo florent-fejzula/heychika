@@ -22,7 +22,8 @@
       "XK": "Kosovë",
       "MK": "Maqedoninë e Veriut",
       "AL": "Shqipëri"
-    }
+    },
+    "cancel": "Anulo"
   },
   "titles": {
     "shop": "Hey Chika",
@@ -477,7 +478,8 @@
       "afterCreate": "Pasi ta krijosh modelin, mund t’i shtosh ngjyrat, masat dhe fotot.",
       "pickCategory": "Zgjidh fillimisht një kategori.",
       "nameNeeded": "Duhet emri.",
-      "confirmDelete": "Ta fshij “{{name}}” bashkë me fotot? Kjo nuk kthehet më."
+      "confirmDelete": "Ta fshij “{{name}}” bashkë me fotot? Kjo nuk kthehet më.",
+      "brandsUsed": "Marka të përdorura më parë"
     },
     "barcodes": {
       "title": "Barkodet në etiketa",
@@ -514,7 +516,6 @@
       "samePrice": "I njëjti çmim për çdo masë",
       "apply": "Zbato",
       "priceFor": "Çmimi në euro për {{sku}}",
-      "costMargin": "kosto {{cost}} · {{pct}}% marzhë",
       "inStock": "në stok",
       "inUseTitle": "Ka histori stoku ose shitjesh, ndaj nuk mund të hiqet",
       "inUse": "Në përdorim",
@@ -525,7 +526,8 @@
       "enterAllPrice": "Shkruaj çmimin për çdo masë, për shembull 29.90.",
       "allNow": "Çdo masë tani kushton {{price}}.",
       "confirmRemove": "Ta heq {{colour}} {{size}} ({{sku}})? Kjo nuk kthehet më.",
-      "removed": "U hoq {{sku}}."
+      "removed": "U hoq {{sku}}.",
+      "costProfit": "kosto {{cost}} · fitim {{profit}} ({{pct}})"
     },
     "images": {
       "title": "Fotot",
@@ -540,7 +542,8 @@
       "delete": "Fshi foton {{n}}",
       "uploadingN": "Po ngarkohet foto {{n}} nga {{total}}…",
       "uploading": "Po ngarkohet…",
-      "confirmDelete": "Ta fshij këtë foto?"
+      "confirmDelete": "Ta fshij këtë foto?",
+      "pasteHint": "Në kompjuter mund ta ngjitësh edhe me Ctrl+V."
     },
     "lists": {
       "title": "Kategoritë, ngjyrat dhe masat",
@@ -799,7 +802,11 @@
       "confirmReceive": "T’i vendos {{count}} copë në raft?\n\nKostoja e tyre fiksohet në {{average}} copa mesatarisht. Kjo nuk kthehet më.",
       "confirmReceive_one": "Ta vendos {{count}} copë në raft?\n\nKostoja e saj fiksohet në {{average}}. Kjo nuk kthehet më.",
       "confirmDelete": "Ta fshij draftin “{{name}}” bashkë me gjithçka të shënuar në të?",
-      "averageNote": "kostoja mesatare {{from}} → {{to}} ({{count}} tashmë në raft)"
+      "averageNote": "kostoja mesatare {{from}} → {{to}} ({{count}} tashmë në raft)",
+      "expected": "Rreth sa copë solle?",
+      "expectedHint": "Jo e detyrueshme. Shpenzimet e rrugës ndahen mbi to te çmimet e sugjeruara, që nga artikulli i parë që fut.",
+      "expectedOn": "Rreth sa copë ka blerja “{{name}}”?",
+      "enterExpected": "Shkruaj rreth sa copë me një numër të plotë, ose lëre bosh."
     },
     "addItem": {
       "title": "Shto artikull",
@@ -807,8 +814,6 @@
       "receivedTitle": "Kjo blerje është pranuar tashmë",
       "receivedText": "Artikujt e saj janë në raft dhe s’mund të shtohen të tjerë. Shtoji këta drejt në stok, ose fillo një blerje të re.",
       "straightToStock": "Shto drejt në stok",
-      "leadTrip": "Në këtë blerje. Shkojnë në raft kur ta pranosh.",
-      "leadStock": "Drejt në stok. E bleve në një rrugë me shpenzime udhëtimi ose doganë? Shtoje te blerja, që të llogariten edhe ato.",
       "what": "Çfarë po shton?",
       "somethingNew": "Diçka të re",
       "moreOfOne": "Më shumë nga një që kam",
@@ -825,7 +830,6 @@
       "paid": "Paguar për copë ({{currency}})",
       "sellingPrice": "Çmimi i shitjes (€)",
       "costs": "Të kushton rreth {{cost}} copa.",
-      "costsWithTrip": "Të kushton rreth {{cost}} copa, me shpenzimet e rrugës.",
       "withMarkup": "Me fitimin tënd {{pct}}%:",
       "use": "Përdor {{price}}",
       "showOnline": "Shfaqe në dyqanin online",
@@ -844,7 +848,18 @@
       "notANumber": "“{{text}}” nuk është numër copësh ({{colour}} {{size}}).",
       "enterOne": "Shkruaj sa ke në të paktën një kuti.",
       "enterPaid": "Shkruaj sa pagove për copë, në {{currency}}.",
-      "enterPrice": "Shkruaj çmimin e shitjes në euro."
+      "enterPrice": "Shkruaj çmimin e shitjes në euro.",
+      "trip": "Blerja",
+      "tripNone": "Asnjë: drejt në raft",
+      "newTrip": "Blerje e re",
+      "createTrip": "Krijo blerjen dhe vazhdo",
+      "tripHint": "Shkon në raft kur ta pranosh blerjen, dhe shpenzimet e rrugës llogariten në çmim.",
+      "noTripHint": "Drejt në raft. E bleve në një rrugë me shpenzime udhëtimi ose doganë? Zgjidh blerjen, që të llogariten në çmim.",
+      "costsSplit": "Të kushton rreth {{cost}} copa: {{paid}} e paguar + {{share}} shpenzime rruge.",
+      "tripAdds": "(+{{amount}} për shpenzimet e rrugës)",
+      "spreadOver": "{{costs}} shpenzime rruge, të ndara në rreth {{count}} copë.",
+      "spreadSoFar": "{{costs}} shpenzime rruge, të ndara vetëm në {{count}} copët e futura deri tani, ndaj del e lartë derisa të futen të tjerat. Shkruaj më lart rreth sa copë solle.",
+      "spreadSoFar_one": "{{costs}} shpenzime rruge, të gjitha mbi këtë {{count}} copë deri tani, ndaj del e lartë derisa të futen të tjerat. Shkruaj më lart rreth sa copë solle."
     },
     "orderStatus": {
       "new": "E re",

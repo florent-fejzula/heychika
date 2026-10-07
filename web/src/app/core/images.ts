@@ -50,3 +50,18 @@ async function render(bitmap: ImageBitmap, max: number): Promise<Blob> {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('could not encode image'))), 'image/jpeg', JPEG_QUALITY),
   );
 }
+
+/**
+ * The photos in a paste (Ctrl+V of a screenshot or a copied image), or none.
+ *
+ * Pasting into a text box keeps its text: copying from Excel or Word puts a
+ * picture of the text on the clipboard too, and that's not a photo of the item.
+ */
+export function pastedImages(event: ClipboardEvent): File[] {
+  const data = event.clipboardData;
+  if (!data) return [];
+  const target = event.target as HTMLElement | null;
+  const typing = !!target?.closest('input:not([type=file]):not([type=checkbox]):not([type=radio]), textarea, [contenteditable=""], [contenteditable=true]');
+  if (typing && data.types.includes('text/plain')) return [];
+  return [...data.files].filter((f) => f.type.startsWith('image/'));
+}

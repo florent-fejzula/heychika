@@ -37,13 +37,15 @@ on the About and returns pages, a domain, and the checklist under [Going live](#
 - **Customers:** everyone who ordered, with what they paid for, parcels that came back, their orders,
   and a note about them
 - Full database schema for every phase, with the stock engine, purchasing, costing and checkout
-  working and tested (154 database tests, 310 app tests)
+  working and tested (156 database tests, 320 app tests)
 - Admin login (owners only), phone-first layout, a live "Today" dashboard, Settings (exchange
   rates, delivery fees, shop details)
 - **Add stock, one form** (Products → *Add product*, Stock → *Add stock*, or *Add item* on a buying trip):
-  photos, name, category, colours, sizes, how many of each, what was paid, and the selling price, which
-  is suggested from the real cost (trip costs included) plus the markup in Settings. It creates the design,
-  every size with its SKU, and the stock in one step. Picking a design that exists restocks it.
+  photos (or paste one with Ctrl+V), name, category, description, material, brand (the ones used before
+  are offered), colours, sizes, how many of each, the buying trip, what was paid, and the selling price,
+  which is suggested from the real cost (trip costs included) plus the markup in Settings. A trip can be
+  made right there without leaving the form. It creates the design, every size with its SKU, and the
+  stock in one step. Picking a design that exists restocks it.
 - **Barcodes from the tags:** the clothes arrive with barcodes. *Scan the tags* (on a trip or a design) links
   one tag per size to it; after that, scanning any of its tags finds it when packing, looking up or adding
   to an order. Every size also keeps its own SKU, which can be typed instead.
@@ -52,7 +54,9 @@ on the About and returns pages, a domain, and the checklist under [Going live](#
 - **Scan:** look an item up with a USB/Bluetooth scanner, the phone camera, or by typing its SKU
 - **Buying trips:** the trip's costs and exchange rate, then *Add item* for each thing bought. It shows
   what each item will really cost *before* you press Receive; receiving puts the items on the shelf and
-  fixes their cost. Adding straight to stock (no trip) records the cost as typed, through a trip of its own
+  fixes their cost. Saying about how many items the trip brought spreads its costs in the suggested
+  prices from the first item on (otherwise they sit on the few entered so far, and no price is filled
+  in). Adding straight to stock (no trip) records the cost as typed, through a trip of its own
 - **Stock:** what is on the shelf, reserved, on the road and damaged, with filters for what is running
   low or sold out; recount, mark damage and write off with a reason; the full history of every size
 - **Categories, colours & sizes:** add new ones without touching code

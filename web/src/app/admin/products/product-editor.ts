@@ -1,9 +1,11 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Catalogue, Category, Colour, ProductDetail, ProductInput, ProductStatus, Size, VariantRow } from '../../core/catalogue';
+import { Catalogue, Category, Colour, ProductDetail, ProductInput, ProductStatus, Size, VariantRow, sameBrand } from '../../core/catalogue';
 import { I18n, TranslatePipe } from '../../core/i18n';
 import { BarcodeLinker, LinkableSize, isLinked } from '../shared/barcode-linker';
+import { BrandPicks } from '../shared/brand-picks';
 import { ImageManager } from './image-manager';
 import { VariantManager } from './variant-manager';
 
@@ -11,7 +13,7 @@ const blankToNull = (s: string): string | null => (s.trim() === '' ? null : s.tr
 
 @Component({
   selector: 'app-product-editor',
-  imports: [ReactiveFormsModule, RouterLink, VariantManager, ImageManager, BarcodeLinker, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, VariantManager, ImageManager, BarcodeLinker, BrandPicks, TranslatePipe],
   templateUrl: './product-editor.html',
   styleUrl: './product-editor.scss',
 })
@@ -40,6 +42,7 @@ export class ProductEditor {
   protected readonly sizes = signal<Size[]>([]);
   protected readonly product = signal<ProductDetail | null>(null);
   protected readonly variants = signal<VariantRow[] | null>(null);
+  protected readonly brands = signal<string[]>([]);
 
   /** Its sizes, for linking the barcodes on their tags. */
   protected readonly linkable = computed<LinkableSize[]>(() =>
@@ -72,11 +75,18 @@ export class ProductEditor {
     featured: [false],
   });
 
+  protected readonly brandValue = toSignal(this.form.controls.brand.valueChanges, { initialValue: '' });
+
   constructor() {
     effect(() => {
       const id = this.id();
       untracked(() => this.load(id));
     });
+  }
+
+  protected pickBrand(name: string): void {
+    this.form.controls.brand.setValue(name);
+    this.form.controls.brand.markAsDirty();
   }
 
   protected async save(): Promise<void> {
@@ -93,7 +103,7 @@ export class ProductEditor {
       name: v.name.trim(),
       description: blankToNull(v.description),
       material: blankToNull(v.material),
-      brand: blankToNull(v.brand),
+      brand: sameBrand(v.brand, this.brands()),
       status: v.status,
       show_online: v.show_online,
       featured: v.featured,
@@ -158,7 +168,8 @@ export class ProductEditor {
     this.state.set('loading');
     this.message.set(null);
     try {
-      const lookups = await this.catalogue.lookups();
+      const [lookups, brands] = await Promise.all([this.catalogue.lookups(), this.catalogue.brands()]);
+      this.brands.set(brands);
       this.categories.set(lookups.categories);
       this.colours.set(lookups.colours);
       this.sizes.set(lookups.sizes);

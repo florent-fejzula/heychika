@@ -68,3 +68,26 @@ export function landedCosts(lines: CostLine[], opts: CostOptions): CostResult {
 export function weightedAverage(currentCost: number, onHand: number, landed: number, received: number): number {
   return round4((currentCost * onHand + landed * received) / (onHand + received));
 }
+
+export interface Estimate extends LandedLine {
+  /** How many items the trip costs were spread over: entered so far, or the trip's expected count if bigger. */
+  spreadOver: number;
+}
+
+/**
+ * What one more item will cost, before the trip is received: `mine` is the item being
+ * added, `others` what's already on the trip.
+ *
+ * Spread only over the items entered so far, the first ones would carry nearly all
+ * the trip costs. So while fewer than `expectedItems` are in, the rest are assumed
+ * to be like the ones entered, and the costs are spread over the expected number.
+ * Receiving still uses the real items (see landedCosts).
+ */
+export function estimateLanded(others: CostLine[], mine: CostLine, opts: CostOptions, expectedItems: number | null): Estimate {
+  const entered = others.reduce((sum, l) => sum + l.qty, 0) + mine.qty;
+  const spreadOver = Math.max(entered, expectedItems ?? 0);
+  // Spreading over more items of the same kind is the same as spreading less over these.
+  const scaled = entered > 0 ? (opts.extraCostsEur * entered) / spreadOver : opts.extraCostsEur;
+  const line = landedCosts([...others, mine], { ...opts, extraCostsEur: scaled }).lines.at(-1)!;
+  return { ...line, spreadOver };
+}

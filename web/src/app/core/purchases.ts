@@ -20,6 +20,8 @@ export interface PurchaseRow {
   status: PurchaseStatus;
   received_at: string | null;
   notes: string | null;
+  /** About how many items it brought: spreads the trip costs in price suggestions until they are all entered. */
+  expected_items?: number | null;
 }
 
 export interface PurchaseSummary extends PurchaseRow {
@@ -28,7 +30,7 @@ export interface PurchaseSummary extends PurchaseRow {
 
 export type PurchaseInput = Pick<
   PurchaseRow,
-  'reference' | 'supplier_name' | 'purchase_date' | 'currency' | 'currency_per_eur' | 'extra_costs_eur' | 'allocation_method' | 'notes'
+  'reference' | 'supplier_name' | 'purchase_date' | 'currency' | 'currency_per_eur' | 'extra_costs_eur' | 'allocation_method' | 'notes' | 'expected_items'
 >;
 
 export interface PurchaseLine {
@@ -59,6 +61,10 @@ export interface TripItem {
   category_id?: number;
   name?: string;
   show_online?: boolean;
+  featured?: boolean;
+  description?: string | null;
+  material?: string | null;
+  brand?: string | null;
   /** Selling price in euros, for every size listed. */
   price_eur: number;
   /** What was paid per item, in the trip's currency (euros when added by hand). */
@@ -121,6 +127,11 @@ export class Purchases {
 
   async update(id: number, input: PurchaseInput): Promise<void> {
     const { error } = await this.sb.from('purchases').update(input).eq('id', id);
+    if (error) fail(error, 'errors.saveTrip');
+  }
+
+  async setExpectedItems(id: number, count: number | null): Promise<void> {
+    const { error } = await this.sb.from('purchases').update({ expected_items: count }).eq('id', id);
     if (error) fail(error, 'errors.saveTrip');
   }
 

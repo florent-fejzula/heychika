@@ -1,32 +1,49 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { Catalogue, Category, Colour, ProductSummary, Size, VariantRow } from '../../core/catalogue';
-import { landedCosts } from '../../core/costing';
+import { Catalogue, Category, Colour, ProductSummary, Size, VariantRow, sameBrand } from '../../core/catalogue';
+import { estimateLanded } from '../../core/costing';
 import { I18n, TranslatePipe } from '../../core/i18n';
-import { formatCode, formatMoney, parseAmount, parseCount } from '../../core/money';
-import { PurchaseLine, PurchaseRow, Purchases, TripItem } from '../../core/purchases';
+import { pastedImages } from '../../core/images';
+import { formatCode, formatMoney, parseAmount, parseCount, parseRate } from '../../core/money';
+import { PurchaseCurrency, PurchaseLine, PurchaseRow, PurchaseSummary, Purchases, TripItem } from '../../core/purchases';
+import { BrandPicks } from '../shared/brand-picks';
 
 interface Photo {
   file: File;
   url: string;
 }
 
+interface NewTrip {
+  reference: string;
+  date: string;
+  costs: string;
+  expected: string;
+  currency: PurchaseCurrency;
+  rate: string;
+}
+
 const key = (colourId: number, sizeId: number) => `${colourId}-${sizeId}`;
+const blankToNull = (s: string): string | null => (s.trim() === '' ? null : s.trim());
+const today = () => new Date().toISOString().slice(0, 10);
 
 /**
- * Adding stock in one go: what it is, its colours and sizes, how many of each, what
- * was paid and what it sells for. On a buying trip it's added to the trip (and goes
- * on the shelf when the trip is received); from Products or Stock it goes straight
- * on the shelf.
+ * Adding stock in one go: what it is (with its description, material and brand),
+ * its colours and sizes, how many of each, what was paid and what it sells for.
+ *
+ * Bought on a buying trip, it's added to the trip (and goes on the shelf when the
+ * trip is received), and the trip's costs count in the suggested price. The trip is
+ * picked here, or made here in a few boxes without leaving the form. With no trip
+ * it goes straight on the shelf.
  *
  * The same form restocks a design that already exists: pick it, and its colours and
  * sizes are ticked for you.
  */
 @Component({
   selector: 'app-add-item',
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, BrandPicks],
   templateUrl: './add-item.html',
   styleUrl: './add-item.scss',
+  host: { '(document:paste)': 'onPaste($event)' },
 })
 export class AddItem {
   private readonly catalogue = inject(Catalogue);
@@ -34,7 +51,7 @@ export class AddItem {
   private readonly router = inject(Router);
   private readonly i18n = inject(I18n);
 
-  /** The trip, from `stock/purchases/:id/add`. Absent when adding straight to stock. */
+  /** The trip, from `stock/purchases/:id/add`. Absent on `stock/add`, where one can be picked. */
   readonly id = input<string>();
   /** `?design=12`: more of a design that already exists. */
   readonly design = input<string>();
@@ -46,6 +63,8 @@ export class AddItem {
   protected readonly colours = signal<Colour[]>([]);
   protected readonly sizes = signal<Size[]>([]);
   protected readonly designs = signal<ProductSummary[]>([]);
+  /** Trips not received yet: the ones items can still go on. */
+  protected readonly trips = signal<PurchaseSummary[]>([]);
   protected readonly trip = signal<PurchaseRow | null>(null);
   protected readonly tripLines = signal<PurchaseLine[]>([]);
   protected readonly markup = signal(50);
@@ -66,13 +85,25 @@ export class AddItem {
   /** Once the price is typed, the suggestion stops overwriting it. */
   protected readonly priceTouched = signal(false);
   protected readonly showOnline = signal(true);
+  protected readonly featured = signal(false);
+  protected readonly description = signal('');
+  protected readonly material = signal('');
+  protected readonly brand = signal('');
+  protected readonly brands = signal<string[]>([]);
   protected readonly photos = signal<Photo[]>([]);
 
   protected readonly saving = signal(false);
   protected readonly progress = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
 
-  protected readonly onTrip = computed(() => this.id() !== undefined);
+  /** A new trip, made without leaving the form. */
+  protected readonly newTrip = signal<NewTrip | null>(null);
+  protected readonly tripError = signal<string | null>(null);
+  protected readonly creatingTrip = signal(false);
+  protected readonly expected = signal('');
+  protected readonly currencies: PurchaseCurrency[] = ['EUR', 'USD', 'TRY'];
+
+  protected readonly onTrip = computed(() => this.trip() !== null);
   protected readonly currency = computed(() => this.trip()?.currency ?? 'EUR');
 
   protected readonly category = computed(() => this.categories().find((c) => c.id === this.categoryId()) ?? null);
@@ -109,7 +140,8 @@ export class AddItem {
 
   /**
    * What one item will really cost (with its share of the trip costs, shared the way
-   * the trip says), and a selling price from the markup in Settings.
+   * the trip says), and a selling price from the markup in Settings. `tripAdds` is
+   * how much more that price is because of the trip costs.
    */
   protected readonly estimate = computed(() => {
     const paid = parseAmount(this.paid());
@@ -120,13 +152,25 @@ export class AddItem {
     const others = this.tripLines()
       .filter((l) => !mine.has(l.variant_id))
       .map((l) => ({ qty: l.qty, unitPrice: Number(l.unit_price) }));
-    const result = landedCosts([...others, { qty, unitPrice: paid }], {
+    const tripCosts = Number(trip?.extra_costs_eur ?? 0);
+    const e = estimateLanded(others, { qty, unitPrice: paid }, {
       currencyPerEur: Number(trip?.currency_per_eur ?? 1),
-      extraCostsEur: Number(trip?.extra_costs_eur ?? 0),
+      extraCostsEur: tripCosts,
       method: trip?.allocation_method ?? 'by_quantity',
-    });
-    const landed = result.lines.at(-1)?.landedEur ?? 0;
-    return { landed, suggested: Math.ceil(landed * (1 + this.markup() / 100)) };
+    }, trip?.expected_items ?? null);
+    const priced = (cost: number) => Math.ceil(cost * (1 + this.markup() / 100));
+    const suggested = priced(e.landedEur);
+    return {
+      paid: e.unitPriceEur,
+      share: e.extraEur,
+      landed: e.landedEur,
+      suggested,
+      tripAdds: suggested - priced(e.unitPriceEur),
+      tripCosts,
+      spreadOver: e.spreadOver,
+      /** The trip doesn't say how many items it brought, so the costs sit on the few entered so far. */
+      guessing: tripCosts > 0 && !trip?.expected_items,
+    };
   });
 
   constructor() {
@@ -136,10 +180,12 @@ export class AddItem {
       untracked(() => this.load(id, design));
     });
 
-    // The suggested price fills the box until she types her own.
+    // The suggested price fills the box until she types her own. Not while the trip
+    // costs sit on only the few items entered so far: that price would be far too
+    // high, so it waits for her to say how many the trip brought (or to choose).
     effect(() => {
       const e = this.estimate();
-      if (e && !untracked(() => this.priceTouched())) this.price.set(String(e.suggested));
+      if (e && !untracked(() => this.priceTouched())) this.price.set(e.guessing ? '' : String(e.suggested));
     });
 
     inject(DestroyRef).onDestroy(() => this.photos().forEach((p) => URL.revokeObjectURL(p.url)));
@@ -239,14 +285,114 @@ export class AddItem {
   }
 
   protected addPhotos(input: HTMLInputElement): void {
-    const files = [...(input.files ?? [])];
-    this.photos.update((list) => [...list, ...files.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+    this.addFiles([...(input.files ?? [])]);
     input.value = '';
+  }
+
+  /** Ctrl+V of a screenshot or a copied photo, anywhere on the page. */
+  protected onPaste(event: ClipboardEvent): void {
+    if (this.state() !== 'ready' || this.mode() !== 'new') return;
+    const files = pastedImages(event);
+    if (!files.length) return;
+    event.preventDefault();
+    this.addFiles(files);
+  }
+
+  private addFiles(files: File[]): void {
+    this.photos.update((list) => [...list, ...files.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
   }
 
   protected removePhoto(photo: Photo): void {
     URL.revokeObjectURL(photo.url);
     this.photos.update((list) => list.filter((p) => p !== photo));
+  }
+
+  // --------------------------------------------------------------------- trips
+
+  /** '' for none (straight onto the shelf), else a trip id. */
+  protected async chooseTrip(value: string): Promise<void> {
+    this.tripError.set(null);
+    this.newTrip.set(null);
+    if (!value) {
+      this.trip.set(null);
+      this.tripLines.set([]);
+      return;
+    }
+    const id = Number(value);
+    try {
+      const [trip, lines] = await Promise.all([this.purchases.get(id), this.purchases.lines(id)]);
+      this.trip.set(trip);
+      this.tripLines.set(lines);
+    } catch (e) {
+      this.tripError.set((e as Error).message);
+    }
+  }
+
+  protected openNewTrip(): void {
+    this.tripError.set(null);
+    this.newTrip.set({ reference: '', date: today(), costs: '', expected: '', currency: 'EUR', rate: '' });
+  }
+
+  protected editNewTrip(change: Partial<NewTrip>): void {
+    this.newTrip.update((t) => (t ? { ...t, ...change } : t));
+  }
+
+  /** Makes the trip, picks it, and carries on with the item. */
+  protected async createTrip(): Promise<void> {
+    const t = this.newTrip();
+    if (!t || this.creatingTrip()) return;
+    const rate = t.currency === 'EUR' ? 1 : parseRate(t.rate);
+    const costs = t.costs.trim() === '' ? 0 : parseAmount(t.costs);
+    const expected = t.expected.trim() === '' ? null : parseCount(t.expected);
+
+    const fail = (key: string, params?: Record<string, unknown>) => this.tripError.set(this.i18n.t(key, params));
+    if (!t.reference.trim()) return fail('admin.trip.nameIt');
+    if (!t.date) return fail('admin.trip.pickDate');
+    if (rate === null) return fail('admin.trip.enterRate', { currency: t.currency, example: t.currency === 'TRY' ? '38.5' : '1.08' });
+    if (costs === null) return fail('admin.trip.enterCosts');
+    if (expected === 0 || (t.expected.trim() !== '' && expected === null)) return fail('admin.trip.enterExpected');
+
+    this.creatingTrip.set(true);
+    this.tripError.set(null);
+    try {
+      const id = await this.purchases.create({
+        reference: t.reference.trim(),
+        supplier_name: null,
+        purchase_date: t.date,
+        currency: t.currency,
+        currency_per_eur: rate,
+        extra_costs_eur: costs,
+        allocation_method: 'by_quantity',
+        notes: null,
+        ...(expected !== null && { expected_items: expected }),
+      });
+      this.trips.set((await this.purchases.list()).filter((p) => p.status === 'draft'));
+      await this.chooseTrip(String(id));
+    } catch (e) {
+      this.tripError.set((e as Error).message);
+    } finally {
+      this.creatingTrip.set(false);
+    }
+  }
+
+  /** For a trip that doesn't say yet how many items it brought. */
+  protected async saveExpected(): Promise<void> {
+    const trip = this.trip();
+    const n = parseCount(this.expected());
+    if (!trip) return;
+    if (!n) {
+      this.tripError.set(this.i18n.t('admin.trip.enterExpected'));
+      return;
+    }
+    try {
+      await this.purchases.setExpectedItems(trip.id, n);
+      this.trip.set({ ...trip, expected_items: n });
+      this.trips.update((list) => list.map((p) => (p.id === trip.id ? { ...p, expected_items: n } : p)));
+      this.tripError.set(null);
+      this.expected.set('');
+    } catch (e) {
+      this.tripError.set((e as Error).message);
+    }
   }
 
   // -------------------------------------------------------------------- saving
@@ -279,7 +425,19 @@ export class AddItem {
     if (price === null) return this.fail('admin.addItem.enterPrice');
 
     const item: TripItem = isNew
-      ? { product_id: null, category_id: this.categoryId()!, name: this.name().trim(), show_online: this.showOnline(), price_eur: price, unit_price: paid, lines }
+      ? {
+          product_id: null,
+          category_id: this.categoryId()!,
+          name: this.name().trim(),
+          description: blankToNull(this.description()),
+          material: blankToNull(this.material()),
+          brand: sameBrand(this.brand(), this.brands()),
+          show_online: this.showOnline(),
+          featured: this.featured(),
+          price_eur: price,
+          unit_price: paid,
+          lines,
+        }
       : { product_id: existing!.id, price_eur: price, unit_price: paid, lines };
 
     this.saving.set(true);
@@ -338,6 +496,10 @@ export class AddItem {
     this.paid.set('');
     this.price.set('');
     this.priceTouched.set(false);
+    this.description.set('');
+    this.material.set('');
+    this.brand.set('');
+    this.featured.set(false);
     this.error.set(null);
   }
 
@@ -348,11 +510,15 @@ export class AddItem {
   private async load(id: string | undefined, design: string | undefined): Promise<void> {
     this.state.set('loading');
     try {
-      const [lookups, designs, markup] = await Promise.all([
+      const [lookups, designs, markup, trips, brands] = await Promise.all([
         this.catalogue.lookups(),
         this.catalogue.listProducts(),
         this.purchases.markup(),
+        this.purchases.list(),
+        this.catalogue.brands(),
       ]);
+      this.trips.set(trips.filter((p) => p.status === 'draft'));
+      this.brands.set(brands);
       this.categories.set(lookups.categories.filter((c) => c.active));
       this.colours.set(lookups.colours);
       this.sizes.set(lookups.sizes);

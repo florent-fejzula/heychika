@@ -75,10 +75,13 @@
             <span>{{ 'admin.design.material' | t }}</span>
             <input type="text" formControlName="material" [placeholder]="'admin.design.materialPlaceholder' | t" />
           </label>
-          <label class="field">
-            <span>{{ 'admin.design.brand' | t }}</span>
-            <input type="text" formControlName="brand" />
-          </label>
+          <div class="field">
+            <label class="field">
+              <span>{{ 'admin.design.brand' | t }}</span>
+              <input type="text" formControlName="brand" autocomplete="off" />
+            </label>
+            <app-brand-picks [brands]="brands()" [value]="brandValue()" (pick)="pickBrand($event)" />
+          </div>
         </div>
 
         <div class="grid-2">

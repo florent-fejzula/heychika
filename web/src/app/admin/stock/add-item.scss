@@ -1,8 +1,3 @@
-.lead {
-  margin: 4px 0 0;
-  font-size: 0.875rem;
-}
-
 .small {
   margin: 0;
   font-size: 0.8125rem;
@@ -144,12 +139,49 @@
 }
 
 .estimate {
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 0.875rem;
   color: var(--ink-soft);
 
+  p {
+    margin: 0;
+  }
+
   .btn {
     margin-left: 4px;
+  }
+}
+
+.trip-adds {
+  margin-left: 0.25em;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.trip-row {
+  display: flex;
+  gap: 8px;
+
+  select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// The new trip, made inside the form: set off from the item around it.
+.new-trip {
+  padding: 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+
+  // One box per row on a phone: two across cuts off the name and the date.
+  @media (max-width: 599px) {
+    .grid-2 {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 }
 

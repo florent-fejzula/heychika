@@ -205,6 +205,16 @@ export class Catalogue {
     await this.removeFiles(images.map((i) => i.storage_path));
   }
 
+  /**
+   * Brands already used, most used first, so the brand box can offer them. Spelled
+   * the way they were written most often ("Vavex" and "vavex" are one brand).
+   */
+  async brands(): Promise<string[]> {
+    const { data, error } = await this.sb.from('products').select('brand').not('brand', 'is', null).overrideTypes<{ brand: string }[], { merge: false }>();
+    if (error) return [];
+    return rankBrands(data.map((r) => r.brand));
+  }
+
   // --------------------------------------------------------------- variants
 
   async listVariants(productId: number): Promise<VariantRow[]> {
@@ -355,4 +365,33 @@ export class Catalogue {
     }
     return null;
   }
+}
+
+const tidy = (s: string) => s.trim().replace(/\s+/g, ' ');
+
+/** Distinct brands, most used first; each in the spelling used most often. */
+export function rankBrands(names: string[]): string[] {
+  const groups = new Map<string, Map<string, number>>();
+  for (const raw of names) {
+    const name = tidy(raw);
+    if (!name) continue;
+    const key = name.toLocaleLowerCase();
+    const spellings = groups.get(key) ?? new Map<string, number>();
+    spellings.set(name, (spellings.get(name) ?? 0) + 1);
+    groups.set(key, spellings);
+  }
+  return [...groups.values()]
+    .map((spellings) => {
+      const [best] = [...spellings].sort((a, b) => b[1] - a[1]);
+      return { name: best[0], uses: [...spellings.values()].reduce((a, b) => a + b, 0) };
+    })
+    .sort((a, b) => b.uses - a.uses || a.name.localeCompare(b.name))
+    .map((b) => b.name);
+}
+
+/** A brand as typed, in the spelling already in use if it matches one ("vavex" → "Vavex"). */
+export function sameBrand(typed: string, known: string[]): string | null {
+  const name = tidy(typed);
+  if (!name) return null;
+  return known.find((k) => k.toLocaleLowerCase() === name.toLocaleLowerCase()) ?? name;
 }

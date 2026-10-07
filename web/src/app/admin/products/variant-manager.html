@@ -84,8 +84,8 @@
             <div class="price">
               <input type="text" inputmode="decimal" [attr.aria-label]="'admin.variants.priceFor' | t: { sku: v.sku }" autocomplete="off"
                      [value]="v.price_eur" (change)="savePrice(v, $any($event.target).value)" />
-              @if (margin(v); as pct) {
-                <small class="muted">{{ 'admin.variants.costMargin' | t: { cost: money(v.cost_eur), pct } }}</small>
+              @if (profit(v); as p) {
+                <small class="muted">{{ 'admin.variants.costProfit' | t: p }}</small>
               }
             </div>
             <div class="stock">

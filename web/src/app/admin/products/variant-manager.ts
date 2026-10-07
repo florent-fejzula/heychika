@@ -157,10 +157,16 @@ export class VariantManager {
     return formatMoney(Number(amount), 'EUR');
   }
 
-  protected margin(v: VariantRow): number | null {
+  /**
+   * What she makes on one, and as a markup on what it cost: the way she prices
+   * (cost €8, sells at €20: €12 profit, +150%), and the same as Settings' markup.
+   */
+  protected profit(v: VariantRow): { cost: string; profit: string; pct: string } | null {
     const price = Number(v.price_eur);
     const cost = Number(v.cost_eur);
-    return cost > 0 && price > 0 ? Math.round(((price - cost) / price) * 100) : null;
+    if (!(cost > 0 && price > 0)) return null;
+    const pct = Math.round(((price - cost) / cost) * 100);
+    return { cost: this.money(cost), profit: this.money(price - cost), pct: (pct >= 0 ? '+' : '−') + Math.abs(pct) + '%' };
   }
 
   protected units(v: VariantRow): number {

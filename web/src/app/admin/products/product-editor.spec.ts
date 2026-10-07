@@ -24,6 +24,7 @@ async function setup(id?: string, product: ProductDetail | null = detail, varian
     deleteProduct: vi.fn().mockResolvedValue(undefined),
     listVariants: vi.fn().mockResolvedValue(variants),
     listImages: vi.fn().mockResolvedValue([]),
+    brands: vi.fn().mockResolvedValue(['Vavex']),
     imageUrl: (p: string) => p,
   };
   TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: Catalogue, useValue: stub }] });
